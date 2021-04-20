@@ -16,6 +16,9 @@ void game_init(){
    return newGame
 }
 
+void game_bind(game_t *game, int fd_render, int fd_command, int fd_data){
+}
+
 void game_start(game_t *game){
 	while(game->status == PLAY){
 		/* Capturamos presión tecla */
@@ -52,5 +55,8 @@ void game_start(game_t *game){
 			list_next(game->shoot_enemies)
 		}
 		/* Dibujamos pantalla */
+		/* Enviamos por UDP los datos de cada elemento a dibujar */
+
+		/* Enviamos datos del juego por TCP */
 	}
 }

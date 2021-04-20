@@ -2,15 +2,24 @@
 #include "libs/ship.h"
 #include "libs/shoot.h"
 #include "libs/game.h"
+#include <sys/socket.h>
 
 void main(void *args){
 	game_t *game;
 
-	/* Levantamos el puerto de conexion */
+	while(true){
+		/* Levantamos el puerto de conexion */
+		/* Bindeamos el socket */
+		/* Aguardamos una conexión */
 
-	/* Levantamos el puerto de render */
+		/* Negociamos los puertos del render, comandos y datos */
 
-	/* Levantamos el puerto de comandos */
+		game = game_init()
 
-	game = game_init()
+		/* Pasamos los socket al juego */
+		game_bind(game,fd_render,fd_command,fd_data)
+
+		/* Iniciamos el juego */
+		game_start(game)
+	}
 }
