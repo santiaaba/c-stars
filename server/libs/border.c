@@ -21,16 +21,20 @@ uint8_t border_collision(border_t *border, border_t *border2){
 	while(!lista_eol(l1) && !crash){
 		lista_first(l2);
 		while(!lista_eol(l2) && !crash){
-			crash = rect_collision(lista_get(l1),lista_get(l2));
+			crash = rect_collision(*(rect_t *)lista_get(l1),*(rect_t *)lista_get(l2));
 		}
 	}
 	return crash;
 }
 
-void border_add_vector(border_t*border, vector_t *vector){
+void border_add_vector(border_t*border, vector_t vector){
 	lista_first(border->lista);
 	while(!lista_eol(border->lista)){
-		point_add_vector(rect_get_point(lista_get(border->lista)),vector);
+		point_add_vector(rect_get_point((rect_t *)lista_get(border->lista)),vector);
 		lista_next(border->lista);
 	}
+}
+
+void border_destroy(border_t *border){
+	lista_clean(border->lista,&rect_destroy);
 }

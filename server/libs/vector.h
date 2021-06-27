@@ -23,6 +23,6 @@ int32_t vector_x(vector_t *vector);
 int32_t vector_y(vector_t *vector);
 
 /* Copia el vector origen  en vector*/
-void vector_copy(vector_t *vector, vector_t origen);
+void vector_copy(vector_t *vector, vector_t *origen);
 
 #endif

@@ -23,3 +23,7 @@ int32_t point_get_y(point_t *point){
 	return point->y;
 }
 
+void point_copy(point_t *point, point_t *other){
+	point->x = other->x;
+	point->y = other->y;
+}

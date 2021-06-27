@@ -1,21 +1,17 @@
 #include "rect.h"
 
 void rect_init(rect_t *rect){
-   point_t *p = NULL;
-
-	p = (point_t *)malloc(sizeof(point_t));
-	point_init(p);
-	rect->point = p;
+	point_init(&(rect->point));
 	rect->width = 0;
 	rect->height = 0;
 }
 
 point_t *rect_get_point(rect_t *rect){
-	return rect->point;
+	return &(rect->point);
 }
 
 void rect_set_point(rect_t *rect, point_t *p){
-	point_set(rect->point,point_get_x(p),point_get_y(p));
+	point_copy(&(rect->point),p);
 }
 
 void rect_set_dim(rect_t *rect, uint32_t width, uint32_t height){
@@ -33,8 +29,8 @@ uint32_t rect_get_height(rect_t *rect){
 
 uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	
-	uint32_t b_x = point_get_x(rect->point);
-	uint32_t b_y = point_get_y(rect->point);
+	uint32_t b_x = point_get_x(&(rect->point));
+	uint32_t b_y = point_get_y(&(rect->point));
 	uint32_t b_h = rect->height;
 	uint32_t b_w = rect->width;
 
@@ -50,4 +46,7 @@ uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	(o_x + o_w > b_x && o_x < b_x + b_w &&
 	((o_y + o_w < b_y && o_y + o_w > b_y - b_h) ||
 	(o_y + o_h < b_y && o_y + o_h > b_y - b_h)));
+}
+
+void rect_destroy(rect_t *rect){
 }

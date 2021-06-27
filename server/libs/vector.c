@@ -18,7 +18,7 @@ int32_t vector_y(vector_t *vector){
 	return vector->modulo * sin(vector->direccion);
 }
 
-void vector_copy(vector_t *vector, vector_t origen){
-	vector->direccion = origen.direccion;
-	vector->modulo = origen.modulo;
+void vector_copy(vector_t *vector, vector_t *origen){
+	vector->direccion = origen->direccion;
+	vector->modulo = origen->modulo;
 }

@@ -22,25 +22,28 @@ void server_init(){
 }
 
 void main(void *args){
-	game_t *game;
+	game_t game;
 	tcp_server_t *command_server;
 	udp_server_t *keyboard_server;
+
+	pthread_t t_command;
+
 	uint8_t exit = 0;
 
-	while(!exit){
-		/* Levantamos el puerto de comandos */
-		/* Bindeamos el socket */
-		/* Aguardamos una conexión */
+	/* Inicializamos la estructura del juego */
+	game_init(&game);
 
-		/* Negociamos los puertos del render, comandos y datos */
-
-		game = game_init()
-
-		/* Pasamos los socket al juego */
-		game_bind(game,fd_render,fd_command,fd_data)
-
-		/* Iniciamos el juego */
-		game_start(game)
+	/* Creamos el hilo que se encarga del servidor de comandos */
+	if(0 != pthread_create(&t_command, NULL, &command_server_start, s)){
+		printf("Error al querer crear el hilo para el servidor de comandos\n");
+		exit(2);
 	}
+
+	/* Creamos el hilo que se encarga de la logica del juego */
+	if(0 != pthread_create(&(s->do_task), NULL, &game_run, &game)){
+		printf ("Imposible levantar el hilo para realizar tareas\n");
+		exit(2);
+	}
+
 	return 0;
 }
