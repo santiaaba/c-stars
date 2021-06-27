@@ -1,9 +1,26 @@
-typedef struct border{
-	uint32_t x,
-	uint32_t y,
-	uint32_t width,
-	uint32_t height
-} border_t
+#include <stdlib.h>
+#include <stdint.h>
+#include "rect.h"
+#include "lista.h"
+#include "vector.h"
 
-border_t *border_init(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
-void border_collision(border_t *border);
+#ifndef BORDER_H
+#define BORDER_H
+
+typedef struct border{
+	lista_t *lista;
+} border_t;
+
+/* Inicializa un borde */
+void border_init(border_t *border);
+
+/* Agrega un rectangulo a la lista */
+void border_add_rect(border_t *border, rect_t *rect);
+
+/* Determina si ha habido colicion entre los dos bordes */
+uint8_t border_collision(border_t *border, border_t *border2);
+
+/* Mueve los rectangulos que conforman el borde segun un vector */
+void border_add_vector(border_t*border, vector_t *vector);
+
+#endif

@@ -1,17 +1,25 @@
 #include "point.h"
 
-point_t *point_init(uint32_t x, uint32_t y){
-	point_t *point;
-	point = (point_t*)malloc(sizeof(point_t));
-	return point;
+void point_init(point_t *point){
+	point->x = 0;
+	point->y = 0;
 }
 
-void point_set(point_t *point, uint32_t x, uint32_t y){
+void point_set(point_t *point, int32_t x, int32_t y){
+	point->x = x;
+	point->y = y;
 }
-uint32_t point_get_x(point_t *point){
+
+void point_add_vector(point_t *point, vector_t *vector){
+	point->x += vector_x(vector);
+	point->y += vector_y(vector);
+}
+
+int32_t point_get_x(point_t *point){
 	return point->x;
 }
-uint32_t point_get_y(point_t *point){
+
+int32_t point_get_y(point_t *point){
 	return point->y;
 }
 

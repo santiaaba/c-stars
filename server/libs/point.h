@@ -1,15 +1,18 @@
-#include <stdlib.h>
-#include <stdint.h>
-
 #ifndef POINT_H
 #define POINT_H
+
+#include <stdlib.h>
+#include <stdint.h>
+#include "vector.h"
+
 typedef struct Point {
-	uint32_t x;
-	uint32_t y;
+	int32_t x;
+	int32_t y;
 } point_t;
 
-point_t *point_init(uint32_t x, uint32_t y);
-void point_set(point_t *point, uint32_t x, uint32_t y);
-uint32_t point_get_x(point_t *point);
-uint32_t point_get_y(point_t *point);
+void point_init(point_t *point);
+void point_set(point_t *point, int32_t x, int32_t y);
+void point_add_vector(point_t *point, vector_t *vector);
+int32_t point_get_x(point_t *point);
+int32_t point_get_y(point_t *point);
 #endif
