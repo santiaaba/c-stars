@@ -6,7 +6,7 @@
 #define RECT_H
 
 typedef struct rect{
-	point_t point;
+	point_t *point;
 	uint32_t width;
 	uint32_t height;
 } rect_t;
@@ -15,7 +15,7 @@ typedef struct rect{
 void rect_init(rect_t *rect);
 
 /* Setea el punto del rectangulo */
-void rect_set_point(rect_t *rect, point_t *p);
+void rect_set_point(rect_t *rect, int32_t x, int32_t y);
 
 point_t *rect_get_point(rect_t *rect);
 
@@ -33,6 +33,6 @@ uint32_t rect_get_height(rect_t *rect);
 uint16_t rect_collision(rect_t *rect, rect_t *rect2);
 
 /* No hace nada. Ya que un rect no esta formado por punteros */
-void rect_destroy(rect_t *rect);
+void rect_destroy(rect_t **rect);
 
 #endif

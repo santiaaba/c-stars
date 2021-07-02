@@ -7,6 +7,19 @@
 #include "border.h"
 #include "border.h"
 #include "shoot.h"
+#include "clockgame.h"
+
+typedef struct t_ia_mov{
+	vector_t *vector;
+	uint32_t duration;	/* Duracion en segundos de este movimiento */
+} ia_mov_t;
+
+typedef struct t_ia{
+	lista_t *path;
+	uint32_t time_last_mov;	/* Instante de tiempo en que
+										se inicio el ultimo movimiento */
+	clockgame_t *clock;
+} ia_t;
 
 typedef enum ship_type { HEROE, ZANGANO, ZANGANO2, BOMBARDERO, DESTRUCTOR1, DESTRUCTOR2, JEFE } ship_type_t;
 
@@ -16,7 +29,10 @@ typedef struct t_ship{
 	border_t *border;
 	vector_t *vector;
 	ship_type_t type;
+	ia_t *autopilot;
+	uint8_t ia_activated;
 } ship_t;
+
 
 /* Inicializa una nave */
 void ship_init(ship_t *ship, ship_type_t type);
@@ -24,7 +40,8 @@ void ship_init(ship_t *ship, ship_type_t type);
 /* Permite colocar la nave en coordenadas especificas */
 void ship_set_position(ship_t *ship, point_t *point);
 
-/* Mueve la nave */
+/* Mueve la nave. Ejecuta la instaucción de la ia
+	si esta esta activada */
 void ship_move(ship_t *ship);
 
 /* Agrega un rectandulo al borde de la nave. Se debe
@@ -35,7 +52,7 @@ void ship_move(ship_t *ship);
 void ship_border_add(ship_t *ship, int32_t x, int32_t y, uint32_t heigh, uint32_t width);
 
 /* Setea el vector de la nave */
-void ship_set_vector(ship_t *ship, vector_t vector);
+void ship_set_vector(ship_t *ship, vector_t *vector);
 
 /* Determina si la nave a colicionado contra otra nave. De ser
    asi, decrementa su poder en base al poder de la nave con la que
@@ -47,7 +64,7 @@ uint8_t ship_colision_ship(ship_t *ship, ship_t *ship2);
 uint8_t ship_colision_shoot(ship_t *ship, shoot_t *shoot);
 
 /* Retorna los bordes de una nave */
-border_t ship_border(ship_t *ship);
+border_t *ship_border(ship_t *ship);
 
 /* Obtiene la energia de la nave */
 uint32_t ship_get_power(ship_t *ship);
@@ -57,5 +74,32 @@ void ship_set_power(ship_t *ship, uint32_t power);
 
 /* Retorna las coordenadas de la posicion de la nave */
 point_t *ship_get_position(ship_t *ship);
+
+/* Retorna el ia de la nave */
+ia_t *ship_get_ia(ship_t *ship);
+
+/* Activa la ia de la nave */
+void ship_ia_activate(ship_t *ship);
+
+/* Destruye una nave */
+void ship_destroy(ship_t **ship);
+
+/****************************
+			Para la IA
+*****************************/
+
+/* Inicializa la estructura de la ia */
+static void ia_init(ia_t *ia, clockgame_t *clock);
+
+/* Inicia la ia */
+static void ia_start(ia_t *ia);
+
+/* Maneja la nave cambiando el vector de movimiento
+	si correspondiese */
+static void ia_drive_ship(ia_t *ia, ship_t *ship);
+
+static void ia_add_path( ia_t *ia, uint32_t instant,uint32_t direction, uint32_t speed);
+
+static void ia_destroy(ia_t **ia);
 
 #endif

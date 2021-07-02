@@ -1,6 +1,14 @@
+#ifndef GAME_H
+#define GAME_H
+
+#include "point.h"
+#include "ship.h"
+#include "shoot.h"
+#include <stdint.h>
+
 typedef enum {
-	INIT,		/* Menu de inicio */
-	READY,	/* Preparado para arrancar el nivel */
+	WAIT,		/* Esperando a que se conecte un cliente */
+	READY,	/* Cliente conectado. Esperando comando play */
 	PLAY,		/* Jugando el nivel */
 	PAUSE,	/* Nivel pausado */
 	END		/* Juego terminado */
@@ -11,9 +19,10 @@ typedef struct t_game{
 	uint32_t score;
 	ship_t *player;
 	lista_t *enemies;
-	lista_t *shot_enemies;
-	lista_t *shot_player;
-} game_t
+	lista_t *shoot_enemies;
+	lista_t *shoot_player;
+	level_t *level;
+} game_t;
 
 void game_init(game_t *game);
 void game_run(game_t *game);
@@ -21,3 +30,5 @@ void game_set_level(game_t *game);
 void game_start(game_t *game);
 void game_pause(game_t *game);
 void game_over(game_t *game);
+
+#endif
