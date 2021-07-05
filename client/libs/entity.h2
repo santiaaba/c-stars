@@ -7,11 +7,10 @@
 #include <stdint.h>
 
 typedef struct t_entity{
-	int16_t x;
-	int16_t y;
-	uint16_t sprite;
-	uint16_t frame;
-	SDL_Texture *texture;
+	SDL_Surface *sprite;
+	SDL_Rect frame;	  /* determina dentro del sprite la parte a dibujar */
+	SDL_Rect position;  /* Solo nos interesan las coordenadas */
+	uint16_t type;
 } entity_t;
 
 void entity_init(entity_t *entity, SDL_Surface *sprite, uint16_t type);
