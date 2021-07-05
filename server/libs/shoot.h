@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include "point.h"
+#include "../libs/point.h"
 #include "border.h"
 #include "vector.h"
 

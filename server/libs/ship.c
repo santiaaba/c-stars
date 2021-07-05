@@ -12,14 +12,15 @@ void ship_init(ship_t *ship, ship_type_t type){
 	ship -> vector = (vector_t *)malloc(sizeof(vector_t));
 	vector_init(ship -> vector);
 
+	ship -> ia = (ia_t *)malloc(sizeof(ia_t));
+	ia_init(ship->ia);
+
 	ship -> type = type;
 	ship -> ia_activated = 0;
 }
 
-void ship_set_position(ship_t *ship, point_t *point){
-	point_set( ship->position,
-			     point_get_x(point),
-				  point_get_y(point));
+void ship_set_position(ship_t *ship, int32_t x, int32_t y){
+	point_set( ship->position,x,y);
 }
 
 void ship_move(ship_t *ship){

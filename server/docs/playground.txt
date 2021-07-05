@@ -1,0 +1,2 @@
+El área de juego es un rectángulo horizontal de 600px de alto por 1024px de ancho.
+

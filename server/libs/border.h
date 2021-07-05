@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "rect.h"
-#include "lista.h"
+#include "../libs/lista.h"
 #include "vector.h"
 
 #ifndef BORDER_H

@@ -53,6 +53,18 @@ void *lista_get_last(lista_t *l){
 	return l->last->data;
 }
 
+/* Retorna el elemento en el index indicado.
+	No controla si nos caemos de la lista o
+	si esta vacia */
+void *lista_by_index(lista_t *l,int index){
+	int i;
+	lista_first(l);
+	for(i = 0; i < index; i++){
+		lista_next(l);
+	}
+	return l->actual->data;
+}
+
 void lista_first(lista_t *l){
 	l->actual = l->first;
 }

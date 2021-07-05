@@ -7,21 +7,33 @@
 	* Secuencia de aparición de las naves enemigas
 */
 
-#include "attack.h"
+#include "ship.h"
+#include <stdint.h>
+#include "../libs/lista.h"
+#include "clockgame.h"
+
+typedef struct t_attack{
+   ship_t *ship;
+   uint16_t time;
+} attack_t;
 
 typedef struct t_level{
 	int background;
 	int soundTrak;
-	lista_t *secuence;	/* Posee las secuencias de ataque */
-} level_t
+	clockgame_t *clockgame;
+	lista_t *attacks;	/* Posee las secuencias de ataque */
+} level_t;
 
 /* Inicializa la estructura del nivel */
-void level_init(level_t *level);
+void level_init(level_t *level, clockgame_t *clockgame);
 
 /* Carga los datos del nivel desde el archivo */
-void level_load(level_t *level);
+void level_load(level_t *level, char *datafile);
 
 /* Corre el nivel */
-void level_run(level_t *level);
+void level_run(level_t *level, lista_t *enemies);
+
+/* Destruye las estructuras internas del level */
+void level_destroy(level_t *level);
 
 #endif

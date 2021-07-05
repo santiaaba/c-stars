@@ -14,6 +14,11 @@ void game_init(game_t *game){
 	lista_init(game->shoot_player,sizeof(shoot_t));
 }
 
+void game_set_level(game_t *game, uint16_t idLevel){
+	level_destroy(game->level);
+	level_set(game->level,idLevel);
+}
+
 static void game_play(game_t *game){
 	/* verificamos cambio en teclado */
 
@@ -70,7 +75,7 @@ static void game_play(game_t *game){
 	ship_move(game->player);
 
 	/* Lanzamos nuevos enemigos si corresponde */
-	level_run(game->level);
+	level_run(game->level,game->enemies);
 
 	/* Enviamos por UDP los datos para el render */
 	/* Enviamos por UDP los datos para el sonido */

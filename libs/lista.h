@@ -26,6 +26,7 @@ void lista_add(lista_t *l, void *e);
 void *lista_get(lista_t *l);
 void *lista_get_first(lista_t *l);
 void *lista_get_last(lista_t *l);
+void *lista_by_index(lista_t *l,int index);
 void lista_first(lista_t *l);
 void lista_next(lista_t *l);
 unsigned int lista_size(lista_t *l);

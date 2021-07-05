@@ -26,7 +26,7 @@ typedef struct t_game{
 
 void game_init(game_t *game);
 void game_run(game_t *game);
-void game_set_level(game_t *game);
+void game_set_level(game_t *game, uint16_t level);
 void game_start(game_t *game);
 void game_pause(game_t *game);
 void game_over(game_t *game);
