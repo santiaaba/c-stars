@@ -1,7 +1,7 @@
 #include "game.h"
 
 void game_init(game_t *game){
-	game->status = WAIT;
+	game->status = READY;
 	game->score = 0;
    game->player = (ship_t *)malloc(sizeof(ship_t));
 	game->enemies = (lista_t *)malloc(sizeof(lista_t));
@@ -19,8 +19,59 @@ void game_set_level(game_t *game, uint16_t idLevel){
 	level_set(game->level,idLevel);
 }
 
+void game_key(game_t *game){
+	int i = 0;
+	vector_t *vector;
+	while(i < game->key_size){
+		vector = ship_get_vector(game->player);
+		switch(game->key[i]){
+			case CERO:
+				vector_set(vector,0,0);
+				break;
+			case TOP:
+				vector_set(vector,averiguar,1);
+				break;
+		   case TOPRIGHT:
+				vector_set(vector,averiguar,1);
+				break;
+		   case RIGHT:
+				vector_set(vector,averiguar,1);
+				break;
+		   case RIGHTBOTTOM:
+				vector_set(vector,averiguar,1);
+				break;
+		   case BOTTOM:
+				vector_set(vector,averiguar,1);
+				break;
+		   case BOTTOMLEFT:
+				vector_set(vector,averiguar,1);
+				break;
+		   case LEFT:
+				vector_set(vector,averiguar,1);
+				break;
+		   case LEFTTOP:
+				vector_set(vector,averiguar,1);
+				break;
+
+		   case FIRE_PRESS:
+				break;
+		   case FIRE_RELEASE:
+				break;
+		   case PAUSE_PRESS:
+				game->status = PAUSE;
+				break;
+		   case START_PRESS:
+				game->status = PLAYING;
+				break;
+		}
+	}
+	game->key_size = 0;
+}
+
 static void game_play(game_t *game){
 	/* verificamos cambio en teclado */
+	/* Leemos de un listado de acciones */
+	game_key(game)
 
 	/* Gestionamos enemigos */
 	lista_first(game->enemies);
@@ -82,13 +133,9 @@ static void game_play(game_t *game){
 }
 
 void game_run(game_t *game){
-	while (1){
+	while (game->status != LEAVE){
 		switch(game->status){
-			case WAIT:
-				break;
-			case READY:
-				break;
-			case PLAY:
+			case PLAYING:
 				game_play(game);
 				break;
 			case PAUSE:
@@ -96,5 +143,6 @@ void game_run(game_t *game){
 			case END:
 				break;
 		}
+		nanosleep(60000);
 	}
 }

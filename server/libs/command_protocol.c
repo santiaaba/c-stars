@@ -4,25 +4,23 @@
 typedef struct t_command_protocol{
 } command_protocol_t
 
-void recive(){
+void recive(buffer *char ){
 	switch {
-		case START:
-			sem_wait(&mutex)
-			/* START: Solicita iniciar o comenzar el juego */
-			sem_post(&mutex)
+		case KEY:
+			/* Recibo instrucciones de tecla presionada */
+		case STATUS:
+			/* Conocer el estado del juego */
+		case LEVEL:
+			/* Configurar nivel a ser jugado */
 		case PAUSE:
 			sem_wait(&mutex)
 			/* PAUSE: Solicita pausar el juego */
 			sem_post(&mutex)
-		case ALIVE:
+		case KEEPALIVE:
 			/* ALIVE: se informa que el cliente esta vivo */
-		case END:
+		case LEAVE:
 			sem_wait(&mutex)
-			/* END: Solicita finalizar el juego */
-			sem_post(&mutex)
-		case STATUS:
-			sem_wait(&mutex)
-			/* STATUS: Solicita retorna el estado del juego */
+			/* END: Solicita finalizar la conexion */
 			sem_post(&mutex)
 	}
 }

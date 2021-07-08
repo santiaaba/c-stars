@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include "../libs/point.h"
+#include "point.h"
 
 #ifndef RECT_H
 #define RECT_H

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "vector.h"
 #include "border.h"
+#include "rect.h"
 #include "shoot.h"
 #include "clockgame.h"
 
@@ -28,54 +29,12 @@ typedef struct t_ship{
 	border_t *border;
 	vector_t *vector;
 	ship_type_t type;
-	ia_t *autopilot;
+	ia_t *ia;
 	uint8_t ia_activated;
 } ship_t;
 
-void struct ship_border_heroe(ship_t *ship){
-}
-void struct ship_border_zangano(ship_t *ship){
-}
-void struct ship_border_zangano2(ship_t *ship){
-}
-void struct ship_border_bombardero(ship_t *ship){
-}
-void struct ship_border_destruc1(ship_t *ship){
-}
-void struct ship_border_destruc2(ship_t *ship){
-}
-void struct ship_border_jefe(ship_t *ship){
-}
-
-/* Setea los bordes de una nave segun su tipo */
-void static ship_set_border(ship_t *ship){
-	switch(){
-		case HEROE:
-			ship_border_heroe(ship);
-			break;
-		case ZANGANO:
-			ship_border_zangano(ship);
-			break;
-		case ZANGANO2:
-			ship_border_zangano2(ship);
-			break;
-		case BOMBARDERO:
-			ship_border_bombardero(ship);
-			break;
-		case DESTRUC1:
-			ship_border_destruc1(ship);
-			break;
-		case DESTRUC2:
-			ship_border_destruc2(ship);
-			break;
-		case JEFE:
-			ship_border_jefe(ship);
-			break;
-	}
-}
-
 /* Inicializa una nave */
-void ship_init(ship_t *ship, ship_type_t type);
+void ship_init(ship_t *ship, ship_type_t type, clockgame_t* clockagame);
 
 /* Permite colocar la nave en coordenadas especificas */
 void ship_set_position(ship_t *ship, int32_t x, int32_t y);
