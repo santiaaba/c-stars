@@ -3,24 +3,27 @@
 #include "libs/shoot.h"
 #include "libs/game.h"
 #include <sys/socket.h>
-#include "command_server.h"
+#include "libs/command_protocol.h"
 
 void main(void *args){
 	game_t game;
 	tcp_server_t command_server;
 	pthread_t thread_command;
 	pthread_t thread_game;
+	sem_t sem;
 
 	uint8_t exit = 0;
 
 	/* Inicializamos la estructura del juego */
-	game_init(&game);
+	game_init(&game,&sem);
 
 	/* Inicializamos el server */
-	if(!tcp_server_init(command_server,2525)){
-		printf("Error al querer generar els erver")
+	if(!tcp_server_init(&command_server,2525)){
+		printf("Error al querer generar el server");
 		return 1;
 	}
+
+	tcp_server_assign_protocol(&command_server,&protocol_handle);
 
 	/* Creamos el hilo que se encarga del servidor de comandos */
 	if(0 != pthread_create(&thread_command, NULL, &tcp_server_start, &command_server)){

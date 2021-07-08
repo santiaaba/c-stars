@@ -28,6 +28,7 @@ typedef struct t_ship{
 	point_t *position;
 	border_t *border;
 	vector_t *vector;
+	float speed;
 	ship_type_t type;
 	ia_t *ia;
 	uint8_t ia_activated;
@@ -38,6 +39,12 @@ void ship_init(ship_t *ship, ship_type_t type, clockgame_t* clockagame);
 
 /* Permite colocar la nave en coordenadas especificas */
 void ship_set_position(ship_t *ship, int32_t x, int32_t y);
+
+/* Setea la velocidad de la nave */
+void ship_set_speed(ship_t *ship, float speed);
+
+/* Retorna la velocidad de la nave */
+float ship_set_speed(ship_t *ship);
 
 /* Mueve la nave. Ejecuta la instaucción de la ia
 	si esta esta activada */

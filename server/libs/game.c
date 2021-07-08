@@ -1,8 +1,10 @@
 #include "game.h"
 
-void game_init(game_t *game){
+void game_init(game_t *game, sem_t *sem){
 	game->status = READY;
 	game->score = 0;
+	game->sem = sem;
+	game->buffer = 0;
    game->player = (ship_t *)malloc(sizeof(ship_t));
 	game->enemies = (lista_t *)malloc(sizeof(lista_t));
    game->shoot_enemies = (lista_t *)malloc(sizeof(lista_t));
@@ -29,28 +31,28 @@ void game_key(game_t *game){
 				vector_set(vector,0,0);
 				break;
 			case TOP:
-				vector_set(vector,averiguar,1);
+				vector_set(vector,90,ship_speed(game->player));
 				break;
 		   case TOPRIGHT:
-				vector_set(vector,averiguar,1);
+				vector_set(vector,45,ship_speed(game->player));
 				break;
 		   case RIGHT:
-				vector_set(vector,averiguar,1);
+				vector_set(vector,0,ship_speed(game->player));
 				break;
 		   case RIGHTBOTTOM:
-				vector_set(vector,averiguar,1);
+				vector_set(vector,315,ship_speed(game->player));
 				break;
 		   case BOTTOM:
-				vector_set(vector,averiguar,1);
+				vector_set(vector,270,ship_speed(game->player));
 				break;
 		   case BOTTOMLEFT:
-				vector_set(vector,averiguar,1);
+				vector_set(vector,225,ship_speed(game->player));
 				break;
 		   case LEFT:
-				vector_set(vector,averiguar,1);
+				vector_set(vector,180,ship_speed(game->player));
 				break;
 		   case LEFTTOP:
-				vector_set(vector,averiguar,1);
+				vector_set(vector,135,ship_speed(game->player));
 				break;
 
 		   case FIRE_PRESS:
@@ -69,7 +71,8 @@ void game_key(game_t *game){
 }
 
 static void game_play(game_t *game){
-	/* verificamos cambio en teclado */
+	/* Logica del juego y confeccion del buffer */
+
 	/* Leemos de un listado de acciones */
 	game_key(game)
 
@@ -128,8 +131,60 @@ static void game_play(game_t *game){
 	/* Lanzamos nuevos enemigos si corresponde */
 	level_run(game->level,game->enemies);
 
-	/* Enviamos por UDP los datos para el render */
-	/* Enviamos por UDP los datos para el sonido */
+	game_render(game)
+}
+
+void game_streming(game_t *game){
+	/* Envia el buffer por udp */
+	while(1){
+		sem_wait(game->sem_buffer);
+		if(game->pre_buffer_size > 0){
+			memcpy(game->udp_buffer,game->pre_buffer,game->pre_buffer_size);
+			game->udp_buffer_size = game->pre_buffer_size;
+			game->pre_buffer_size = 0;
+		}
+		sem_post(game->sem_buffer);
+		if(game->udp_buffer_size > 0){
+			send(game->clientfd, game->udp_buffer, game->udp_buffer_size);
+			game->udp_buffer_size = 0;
+		}
+	}
+}
+
+void game_render(game_t *game){
+	/* Arma el buffer de donde luego consume el hilo cliente UDP
+		para enviar al cliente. El buffer siempre es pisado. */
+	/* El acceso al buffer y a su tamano es seccion critica */
+	
+	sem_wait(game->sem_buffer);
+	/* Render jugador */
+		/* Obtener la posicion */
+		/* Obtener el tipo */
+		/* Obtener el sprite */
+		/* Obtener el frame */
+	/* Render disparos jugador */
+		/* Obtener la posicion */
+		/* Obtener el tipo */
+		/* Obtener el sprite */
+		/* Obtener el frame */
+	/* Render enemigos */
+	lista->first(game->enemies);
+	while(!lista_eol(game->enemies)){
+		/* Obtener la posicion */
+		/* Obtener el tipo */
+		/* Obtener el sprite */
+		/* Obtener el frame */
+		ship_get_position(lista_get(game->enemies));
+		lista_next(game->enemies);
+	}
+	/* Render disparos enemigos */
+	while(!lista_eol(game->shoot_enemies)){
+		/* Obtener la posicion */
+		/* Obtener el tipo */
+		/* Obtener el sprite */
+		/* Obtener el frame */
+	}
+	sem_post(game->sem_buffer);
 }
 
 void game_run(game_t *game){

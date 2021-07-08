@@ -13,6 +13,7 @@ void ship_init(ship_t *ship, ship_type_t type, clockgame_t *clockgame){
 	rect_t *rect;
 
 	ship -> power = 0;
+	ship -> speed = 1;
 
 	ship -> position = (point_t *)malloc(sizeof(point_t));
 	point_init(ship -> position);
@@ -54,6 +55,14 @@ void ship_init(ship_t *ship, ship_type_t type, clockgame_t *clockgame){
 			border_add_rect(ship->border,rect);
 			break;
 	}
+}
+
+void ship_set_speed(ship_t *ship, float speed){
+	ship->speed = speed;
+}
+
+float ship_get_speed(ship_t *ship){
+	return ship->speed;
 }
 
 void ship_set_position(ship_t *ship, int32_t x, int32_t y){

@@ -26,8 +26,12 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port){
 	return 1;
 }
 
-void tcp_server_start(tcp_server_t *server){
+void tcp_server_assign_protocol(tcp_server_t *server, void *protocol(char *buffer,int size)){
+	server -> protocol = protocol;
+}
 
+void tcp_server_start(tcp_server_t *server){
+	char *response;
 	while(server->runing){
 		/* Aguardamos que un cliente establezca una conexion */
 		confd = accept(sockfd, (SA*)&cli, &len);
@@ -36,9 +40,9 @@ void tcp_server_start(tcp_server_t *server){
 			while(server->status == ESTABLISHED){
 				/* Aguardamos a recibir una instruccion */
 				size = read(server->sockfd, buff, sizeof(buff));
-				server->protocol(buffer,size);
+				server->protocol(buffer,size,&response_buffer,&size_response);
 				/* Respondemos al cliente */
-				write(sever->sockfd, buff, sizeof(buff));
+				write(sever->sockfd,response_buffer,size_response);
 			}
 			close(server->sockfd);
 		}

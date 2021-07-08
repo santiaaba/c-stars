@@ -4,6 +4,7 @@
 #include "point.h"
 #include "ship.h"
 #include "shoot.h"
+#include <semaphore.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -35,6 +36,11 @@ typedef struct t_game{
 	key_size;		/* Tamano logico del vector key */
 	status_t status;
 	uint32_t score;
+	sem_t *sem_buffer;			/* Semaphore para pre_buffer y pre_buffer_size */
+	char pre_buffer[512];		/* Buffer donde el juego guarda los datos a enviar */
+	int pre_buffer_size; 	  	/* Tamano logico del buffer */
+	char udp_buffer[512];			/* Buffer para el envio UDP */
+	int udp_buffer_size; 	 	 	/* Tamano logico del buffer para UDP */
 	ship_t *player;
 	lista_t *enemies;
 	lista_t *shoot_enemies;
@@ -48,6 +54,7 @@ void game_run(game_t *game);
 void game_set_level(game_t *game, uint16_t level);
 void game_start(game_t *game);
 void game_pause(game_t *game);
+void game_udp_negociate(game_t *game);
 void game_over(game_t *game);
 
 #endif

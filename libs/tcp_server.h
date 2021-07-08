@@ -21,6 +21,11 @@ typedef struct t_tcp_server{
 
 void tcp_server_init(tcp_server_t *server, uint32_t port);
 
+void tcp_server_assign_protocol(
+			tcp_server_t *server,
+			void *protocol(char *buffer,int size)
+		);
+
 uint8_t tcp_server_start(tcp_server_t *server);
 
 uint8_t tcp_server_recive(tcp_server_t *server);
