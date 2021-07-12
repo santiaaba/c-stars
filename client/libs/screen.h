@@ -14,10 +14,10 @@
 #define SCREEN_BPP      24
 
 typedef struct t_screen{
-	last_frame uint32_t;				/* Ultimo frame dibujado */
-	SQL_Surface *play_ground = NULL;
-	SDL_windows *window = NULL;
-	entities_t buffer[100];			/* Almacena hasta 100 entidades OJO */
+	uint32_t last_frame;				/* Ultimo frame dibujado */
+	SDL_Surface *play_ground;
+	SDL_Window *window;
+	entity_t buffer[100];			/* Almacena hasta 100 entidades OJO */
 	uint16_t entities;				/* Tamaño logico del buffer */
 } screen_t;
 
@@ -29,9 +29,9 @@ static void screen_draw(screen_t *screen);
 
 /* Genera entidades segun los datos obtenidos por el
 	protocolo UDP */
-void screen_add_data(screen_t *screen, void udpdata){
+void screen_add_data(screen_t *screen, char *udpdata);
 
 /* Destruye la estructura screen */
-void screen_destroy(screent_t **screen);
+void screen_destroy(screen_t **screen);
 
 #endif

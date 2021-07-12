@@ -1,0 +1,10 @@
+Estados
+-------
+
+	Pantalla de		<-----	Pantalla de
+	conexion a		---->		opciones (jugar, desconectar, salir)
+	servidor								
+											|	^
+											|	|
+											v	|
+										Pantalla jugar
