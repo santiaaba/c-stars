@@ -1,60 +1,39 @@
-#include "screen.h"
+#ifndef GAME_H
+#define GAME_H
 
-void game_start(game_t *game){
-	while(game->status != END){
-		switch(game->status){
-			case PLAY:
-				game_play(game);
-				break;
-			case CONNECT:
-				game_connect(game);
-				break;
-			case MAINMENU:
-				game_main_menu(game);
-				break;
-			case PAUSE:
-				game_pause(game);
-				break;
-		}
-	}
-}
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <stdio.h>
+#include "entity.h"
+#include "button.h"
+#include "input.h"
 
-void game_play(game_t *game){
-	/* Loop cuando se esta jugando. El ritmo lo impone
-	   el servidor. El servidor va enviando los datos de
-		un frame a medida que los va generando. El cliente
-		debe dibujar el frame inmediatamente cuando determina
-		que los siguientes datos corresponden al frame siguiente */
-	while(game->status == PLAY){
-		/* Capturamos los eventos del teclado */
+#define SCREEN_WIDTH    1024
+#define SCREEN_HEIGHT   600
+#define SCREEN_BPP      24
 
-		/* Colocamos los eventos en el buffer. No los enviamos directamente
-			por TCP desde aca porque puede generar demora en el render de la
-			imagen ya que el send del TCP es bloqueante */
-		screen_draw(game->screen);
-		nanosleep(20000);		// Aguardamos 20 milisegundos
-	}
-}
+typedef enum {
+	HELLO,
+	CONNECT,
+	MAINMENU,
+	PLAY,
+	PAUSE,
+	END
+} game_status_t;
 
-void game_connect(){
-	/* Loop cuando se esta esperando conectar
-	   contra un servidor */
-	while(game->status == CONNECT){
-	}
-}
+typedef struct {
+	SDL_Window *window;
+	SDL_Renderer *renderer;
+	game_status_t status;
+} game_t;
 
-void game_main_menu(){
-	/* Loop cuando se esta presentando el menu
-		principal */
-	while(game->status == MENU){
-	}
-}
+int game_init(game_t *game);
+void game_run(game_t *game);
+void game_hello(game_t *game);
+void game_connect(game_t *game);
+void game_main_menu(game_t *game);
+void game_play(game_t *game);
+void game_pause(game_t *game);
+void game_free(game_t *game);
 
-void game_pause(){
-	/* Loop cuando se esta presentando la pausa */
-	while(game->status == PAUSE){
-	}
-}
-
-void game_make_menu(){
-}
+#endif

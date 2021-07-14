@@ -1,0 +1,33 @@
+El cliente implementa dos conexiones contra el servidor.
+A grandes razgos el cliente realiza dos acciones. Envia comandos al servidor
+indicando la acción sobre el juego y recibe del servidor los datos
+necesarios para renderizar cada frame y reproducir sonidos.
+
+
+El renderizado y sonido
+-----------------------
+El cliente posee un servidor UDP escuchando. El servidor envia paquetes UDP con
+las instrucciones sobre dónde dibujar cada elemento y cómo dibujarlo. Los datos son:
+
+Entity Type:	Tipo de entidad a dibujar (una nave, una bomba, etc)
+Position:		Coordenadas (x,y) donde dibujar la entidad
+Sprite:			Animación a utilizar dentro de la textura
+Frame:			Cuadro de la animación a dibujar
+
+El ritmo lo impone el servidor. Es decir... el cliente no posee una pausa
+que fuerza a dibujar 15 cuadros por segundo. El cliente siempre está esperando
+leer nuevos datos en el buffer. Es el servidor es quien impone el tiempo.
+
+Como el readfrom de UDP es bloqueante, no lo colocamos dentro del bucle que se
+encarga de dibujar y tomar los eventos de teclado. Lo resolvemos de la siguiente forma.
+Levantamos un hilo para el servidor UDP que se queda siempre esperando paquetes UDP
+del lado del "server". A medida que van llegando los paquetes, los guardamos en un buffer.
+Cada paquete UDP posee en su estructura el número de Frame al que pertenecen los datos.
+Cuando se recibe un UDP donde su número de Frame es mayor al que se venía recibiendo, se
+interpreta que ha cambiado de frame y que lo anterior recibido hay que dibujarlo. Es allí
+cuando se renderiza la pantalla y se reproduce algun sonido indicado entre los datos UDP.
+
+Eventos de teclado
+------------------
+Poseemos otro hilo que se encarga de recolectar las teclas precionadas y enviarlas por TCP
+al servidor.

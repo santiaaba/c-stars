@@ -22,6 +22,20 @@ void entity_set_frame(entity_t *entity, uint16_t row, uint16_t col){
 	(entity->frame).y = (entity->frame).w * col;
 }
 
+void entity_copy(entity_t *dest, entity_t *src){
+	dest->frame.x = src->frame.x;
+	dest->frame.y = src->frame.y;
+	dest->frame.w = src->frame.w;
+	dest->frame.h = src->frame.h;
+
+	dest->position.x = src->position.x;
+	dest->position.y = src->position.y;
+	dest->position.w = src->position.w;
+	dest->position.h = src->position.h;
+
+	dest->texture = src->texture;
+}
+
 void entity_draw(entity_t *entity, SDL_Renderer *renderer){
 	SDL_RenderCopy(
 		renderer,

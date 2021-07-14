@@ -1,0 +1,48 @@
+Implementar de la mejor forma el renderizado de la pantalla. Elementos
+
+
+Por UDP obtenemos datos de elementos a dibujar. Éstos elementos se llaman entidades.
+Las entidades poseen:
+* textura
+* posision
+* id sprite
+* id frame
+
+
+Tenemos un array que se va llenando de entidades a dibujar.
+Las entidades entienden el mensaje draw que les permite autodibujarse en la pantalla.
+
+
+
+
+Podríamos tener un array de entidades donde las entidades podrían ser:
+*sprites
+*button
+*label
+*text
+*background
+
+
+
+
+Tenemos el playGroud que se conforma con entidades generadas por UDP
+
+
+Tenemos la pantalla que posee una lista de entidades a dibujar. Éstas entidades pueden ser:
+playGround
+button
+label
+text
+background
+
+El orden de aparicion determina el orden de dibujo y cual tapa a cual. Cada uno de ellos
+posee un metodo draw que reciben como parametro un SDL_Renderer para autodibujarse en el mismo.
+
+El problema es la lista de elementos tan distintos.
+
+Cada uno de ellos posee 
+
+
+---------------------------------------------
+
+Por cada pantalla, se construye la misma a mano
