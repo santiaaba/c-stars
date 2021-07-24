@@ -6,10 +6,24 @@
 int main(char argc, char * argv[]){
 	
 	game_t *game;
-	pthread_t thread_game;
+	command_server_t *cs
 
-	if (game_init(game) < 0){
+	pthread_t thread_game;
+	pthread_t thread_cs;
+	void *retval;
+
+	/* Inicializamos la estructura game */
+	if (game_init(game) < 0)
 		exit(1);
+
+	/* Inicializamos la estructura de commandos */
+	if(command_server_init(cs))
+		exit(1);
+
+	/* Creamos el hilo que se encarga del cliente de comandos */
+	if(0 != pthread_create(&thread_cs, NULL, &cs_run, cs)){
+		printf("Error al querer crear el hilo para el command\n");
+		exit(2);
 	}
 
 	/* Creamos el hilo que se encarga del juego en si mismo */
@@ -17,6 +31,8 @@ int main(char argc, char * argv[]){
 		printf("Error al querer crear el hilo para el juego\n");
 		exit(2);
 	}
+
+	pthread_join(thread_game,&retval);
 
 	/* Finalizamos el programa */
 	game_free(game);

@@ -8,7 +8,10 @@
 #include <string.h>
 
 #define TEXT_LIMIT 20
-#define CHAR_WIDTH 20
+#define TEXT_WIDTH 428
+#define TEXT_HEIGHT 60
+#define CHAR_WIDTH 33
+#define CHAR_HEIGHT 40
 
 typedef struct {
 	SDL_Rect dest;

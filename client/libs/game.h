@@ -11,6 +11,7 @@
 #define SCREEN_WIDTH    1024
 #define SCREEN_HEIGHT   600
 #define SCREEN_BPP      24
+#define SCREEN_REFRESH	60
 
 typedef enum {
 	HELLO,
@@ -28,12 +29,14 @@ typedef struct {
 } game_t;
 
 int game_init(game_t *game);
-void game_run(game_t *game);
+void *game_run(game_t *game);
 void game_hello(game_t *game);
 void game_connect(game_t *game);
 void game_main_menu(game_t *game);
 void game_play(game_t *game);
 void game_pause(game_t *game);
 void game_free(game_t *game);
+int game_server_connect(game_t *game);
+void game_server_close(game_t *game);
 
 #endif

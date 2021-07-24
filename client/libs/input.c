@@ -8,21 +8,21 @@ void input_init(input_t *input,
 							int focus,
 							SDL_Renderer *renderer){
 
-	input->off = IMG_LoadTexture(renderer, "../img/off_text.png");
-	input->on = IMG_LoadTexture(renderer, "../img/on_text.png");
-	input->alphabet = IMG_LoadTexture(renderer, "../img/alfabeto.png");
+	input->off = IMG_LoadTexture(renderer, "img/input_off.png");
+	input->on = IMG_LoadTexture(renderer, "img/input_on.png");
+	input->alphabet = IMG_LoadTexture(renderer, "img/alfabeto.png");
 
 	input->focus = focus;
 
 	input->frame.x = 0;
 	input->frame.y = 0;
-	input->frame.w = 200;  /* Ancho fijo del input */
-	input->frame.h = 50;		/* Alto fijo al input */
+	input->frame.w = TEXT_WIDTH;  /* Ancho fijo del input */
+	input->frame.h = TEXT_HEIGHT;		/* Alto fijo al input */
 
 	input->dest.x = x;
 	input->dest.y = y;
-	input->dest.w = 200;		/* Ancho fijo al input */
-	input->dest.h = 50;	 	/* Alto fijo al input */
+	input->dest.w = TEXT_WIDTH;		/* Ancho fijo al input */
+	input->dest.h = TEXT_HEIGHT;	 	/* Alto fijo al input */
 
 	strcpy(input->text,"");
 }
@@ -39,13 +39,13 @@ void input_draw(input_t *input, SDL_Renderer *renderer){
 	}
 	/* Ahora dibujamos el texto */
 	char_frame.y = 0;
-	char_frame.w = 20;
-	char_frame.h = 40;
+	char_frame.w = CHAR_WIDTH;
+	char_frame.h = CHAR_HEIGHT;
 
-	char_dest.x = input->dest.x + 5;		//padding 5 desde el borde superior
-	char_dest.y = input->dest.y + 5;		// padding 5 desde el borde superior
-	char_dest.w = 20;
-	char_dest.h = 40;
+	char_dest.x = input->dest.x + 5;		//padding 5
+	char_dest.y = input->dest.y + 5;		// padding 10
+	char_dest.w = CHAR_WIDTH;
+	char_dest.h = CHAR_HEIGHT;
 	for(i=0;i<strlen(input->text);i++){
 		switch(input->text[i]){
 			case '0':
@@ -83,22 +83,25 @@ void input_draw(input_t *input, SDL_Renderer *renderer){
 				break;
 		}
 		SDL_RenderCopy(renderer,input->alphabet,&char_frame,&char_dest);
-		char_dest.x += 25;
+		char_dest.x += CHAR_WIDTH;
 	}
 }
 
 void input_add_char(input_t *input, char c){
 	int i = strlen(input->text);
+	printf("Agregando %c\n",c);
 	if(i < TEXT_LIMIT){
 		input->text[i] = c;
-		input->text[i+1] = '\n';
+		input->text[i+1] = '\0';
 	}
+	printf("Agregando:%s\n",input->text);
 }
 
 void input_del_char(input_t *input){
 	int i = strlen(input->text);
 	if(i > 0)
-		input->text[i-1] = '\n';
+		input->text[i-1] = '\0';
+	printf("Borrado:%s\n",input->text);
 }
 
 char *input_get_value(input_t *input){

@@ -2,7 +2,7 @@
 
 int game_init(game_t *game){
 	if(SDL_Init(SDL_INIT_VIDEO) < 0){
-		printf("No fue posible iniciar el video. ");
+		printf("No fue posible iniciar el video.\n");
 		printf("Error SDL: %s\n", SDL_GetError());
 		return 1;
 	}
@@ -12,7 +12,7 @@ int game_init(game_t *game){
 		SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 
 	if(game->window == NULL){
-		printf("No fue posible crear la ventana. ");
+		printf("No fue posible crear la ventana.\n");
 		printf("Error SDL: %s\n", SDL_GetError());
 		return 1;
 	}
@@ -21,7 +21,18 @@ int game_init(game_t *game){
 	game->status = HELLO;
 }
 
-void game_run(game_t *game){
+int game_check_connect(){
+	/* Verifica que la conexion al server todavia
+	   se encuentre activa */
+}
+
+void game_server_close(game_t *game){
+	close(game->sockfd);
+	game->status == DISCONNECT;
+}
+
+void *game_run(game_t *game){
+	printf("Arrancamos GAME\n");
 	while(game->status != END){
 		switch(game->status){
 			case HELLO:
@@ -47,17 +58,42 @@ void game_hello(game_t *game){
 	/* Pantalla de presentacion. Se aguarda precionar
 		cualquier tecla */
 	SDL_Event event;
+	SDL_Rect bg_frame, bg_dest;
+	SDL_Texture *bg_texture;
+
+	bg_frame.x = 0;
+	bg_frame.y = 0;
+	bg_frame.h = SCREEN_HEIGHT;
+	bg_frame.w = SCREEN_WIDTH;
+
+	bg_dest.x = 0;
+	bg_dest.y = 0;
+	bg_dest.h = SCREEN_HEIGHT;
+	bg_dest.w = SCREEN_WIDTH;
+
+	bg_texture = IMG_LoadTexture(game->renderer, "img/hello_bg.jpg");
+
+	printf("Arrancamos HELLO\n");
 	while(game->status == HELLO){
 		/* Si presionamos cualquier tecla, pasamos la pantalla */
 		while(SDL_PollEvent(&event)){
-			game->status = CONNECT;
+			if(event.type == SDL_KEYDOWN)
+				game->status = CONNECT;
 		}
 		/* Borramos la pantalla */
 		SDL_RenderClear(game->renderer);
+		/* Pintamos el background */
+		SDL_RenderCopy(game->renderer, bg_texture, &bg_frame, &bg_dest);
 		/* Le pedimos al screen que renderise */
 		SDL_RenderPresent(game->renderer);
-		SDL_Delay(60);
+		SDL_Delay(SCREEN_REFRESH);
+
+		/* Movemos el background */
+		if(bg_frame.x < 200){
+			bg_frame.x++;
+		}
 	}
+	printf("Finalizo HELLO\n");
 }
 
 void game_play(game_t *game){
@@ -85,7 +121,7 @@ void game_play(game_t *game){
 					break;
 			}
 		}
-		SDL_Delay(20);
+		SDL_Delay(SCREEN_REFRESH);
 	}
 }
 
@@ -98,6 +134,7 @@ void game_connect(game_t *game){
 	input_t ip_server;
 	int key = 0;
 	SDL_Event event;
+	int key_press = 0;
 
 	input_init(&ip_server,100,100,1,game->renderer);
 
@@ -105,21 +142,35 @@ void game_connect(game_t *game){
 		/* Capturamos los eventos del teclado */
 		while(SDL_PollEvent(&event)){
 			/* Solo aceptamos los numeros, el punto y el backspace */
-			key = event.key.keysym.sym;
-			if ((key >= SDLK_0 && key <= SDLK_9) || key == SDLK_PERIOD){
-					input_add_char(&ip_server,key);
+			//if(event.type == SDL_KEYDOWN && !key_press){
+			if(event.type == SDL_KEYDOWN){
+				key_press = 1;
+				key = event.key.keysym.sym;
+				if ((key >= SDLK_0 && key <= SDLK_9) || key == SDLK_PERIOD){
+						input_add_char(&ip_server,key);
+				}
+				if (key == SDLK_BACKSPACE){
+					input_del_char(&ip_server);
+					printf("backspace\n");
+				}
+				if (key == SDLK_ESCAPE)
+					game->status = HELLO;
+				if (key == SDLK_RETURN)
+					printf("IMPLEMENTAR CONECTAR\n");
+					/* CONECTAR */
+					game_server_connect(game,input_value(&ip_server));
+			} else {
+				if(event.type == SDL_KEYUP)
+					key_press = 0;
 			}
-			if (key == SDLK_BACKSPACE)
-				input_del_char(&ip_server);
-			if (key == SDLK_ESCAPE)
-				game->status = HELLO;
-			if (key == SDLK_RETURN)
-				printf("IMPLEMENTAR CONECTAR");
-				/* CONECTAR */
 		}
+		/* Borramos la pantalla */
 		SDL_RenderClear(game->renderer);
+		/* render del input */
 		input_draw(&ip_server,game->renderer);
-		SDL_Delay(20);
+		/* Render pantalla */
+		SDL_RenderPresent(game->renderer);
+		SDL_Delay(SCREEN_REFRESH);
 	}
 }
 
@@ -147,7 +198,7 @@ void game_main_menu(game_t *game){
 			if (key == SDLK_DOWN && button > 0)
 				button--;
 			if (key == SDLK_RETURN)
-				printf("IMPLEMENTAR BOTON");
+				printf("IMPLEMENTAR BOTON\n");
 				/* ejecutar button */
 		}
 		SDL_RenderClear(game->renderer);
@@ -158,7 +209,7 @@ void game_main_menu(game_t *game){
 				button_exit(&(buttons[i]));
 			button_draw(&(buttons[i]),game->renderer);
 		}
-		SDL_Delay(20);
+		SDL_Delay(SCREEN_REFRESH);
 	}
 }
 
