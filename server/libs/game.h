@@ -1,6 +1,19 @@
 #ifndef GAME_H
 #define GAME_H
 
+#define BUFFER_SIZE 512		/* En bytes o char */
+
+/* Cada dato de render a enviar al cliente tiene el siguiente formato 
+
+     uint16_t	int16_t		int16_t		uint8_t		uint8_t
+  -----------------------------------------------------------
+ |entity-type | pos-x		 | pos-y		 | sprite	|	 frame |
+  -----------------------------------------------------------
+
+Son en total 8 bytes
+*/
+#define DATA_RENDER_SIZE 8
+
 #include "point.h"
 #include "ship.h"
 #include "shoot.h"
@@ -36,11 +49,9 @@ typedef struct t_game{
 	key_size;		/* Tamano logico del vector key */
 	status_t status;
 	uint32_t score;
-	sem_t *sem_buffer;			/* Semaphore para pre_buffer y pre_buffer_size */
-	char pre_buffer[512];		/* Buffer donde el juego guarda los datos a enviar */
-	int pre_buffer_size; 	  	/* Tamano logico del buffer */
-	char udp_buffer[512];			/* Buffer para el envio UDP */
-	int udp_buffer_size; 	 	 	/* Tamano logico del buffer para UDP */
+	sem_t *sem_buffer;					/* Semaphore para la zona critica del buffer */
+	char buffer[BUFFER_SIZE];			/* Buffer para el envio UDP */
+	int buffer_size; 	 	 				/* Tamano logico del buffer para UDP */
 	ship_t *player;
 	lista_t *enemies;
 	lista_t *shoot_enemies;

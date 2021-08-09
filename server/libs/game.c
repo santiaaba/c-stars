@@ -4,7 +4,6 @@ void game_init(game_t *game, sem_t *sem){
 	game->status = READY;
 	game->score = 0;
 	game->sem = sem;
-	game->buffer = 0;
    game->player = (ship_t *)malloc(sizeof(ship_t));
 	game->enemies = (lista_t *)malloc(sizeof(lista_t));
    game->shoot_enemies = (lista_t *)malloc(sizeof(lista_t));
@@ -71,7 +70,6 @@ void game_key(game_t *game){
 }
 
 static void game_play(game_t *game){
-	/* Logica del juego y confeccion del buffer */
 
 	/* Leemos de un listado de acciones */
 	game_key(game)
@@ -93,6 +91,12 @@ static void game_play(game_t *game){
 			lista_next(game->shoot_player);
 		}
 
+		/* render info para cliente */
+		ship_render(lista_get(game->enemies),game->buffer[game->buffer_size]);
+		buffer_size += DATA_RENDER_SIZE;
+		if(buffer_size + DATA_RENDER_SIZE >= BUFFER_SIZE)
+			game_client_send(game);
+
 		/* Disparamos */
 		//ship_shoot(game->player,game->shoot_enemies);
 
@@ -113,6 +117,12 @@ static void game_play(game_t *game){
 			lista_next(game->shoot_player);
 		}
 
+		/* render info para cliente */
+		shoot_render(lista_get(game->shoot_player),game->buffer[game->buffer_size]);
+		game->buffer_size += DATA_RENDER_SIZE;
+		if(game->buffer_size + DATA_RENDER_SIZE >= BUFFER_SIZE)
+			game_client_send(game);
+
 		lista_next(game->shoot_player);
 	}
 
@@ -122,8 +132,18 @@ static void game_play(game_t *game){
 		shoot_move(lista_get(game->shoot_enemies));
 		/* Calculamos colision con jugador */
 		ship_colision_shoot(game->player,lista_get(game->shoot_enemies));
+	
+		shoot_render(lista_get(game->shoot_player),game->buffer[game->buffer_size]);
+		game->buffer_size += DATA_RENDER_SIZE;
+		if(game->buffer_size + DATA_RENDER_SIZE >= BUFFER_SIZE)
+			game_client_send(game);
+	
 		lista_next(game->shoot_enemies);
 	}
+
+	/* Si quedan datos en el buffer, se envían */
+	if(game->buffer_size > 0)
+			game_client_send(game);
 
 	/* Movemos al jugador */
 	ship_move(game->player);
@@ -158,11 +178,9 @@ void game_render(game_t *game){
 	
 	sem_wait(game->sem_buffer);
 	/* Render jugador */
-		/* Obtener la posicion */
-		/* Obtener el tipo */
-		/* Obtener el sprite */
-		/* Obtener el frame */
+	ship_render(game->ship)
 	/* Render disparos jugador */
+	lista_first(game->)
 		/* Obtener la posicion */
 		/* Obtener el tipo */
 		/* Obtener el sprite */

@@ -1,6 +1,6 @@
 #include "ship.h"
 
-void ship_init(ship_t *ship, ship_type_t type, clockgame_t *clockgame){
+void ship_init(ship_t *ship, entity_id_t type, clockgame_t *clockgame){
 	rect_t *create_rect(int32_t x, int32_t y, uint32_t width, uint32_t height){
 		rect_t *newRect;
 		newRect = (rect_t*)malloc(sizeof(rect_t));
@@ -133,6 +133,18 @@ void ship_destroy(ship_t **ship){
 	border_destroy(&((*ship)->border));
 	free((*ship)->vector);
 	ia_destroy(&((*ship)-> ia));
+}
+
+void ship_render(ship_t *ship, char *buffer){
+	/***************/
+	/* IMPLEMENTAR */
+	/***************/
+
+	/* id entidad */
+	/* Posicion x */
+	/* Posicion y */
+	/* Sprite */
+	/* Frame */
 }
 
 /***************************************

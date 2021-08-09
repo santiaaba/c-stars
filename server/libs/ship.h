@@ -8,6 +8,7 @@
 #include "rect.h"
 #include "shoot.h"
 #include "clockgame.h"
+#include "entity_id.h"
 
 typedef struct t_ia_mov{
 	vector_t *vector;
@@ -21,21 +22,19 @@ typedef struct t_ia{
 	clockgame_t *clock;
 } ia_t;
 
-typedef enum ship_type { HEROE, ZANGANO, ZANGANO2, BOMBARDERO, DESTRUC1, DESTRUC2, JEFE } ship_type_t;
-
 typedef struct t_ship{
 	uint32_t power;
 	point_t *position;
 	border_t *border;
 	vector_t *vector;
 	float speed;
-	ship_type_t type;
+	entity_id_t type;
 	ia_t *ia;
 	uint8_t ia_activated;
 } ship_t;
 
 /* Inicializa una nave */
-void ship_init(ship_t *ship, ship_type_t type, clockgame_t* clockagame);
+void ship_init(ship_t *ship, entity_id_t type, clockgame_t* clockagame);
 
 /* Permite colocar la nave en coordenadas especificas */
 void ship_set_position(ship_t *ship, int32_t x, int32_t y);
@@ -89,6 +88,9 @@ void ship_ia_activate(ship_t *ship);
 
 /* Destruye una nave */
 void ship_destroy(ship_t **ship);
+
+/* Genera los datos de la nave en el buffer */
+void ship_render(ship_t *ship, char *buffer);
 
 /****************************
 			Para la IA
