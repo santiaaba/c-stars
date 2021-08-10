@@ -2,6 +2,7 @@
 #include "libs/ship.h"
 #include "libs/shoot.h"
 #include "libs/game.h"
+#include "../libs/tcp_server.h"
 #include <sys/socket.h>
 #include "libs/command_protocol.h"
 
