@@ -26,12 +26,19 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port){
 	return 1;
 }
 
-void tcp_server_assign_protocol(tcp_server_t *server, void *protocol(char *buffer,int size)){
+void tcp_server_assign_protocol(tcp_server_t *server,
+	void *protocol(char *req_buffer,int req_size, char *res_buffer, int *res_size)){
+	/* Donde protocol es una funcion que maneja los mensajes que recibe el server */
+	/* Puntualmente en nuestro caso es req_handle */
 	server -> protocol = protocol;
 }
 
 void tcp_server_start(tcp_server_t *server){
-	char *response;
+	char *req_buffer;
+	char *res_buffer;
+	int req_size;
+	int res_size;
+
 	while(server->runing){
 		/* Aguardamos que un cliente establezca una conexion */
 		confd = accept(sockfd, (SA*)&cli, &len);
@@ -39,10 +46,11 @@ void tcp_server_start(tcp_server_t *server){
 			server->status = ESTABLISHED;
 			while(server->status == ESTABLISHED){
 				/* Aguardamos a recibir una instruccion */
-				size = read(server->sockfd, buff, sizeof(buff));
-				server->protocol(buffer,size,&response_buffer,&size_response);
+				size = read(server->sockfd, req_buffer, sizeof(req_buffer));
+				server->protocol(req_buffer,req_size,&res_buffer,&res_size);
 				/* Respondemos al cliente */
-				write(sever->sockfd,response_buffer,size_response);
+				if(size_response > 0)
+					write(sever->sockfd,res_buffer,res_size);
 			}
 			close(server->sockfd);
 		}
