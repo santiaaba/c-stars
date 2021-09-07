@@ -2,12 +2,20 @@
 #include <stdint.h>
 #include "../libs/point.h"
 #include "border.h"
+#include "render.h"
 #include "vector.h"
 
 #ifndef SHOOT_H
 #define SHOOT_H
 
+#define SHOOT_1	0
+#define SHOOT_2	1
+#define SHOOT_3	2
+#define SHOOT_4	3
+#define SHOOT_5	4
+
 typedef struct t_shoot{
+	int type;
 	uint32_t damage;
 	point_t *position;
 	border_t *border;
@@ -15,7 +23,7 @@ typedef struct t_shoot{
 } shoot_t;
 
 /* Inicializa el disparo */
-void shoot_init(shoot_t *shoot);
+void shoot_init(shoot_t *shoot, int type);
 
 /* Coloca el disparo en una coordenada específica */
 void shoot_set_position(shoot_t *shoot, point_t position);
@@ -36,5 +44,8 @@ uint32_t shoot_get_damage(shoot_t *shoot);
 
 /* Destruye la estructura del disparo */
 void shoot_destroy(shoot_t **shoot);
+
+/* Genera los datos de la nave en el buffer */
+void shoot_render(shoot_t *shoot, render_t *render);
 
 #endif

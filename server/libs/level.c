@@ -1,13 +1,6 @@
 #include "level.h"
 
-void level_init(level_t *level, clockgame_t *clockgame){
-	lista_init(level->attacks, sizeof(attack_t));
-	level->background = 0;
-	level->soundTrak = 0;
-	level->clockgame = clockgame;
-}
-
-void level_load(level_t *level, char *datafile){
+void static level_load(level_t *level, int id){
 	FILE *fdIN;
 	ia_t *ia;
 	int16_t num;
@@ -17,7 +10,9 @@ void level_load(level_t *level, char *datafile){
 	int16_t direction, time, speed;
 	attack_t *attack;
 	ship_t *ship;
+	char datafile[200];
 	
+	sprintf(datafile,"LEVEL%i",id);
 
 	fdIN = fopen(datafile,"rb");
 	fread(&cantShips,sizeof(int16_t),1,fdIN);	/* Cantidad Naves */
@@ -29,7 +24,7 @@ void level_load(level_t *level, char *datafile){
 		fread(&x,sizeof(int16_t),1,fdIN);	/* coordenadaX */
 		fread(&y,sizeof(int16_t),1,fdIN);	/* coordenadaY */
 		ship = (ship_t*)malloc(sizeof(ship_t));
-		ship_init(ship,num);
+		ship_init(ship,num,level->clockgame);
 		ship_set_position(ship,x,y);
 		fread(&num,sizeof(int16_t),1,fdIN);	/* tiempo */
 		attack = (attack_t*)malloc(sizeof(attack_t));
@@ -49,13 +44,25 @@ void level_load(level_t *level, char *datafile){
 	fclose(fdIN);
 }
 
+void level_init(level_t **level, int id, clockgame_t *clockgame){
+	(*level) = (level_t*)malloc(sizeof(level_t));
+	lista_init((*level)->attacks, sizeof(attack_t));
+	(*level)->background = 0;
+	(*level)->soundTrak = 0;
+	(*level)->clockgame = clockgame;
+
+	level_load((*level),id);
+}
+
+
+
 void attack_destroy(attack_t **attack){
 	ship_destroy(&((*attack)->ship));
 }
 
 void level_destroy(level_t **level){
-	lista_clean(&((*level)->attacks),&attack_destroy);
-	free(level);
+	lista_clean((*level)->attacks,&attack_destroy);
+	free(*level);
 }
 
 void level_run(level_t *level, lista_t *enemies){
@@ -70,9 +77,9 @@ void level_run(level_t *level, lista_t *enemies){
 		recorrer la lista solo hasta encontrar el que tiene
 		tiempo mayor a clockgame */
 	lista_first(level->attacks);
-	while(!level_eol(level->attacks) &&
+	while(!lista_eol(level->attacks) &&
 			(((attack_t*)lista_get(level->attacks))->time >=
-			gameclock_time(level->gameclock))){
+			clockgame_time(level->clockgame))){
 		attack = (attack_t *)lista_remove(level->attacks);
 		lista_add(enemies,attack->ship);
 		free(attack);

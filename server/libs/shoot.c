@@ -1,6 +1,7 @@
 #include "shoot.h"
 
-void shoot_init(shoot_t *shoot){
+void shoot_init(shoot_t *shoot, int type){
+	shoot->type = type;
 	shoot->damage = 0;
 	point_set(shoot->position,0,0);
 	border_init(shoot->border);
@@ -29,6 +30,14 @@ uint32_t shoot_get_damage(shoot_t *shoot){
 
 border_t *shoot_get_border(shoot_t *shoot){
 	return shoot->border;
+}
+
+void shoot_render(shoot_t *shoot, render_t *render){
+	render->entity = shoot->type;
+	render->x = point_get_x(shoot->position);
+	render->y = point_get_y(shoot->position);
+	render->sprite = 1;     //MOMENTANEO
+	render->frame = 1;      //MOMENTANEO
 }
 
 void shoot_destroy(shoot_t **shoot){

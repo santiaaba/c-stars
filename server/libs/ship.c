@@ -1,6 +1,6 @@
 #include "ship.h"
 
-void ship_init(ship_t *ship, entity_id_t type, clockgame_t *clockgame){
+void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 	rect_t *create_rect(int32_t x, int32_t y, uint32_t width, uint32_t height){
 		rect_t *newRect;
 		newRect = (rect_t*)malloc(sizeof(rect_t));
@@ -25,14 +25,14 @@ void ship_init(ship_t *ship, entity_id_t type, clockgame_t *clockgame){
 	vector_init(ship -> vector);
 
 	ship -> ia = (ia_t *)malloc(sizeof(ia_t));
-	ia_init(ship->ia, clockgame);
+	ia_init(ship->ia, clock);
 
 	ship -> type = type;
 	ship -> ia_activated = 0;
 
 	/* Asignamos los bordes */
 	switch(type){
-		case HEROE:
+		case PLAYER:
 			rect = create_rect(21,4,21,80);
 			border_add_rect(ship->border,rect);
 			rect = create_rect(42,17,17,53);
@@ -40,13 +40,13 @@ void ship_init(ship_t *ship, entity_id_t type, clockgame_t *clockgame){
 			rect = create_rect(4,33,17,23);
 			border_add_rect(ship->border,rect);
 			break;
-		case ZANGANO:
+		case ENEMIE1:
 			rect = create_rect(20,40,30,61);
 			border_add_rect(ship->border,rect);
 			rect = create_rect(50,10,56,120);
 			border_add_rect(ship->border,rect);
 			break;
-		case ZANGANO2:
+		case ENEMIE2:
 			rect = create_rect(8,19,126,23);
 			border_add_rect(ship->border,rect);
 			rect = create_rect(19,90,126,23);
@@ -85,6 +85,10 @@ void ship_move(ship_t *ship){
 
 void ship_set_vector(ship_t *ship, vector_t *vector){
 	vector_copy(ship->vector,vector);
+}
+
+vector_t *ship_get_vector(ship_t *ship){
+	return ship->vector;
 }
 
 border_t *ship_border(ship_t *ship){
@@ -135,16 +139,12 @@ void ship_destroy(ship_t **ship){
 	ia_destroy(&((*ship)-> ia));
 }
 
-void ship_render(ship_t *ship, char *buffer){
-	/***************/
-	/* IMPLEMENTAR */
-	/***************/
-
-	/* id entidad */
-	/* Posicion x */
-	/* Posicion y */
-	/* Sprite */
-	/* Frame */
+void ship_render(ship_t *ship, render_t *render){
+	render->entity = ship->type;
+	render->x = point_get_x(ship->position);
+	render->y = point_get_y(ship->position);
+	render->sprite = 1;		//MOMENTANEO
+	render->frame = 1;		//MOMENTANEO
 }
 
 /***************************************

@@ -1,36 +1,33 @@
 #ifndef TCP_SERVER_H
 #define TCP_SERVER_H
 
+#include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <soket.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
-typedef enum{
-	LISTEN
-	STABLISHED
-} server_status_t;
+#define	S_NOTLISTEN			0
+#define	S_LISTEN				1
+#define	S_ESTABLISHED		2
 
-typedef struct t_tcp_server{
+#define MAXBUFFER				512
+
+typedef struct{
 	int fd_server;
 	int fd_client;
 	int running;
-	server_status_t status;
-	struct sockaddr_in server;
-	struct sockaddr_in client;
-} tcp_server_t
+	int status;
+	void *protocol;
+	struct sockaddr_in serveraddr;
+	struct sockaddr_in clientaddr;
+} tcp_server_t;
 
-void tcp_server_init(tcp_server_t *server, uint32_t port);
+uint8_t tcp_server_init(tcp_server_t *server, uint32_t port);
 
-void tcp_server_assign_protocol(
-			tcp_server_t *server,
-			void *protocol(char *buffer,int size)
-		);
-
-uint8_t tcp_server_start(tcp_server_t *server);
-
-uint8_t tcp_server_recive(tcp_server_t *server);
-
-uint8_t tcp_server_response(tcp_server_t *server);
+void tcp_server_start(tcp_server_t *server,
+		void *protocol(char *req_buffer,int req_size, char *res_buffer, int *res_size));
 
 void tcp_server_close(tcp_server_t *server);
 

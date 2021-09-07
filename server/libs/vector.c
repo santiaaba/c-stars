@@ -24,3 +24,6 @@ void vector_copy(vector_t *vector, vector_t *origen){
 	vector->direccion = origen->direccion;
 	vector->modulo = origen->modulo;
 }
+
+void vector_del(vector_t *vector1, vector_t *vector2){
+}

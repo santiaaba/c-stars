@@ -40,4 +40,7 @@ int32_t vector_y(vector_t *vector);
 /* Copia el vector origen  en vector*/
 void vector_copy(vector_t *vector, vector_t *origen);
 
+/* Borrar vectores */
+void vector_del(vector_t *vector1, vector_t *vector2);
+
 #endif

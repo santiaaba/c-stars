@@ -1,7 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
-#define BUFFER_SIZE 512		/* En bytes o char */
+#define BUFFER_SIZE 200			/* elementos a renderizar */
+#define EVENT_LIMIT_SIZE  10	/* Limite de eventos */
+#define NANOTIME 60000
 
 /* Cada dato de render a enviar al cliente tiene el siguiente formato 
 
@@ -14,58 +16,75 @@ Son en total 8 bytes
 */
 #define DATA_RENDER_SIZE 8
 
-#include "point.h"
-#include "ship.h"
-#include "shoot.h"
+#include <stdio.h>
+#include <stdbool.h>
 #include <semaphore.h>
 #include <stdint.h>
 #include <time.h>
+#include <unistd.h>
+#include "point.h"
+#include "ship.h"
+#include "shoot.h"
+#include "level.h"
+#include "game.h"
+#include "clockgame.h"
 
-typedef enum {
-   TOP_PRESS,
-   TOP_RELEASE,
-   BOTTOM_PRESS,
-   BOTTOM_RELEASE,
-   LEFT_PRESS,
-   LEFT_RELEASE,
-   RIGHT_PRESS,
-   RIGHT_RELEASE,
-   FIRE_PRESS,
-   FIRE_RELEASE,
-   PAUSE_PRESS,
-   START_PRESS
-} key_t;
+#define	G_WAIT_CONNECT				0
+#define	G_CONNECT_STEP_ONE		1
+#define	G_READY						2
+#define	G_PLAYING					3
+#define	G_PAUSE						4
+#define	G_STOP						5
+#define	G_LEAVE						6
 
-typedef enum {
-	READY,				/* Cliente conectado. Esperando comando play */
-	PLAYING,				/* Jugando el nivel */
-	PAUSE,				/* Nivel pausado */
-	END,					/* Juego terminado */
-	LEAVE					/* Finalizar juego. Salir del programa */
-}	status_t;
+#define K_TOP					0
+#define K_BOTTOM				1
+#define K_LEFT					2	
+#define K_RIGHT				3
+#define K_SPACEBAR			4
 
-typedef struct t_game{
-	key_t key[10];
-	key_size;		/* Tamano logico del vector key */
-	status_t status;
+#define K_DOWN			0
+#define K_UP			1
+
+typedef struct {
+	bool top;
+	bool bottom;
+	bool left;
+	bool right;
+} key_direction_t;
+
+typedef struct {
+	int key;
+	int key_type;
+} game_event_t;
+
+typedef struct {
+	game_event_t *events[EVENT_LIMIT_SIZE];
+	int event_size;						/* Tamano logico del vector key */
+	int status;
 	uint32_t score;
 	sem_t *sem_buffer;					/* Semaphore para la zona critica del buffer */
-	char buffer[BUFFER_SIZE];			/* Buffer para el envio UDP */
+	sem_t *sem_event;						/* Semaphore para la zona critica de eventos */
+	render_t buffer[BUFFER_SIZE];			/* Buffer para el envio UDP */
 	int buffer_size; 	 	 				/* Tamano logico del buffer para UDP */
+	key_direction_t direction;
 	ship_t *player;
 	lista_t *enemies;
 	lista_t *shoot_enemies;
 	lista_t *shoot_player;
 	level_t *level;
+	clockgame_t *clock;
 } game_t;
 
-void game_init(game_t *game);
-void game_key(game_t *game);
-void game_run(game_t *game);
-void game_set_level(game_t *game, uint16_t level);
-void game_start(game_t *game);
-void game_pause(game_t *game);
-void game_udp_negociate(game_t *game);
-void game_over(game_t *game);
+void game_init(game_t *g, sem_t *sem_buffer, sem_t *sem_event);
+void game_event_add(game_t *g, game_event_t *e);
+void game_run(game_t *g);
+void game_set_level(game_t *g, int level);
+void game_start(game_t *g);
+void game_pause(game_t *g);
+void game_udp_negociate(game_t *g);
+void game_over(game_t *g);
+int game_get_state(game_t *g);
+void game_set_state(game_t *g, int state);
 
 #endif

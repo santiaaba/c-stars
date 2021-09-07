@@ -24,7 +24,8 @@ void main(void *args){
 		return 1;
 	}
 
-	tcp_server_assign_protocol(&command_server,&protocol_handle);
+	/* Asignamos el protocolo al server TCP */
+	tcp_server_assign_protocol(&command_server,&req_handle);
 
 	/* Creamos el hilo que se encarga del servidor de comandos */
 	if(0 != pthread_create(&thread_command, NULL, &tcp_server_start, &command_server)){

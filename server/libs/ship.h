@@ -7,8 +7,14 @@
 #include "border.h"
 #include "rect.h"
 #include "shoot.h"
+#include "render.h"
 #include "clockgame.h"
-#include "entity_id.h"
+
+#define PLAYER			0
+#define ENEMIE1		1
+#define ENEMIE2		2
+#define ENEMIE3		3
+#define ENEMIE4		4
 
 typedef struct t_ia_mov{
 	vector_t *vector;
@@ -28,13 +34,13 @@ typedef struct t_ship{
 	border_t *border;
 	vector_t *vector;
 	float speed;
-	entity_id_t type;
+	uint8_t type;		// ID tipo nave
 	ia_t *ia;
 	uint8_t ia_activated;
 } ship_t;
 
 /* Inicializa una nave */
-void ship_init(ship_t *ship, entity_id_t type, clockgame_t* clockagame);
+void ship_init(ship_t *ship, uint8_t type, clockgame_t* clockagame);
 
 /* Permite colocar la nave en coordenadas especificas */
 void ship_set_position(ship_t *ship, int32_t x, int32_t y);
@@ -43,7 +49,7 @@ void ship_set_position(ship_t *ship, int32_t x, int32_t y);
 void ship_set_speed(ship_t *ship, float speed);
 
 /* Retorna la velocidad de la nave */
-float ship_set_speed(ship_t *ship);
+float ship_get_speed(ship_t *ship);
 
 /* Mueve la nave. Ejecuta la instaucción de la ia
 	si esta esta activada */
@@ -58,6 +64,8 @@ void ship_border_add(ship_t *ship, int32_t x, int32_t y, uint32_t heigh, uint32_
 
 /* Setea el vector de la nave */
 void ship_set_vector(ship_t *ship, vector_t *vector);
+
+vector_t *ship_get_vector(ship_t *ship);
 
 /* Determina si la nave a colicionado contra otra nave. De ser
    asi, decrementa su poder en base al poder de la nave con la que
@@ -90,7 +98,7 @@ void ship_ia_activate(ship_t *ship);
 void ship_destroy(ship_t **ship);
 
 /* Genera los datos de la nave en el buffer */
-void ship_render(ship_t *ship, char *buffer);
+void ship_render(ship_t *ship, render_t *render);
 
 /****************************
 			Para la IA
@@ -106,7 +114,7 @@ static void ia_start(ia_t *ia);
 	si correspondiese */
 static void ia_drive_ship(ia_t *ia, ship_t *ship);
 
-static void ia_add_path( ia_t *ia, uint32_t instant,uint32_t direction, uint32_t speed);
+static void ia_add_path(ia_t *ia, uint32_t instant,uint32_t direction, uint32_t speed);
 
 static void ia_destroy(ia_t **ia);
 

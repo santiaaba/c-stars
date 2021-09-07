@@ -9,7 +9,7 @@
 
 #include "ship.h"
 #include <stdint.h>
-#include "../libs/lista.h"
+#include "../../libs/lista.h"
 #include "clockgame.h"
 
 typedef struct t_attack{
@@ -25,15 +25,12 @@ typedef struct t_level{
 } level_t;
 
 /* Inicializa la estructura del nivel */
-void level_init(level_t *level, clockgame_t *clockgame);
-
-/* Carga los datos del nivel desde el archivo */
-void level_load(level_t *level, char *datafile);
+void level_init(level_t **level, int id, clockgame_t *clockgame);
 
 /* Corre el nivel */
 void level_run(level_t *level, lista_t *enemies);
 
 /* Destruye las estructuras internas del level */
-void level_destroy(level_t *level);
+void level_destroy(level_t **level);
 
 #endif
