@@ -63,7 +63,6 @@ typedef struct {
 	int event_size;						/* Tamano logico del vector key */
 	int status;
 	uint32_t score;
-	sem_t *sem_buffer;					/* Semaphore para la zona critica del buffer */
 	sem_t *sem_event;						/* Semaphore para la zona critica de eventos */
 	render_t buffer[BUFFER_SIZE];			/* Buffer para el envio UDP */
 	int buffer_size; 	 	 				/* Tamano logico del buffer para UDP */
@@ -76,7 +75,7 @@ typedef struct {
 	clockgame_t *clock;
 } game_t;
 
-void game_init(game_t *g, sem_t *sem_buffer, sem_t *sem_event);
+void game_init(game_t *g, sem_t *sem_event);
 void game_event_add(game_t *g, game_event_t *e);
 void game_run(game_t *g);
 void game_set_level(game_t *g, int level);

@@ -1,31 +1,34 @@
 #include "game.h"
 
-void game_init(game_t *g, sem_t *sem_buffer, sem_t *sem_event){
+void game_init(game_t *g, sem_t *sem_event){
 	int i;
 
 	g->event_size = 0;
 	for(i=0;i<EVENT_LIMIT_SIZE;i++)
 		g->events[i] = NULL;
 
+	printf("Llego\n");
 	g->status = G_WAIT_CONNECT;
 	g->score = 0;
-	g->sem_buffer = sem_buffer;
 	g->sem_event = sem_event;
    g->player = (ship_t *)malloc(sizeof(ship_t));
 	g->enemies = (lista_t *)malloc(sizeof(lista_t));
    g->shoot_enemies = (lista_t *)malloc(sizeof(lista_t));
    g->shoot_enemies = (lista_t *)malloc(sizeof(lista_t));
+	printf("Llego\n");
 
 	ship_init(g->player,PLAYER, g->clock);
 	lista_init(g->enemies,sizeof(ship_t));
 	lista_init(g->shoot_enemies,sizeof(shoot_t));
 	lista_init(g->shoot_player,sizeof(shoot_t));
+	printf("Llego\n");
 
 	clockgame_init(g->clock);
+	printf("Llego\n");
 	
 	/* Inicializamos los semaforos */
 	sem_post(g->sem_event);
-	sem_post(g->sem_buffer);
+	printf("Llego\n");
 }
 
 void game_set_level(game_t *g, int idLevel){

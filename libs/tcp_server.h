@@ -19,15 +19,18 @@ typedef struct{
 	int fd_client;
 	int running;
 	int status;
-	void *protocol;
+	void (*protocol)(char *req_buffer,int req_size, char *res_buffer, int *res_size);
 	struct sockaddr_in serveraddr;
 	struct sockaddr_in clientaddr;
 } tcp_server_t;
 
 uint8_t tcp_server_init(tcp_server_t *server, uint32_t port);
 
-void tcp_server_start(tcp_server_t *server,
-		void *protocol(char *req_buffer,int req_size, char *res_buffer, int *res_size));
+void tcp_server_assign_protocol(tcp_server_t *server,
+		void (*protocol)(char*, int, char*, int));
+//		void *protocol(char *req_buffer,int req_size, char *res_buffer, int *res_size));
+
+void tcp_server_start(tcp_server_t *server);
 
 void tcp_server_close(tcp_server_t *server);
 

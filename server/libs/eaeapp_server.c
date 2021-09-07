@@ -1,30 +1,4 @@
-#include "command_protocol.h"
-
-/* Encargado de recibir y responder a las peticiones
-   enviadas por el cliente */
-
-int static req_parse(req_t *req, char *buffer, int size){
-	/* Parsea los datos del buffer a la estructura req_t.
-		Retorna 1 si tuvo exito. Retorna 0 si no lo tuvo. */
-
-	// Verificar que el buffer tenga al menos el tamano del encabezado
-	//buffer[0]	// El primer char conforma el codigo y el aux.
-					// ambos de 8 bits aca uno.
-	//buffer[1]	// El siguiente char es el size del data
-	//buffer[2]	// Es el qid entregado por el cliente
-	
-	// Verificar que el primer char este en rango
-	// Verificar que el siguiente char este en rango
-	// Verificar que el tercer char este en rango
-
-	// Armar el encabezado
-
-	//Dependiendo del codigo... armar el body a partir del 4to byte
-}
-
-int static res_parse(res_t *res, char **buffer, int *size){
-	/* Convierta una estructura de respuesta para ser enviada */
-}
+#include "eaeapp_server.h"
 
 void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 	/* Conecta el cliente con el server. Paso 1:
@@ -80,7 +54,6 @@ void static req_connect_step_two(game_t *g, req_t *req, res_t *res){
 	res->header.size = 0;
 	res->body = NULL;
 }
-
 
 void static req_disconnect(game_t *g, req_t *req, res_t *res){
 	/* Desconecta el cliente del server e informa al cliente*/
@@ -203,4 +176,3 @@ void server_protocol_handle(game_t *g,char *req_buffer, int req_size,
 	/* Una vez obtenida la respuesta, la convertimos en res_buffer */
 	res_parse(&res,&res_buffer,res_size);
 }
-

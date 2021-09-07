@@ -105,17 +105,17 @@ void ship_render(ship_t *ship, render_t *render);
 *****************************/
 
 /* Inicializa la estructura de la ia */
-static void ia_init(ia_t *ia, clockgame_t *clock);
+void ia_init(ia_t *ia, clockgame_t *clock);
 
 /* Inicia la ia */
-static void ia_start(ia_t *ia);
+void ia_start(ia_t *ia);
 
 /* Maneja la nave cambiando el vector de movimiento
 	si correspondiese */
-static void ia_drive_ship(ia_t *ia, ship_t *ship);
+void ia_drive_ship(ia_t *ia, ship_t *ship);
 
-static void ia_add_path(ia_t *ia, uint32_t instant,uint32_t direction, uint32_t speed);
+void ia_add_path(ia_t *ia, uint32_t instant,uint32_t direction, uint32_t speed);
 
-static void ia_destroy(ia_t **ia);
+void ia_destroy(ia_t **ia);
 
 #endif

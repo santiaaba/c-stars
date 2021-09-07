@@ -7,9 +7,9 @@
 	* Secuencia de aparición de las naves enemigas
 */
 
-#include "ship.h"
 #include <stdint.h>
 #include "../../libs/lista.h"
+#include "ship.h"
 #include "clockgame.h"
 
 typedef struct t_attack{

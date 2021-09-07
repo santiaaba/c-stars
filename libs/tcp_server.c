@@ -29,8 +29,12 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port){
 	return 1;
 }
 
-void tcp_server_start(tcp_server_t *server,
-	void *protocol(char *req_buffer,int req_size, char *res_buffer, int *res_size)){
+void tcp_server_assign_protocol(tcp_server_t *server,
+      void (*protocol)(char*, int, char*, int)){
+	server->protocol = protocol;
+}
+
+void tcp_server_start(tcp_server_t *server){
 	char req_buffer[MAXBUFFER];
 	char res_buffer[MAXBUFFER];
 	int req_size;
@@ -48,7 +52,7 @@ void tcp_server_start(tcp_server_t *server,
 				//read(server->fd_server, req_buffer, sizeof(req_buffer));
 				req_size = recv(server->fd_server, req_buffer , MAXBUFFER , 0);
 				if(req_size > 0){
-					protocol(req_buffer,req_size,res_buffer,&res_size);
+					(server->protocol)(req_buffer,req_size,res_buffer,&res_size);
 					/* Respondemos al cliente */
 					if(res_size > 0)
 						send(server->fd_server,res_buffer,res_size,0);

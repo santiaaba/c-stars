@@ -1,7 +1,7 @@
-#ifndef COMMAND_PROTOCOL_H
-#define COMMAND_PROTOCOL_H
+#ifndef EAEAPP_H
+#define EAEAPP_H
 
-#include "./game.h"
+#include <stdint.h>
 
 /* Version minima aceptada */
 #define VERSION			1
@@ -61,8 +61,7 @@ typedef struct {
 	void *body;		// Los body varian en base al mensaje
 } res_t;
 
-//void server_protocol_init(server_protol_t *p, game_t *game);
-void server_protocol_handle(game_t *g, char *req_buffer,
-									 int req_size, char *res_buffer,
-									 int *res_size);
+int req_parse(req_t *req, char *buffer, int size);
+int res_parse(res_t *res, char **buffer, int *size);
+
 #endif

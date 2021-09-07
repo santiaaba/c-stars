@@ -151,36 +151,36 @@ void ship_render(ship_t *ship, render_t *render){
 				PARA la IA
  ***************************************/
 
-static void ia_init(ia_t *ia, clockgame_t *clock){
+void ia_init(ia_t *ia, clockgame_t *clock){
 	lista_init(ia->path,sizeof(ia_mov_t));
 	ia -> clock = clock;
 }
 
-static void ia_start(ia_t *ia){
+void ia_start(ia_t *ia){
 	lista_first(ia->path);
 	ia -> time_last_mov = clockgame_time(ia->clock);
 }
 
-static void ia_add_path( ia_t *ia, uint32_t instant,
-								 uint32_t direction, uint32_t speed){
+void ia_add_path( ia_t *ia, uint32_t instant,
+					 uint32_t direction, uint32_t speed){
 	vector_t *vector;
 	vector = (vector_t *)malloc(sizeof(vector_t));
 	vector_set(vector,direction,speed);
 	lista_add(ia->path,vector);
 }
 
-static void ia_drive_ship(ia_t *ia, ship_t *ship){
+void ia_drive_ship(ia_t *ia, ship_t *ship){
 	ia_mov_t *aux =  lista_get(ia->path);
 	if (aux != NULL)
 		if((clockgame_time(ia->clock) - ia->time_last_mov) > aux->duration)
 			ship_set_vector(ship, aux->vector);
 }
 
-static void ia_mov_destroy(ia_mov_t **ia_mov){
+void ia_mov_destroy(ia_mov_t **ia_mov){
 	free((*ia_mov)->vector);
 }
 
-static void ia_destroy(ia_t **ia){
+void ia_destroy(ia_t **ia){
 	lista_clean((*ia)->path,&ia_mov_destroy);
 	free(*ia);
 	/* OJO... no eliminar el clock. Ya que es utilizado
