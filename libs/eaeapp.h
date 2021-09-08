@@ -21,9 +21,34 @@
 #define RES_OK					0
 #define RES_INCORRECT		1
 #define RES_ERROR_VERSION	2
+#define MAX_DATA_BODY		200
 
-/* Estado del protocolo del lado del servidor */
+/*********************************************/
+/* Estructuas para el envio de datos por UDP */
+/*********************************************/
+typedef struct {
+	uint32_t frame;
+	uint8_t type;
+	uint16_t size;
+	uint8_t aux;
+} data_header_t;
 
+typedef struct {
+	uint16_t entity_class;
+	int16_t pos_x;
+	int16_t pos_y;
+	uint8_t sprite;
+	uint8_t frame;
+} data_body_t;
+
+typedef struct {
+	data_header_t header;
+	data_body_t body[MAX_DATA_BODY];
+} data_t;
+
+/************************************************/
+/* Estructuas para el envio de comandos por TCP */
+/************************************************/
 typedef struct req_connect {
 	uint16_t udp;
 	uint16_t version;
@@ -61,7 +86,11 @@ typedef struct {
 	void *body;		// Los body varian en base al mensaje
 } res_t;
 
+/* Para el protocolo TCP de comunicación */
 int req_parse(req_t *req, char *buffer, int size);
 int res_parse(res_t *res, char **buffer, int *size);
+
+int data_send();
+int data_recv();
 
 #endif

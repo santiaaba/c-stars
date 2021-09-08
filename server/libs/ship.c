@@ -152,6 +152,7 @@ void ship_render(ship_t *ship, render_t *render){
  ***************************************/
 
 void ia_init(ia_t *ia, clockgame_t *clock){
+	ia -> path = (lista_t *)malloc(sizeof(lista_t));
 	lista_init(ia->path,sizeof(ia_mov_t));
 	ia -> clock = clock;
 }

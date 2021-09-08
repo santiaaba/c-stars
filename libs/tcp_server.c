@@ -1,6 +1,7 @@
 #include "tcp_server.h"
 
 uint8_t tcp_server_init(tcp_server_t *server, uint32_t port){
+	printf("Iniciamos el server\n");
 	server->status = S_NOTLISTEN;
 	/* Creamos el socket */
 	server->fd_server=socket(AF_INET, SOCK_STREAM, 0);
@@ -14,6 +15,7 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port){
 	server->serveraddr.sin_addr.s_addr = INADDR_ANY;
 
 	/* Bindeamos el puerto e interfaz al soket */
+	printf("Bindeamos server\n");
 	if(bind(server->fd_server,(struct sockaddr*)&(server->serveraddr),
 		sizeof(struct sockaddr))<0) {
 			printf("error en bind() \n");
@@ -21,17 +23,20 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port){
 	}
 
 	/* Dejamos el socket en LISTEN */
+	printf("Dejamos socket en LISTEN\n");
 	if(listen(server->fd_server,5) != 0){ 
 		printf("error en listen()\n");
 		return 0;
 	}
 	server->status = S_LISTEN;
+	printf("Servidor listo para recibir una conexion\n")
 	return 1;
 }
 
 void tcp_server_assign_protocol(tcp_server_t *server,
       void (*protocol)(char*, int, char*, int)){
 	server->protocol = protocol;
+	printf("Protocolo asignado\n");
 }
 
 void tcp_server_start(tcp_server_t *server){

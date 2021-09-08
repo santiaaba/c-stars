@@ -1,9 +1,10 @@
 #ifndef GAME_H
 #define GAME_H
 
-#define BUFFER_SIZE 200			/* elementos a renderizar */
-#define EVENT_LIMIT_SIZE  10	/* Limite de eventos */
-#define NANOTIME 60000
+#define BUFFER_SIZE			200			/* elementos a renderizar */
+#define MAX_UDP_BUFFER		200			/* Tamano maximo de buffer UDP */
+#define EVENT_LIMIT_SIZE	10				/* Limite de eventos */
+#define NANOTIME				60000
 
 /* Cada dato de render a enviar al cliente tiene el siguiente formato 
 
@@ -28,6 +29,7 @@ Son en total 8 bytes
 #include "level.h"
 #include "game.h"
 #include "clockgame.h"
+#include "../../libs/eaeapp.h"
 
 #define	G_WAIT_CONNECT				0
 #define	G_CONNECT_STEP_ONE		1
@@ -73,15 +75,17 @@ typedef struct {
 	lista_t *shoot_player;
 	level_t *level;
 	clockgame_t *clock;
+	int sockfd;
+	struct sockaddr_in servaddr;
 } game_t;
 
 void game_init(game_t *g, sem_t *sem_event);
 void game_event_add(game_t *g, game_event_t *e);
+void game_init_udp(game_t *g);
 void game_run(game_t *g);
-void game_set_level(game_t *g, int level);
-void game_start(game_t *g);
+void game_start(game_t *g, int level);
 void game_pause(game_t *g);
-void game_udp_negociate(game_t *g);
+int game_udp_negociate(game_t *g, char *ip, int port);
 void game_over(game_t *g);
 int game_get_state(game_t *g);
 void game_set_state(game_t *g, int state);

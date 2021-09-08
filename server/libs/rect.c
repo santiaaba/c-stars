@@ -1,6 +1,7 @@
 #include "rect.h"
 
 void rect_init(rect_t *rect){
+	rect->point = (point_t*)malloc(sizeof(point_t));
 	point_init(rect->point);
 	rect->width = 0;
 	rect->height = 0;

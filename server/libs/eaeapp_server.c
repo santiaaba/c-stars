@@ -80,7 +80,8 @@ void static req_game_start(game_t *g, req_t *req, res_t *res){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
-	game_set_state(g,G_PLAYING);
+	game_start(g,(req_level_t)(req->body));
+	//game_set_state(g,G_PLAYING);
 }
 
 void static req_game_stop(game_t *g, req_t *req, res_t *res){

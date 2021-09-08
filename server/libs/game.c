@@ -7,33 +7,32 @@ void game_init(game_t *g, sem_t *sem_event){
 	for(i=0;i<EVENT_LIMIT_SIZE;i++)
 		g->events[i] = NULL;
 
-	printf("Llego\n");
 	g->status = G_WAIT_CONNECT;
 	g->score = 0;
 	g->sem_event = sem_event;
+
    g->player = (ship_t *)malloc(sizeof(ship_t));
 	g->enemies = (lista_t *)malloc(sizeof(lista_t));
    g->shoot_enemies = (lista_t *)malloc(sizeof(lista_t));
-   g->shoot_enemies = (lista_t *)malloc(sizeof(lista_t));
-	printf("Llego\n");
+   g->shoot_player = (lista_t *)malloc(sizeof(lista_t));
+	g->clock = (clockgame_t *)malloc(sizeof(clockgame_t));
 
 	ship_init(g->player,PLAYER, g->clock);
 	lista_init(g->enemies,sizeof(ship_t));
 	lista_init(g->shoot_enemies,sizeof(shoot_t));
 	lista_init(g->shoot_player,sizeof(shoot_t));
-	printf("Llego\n");
 
 	clockgame_init(g->clock);
-	printf("Llego\n");
 	
 	/* Inicializamos los semaforos */
-	sem_post(g->sem_event);
-	printf("Llego\n");
+	//sem_post(g->sem_event);
 }
 
-void game_set_level(game_t *g, int idLevel){
+void game_start(game_t *g, int idLevel){
 	level_destroy(&(g->level));
 	level_init(&(g->level),idLevel,g->clock);
+	ship_set_position(g->player,100,300);
+	g->status = G_PLAYING;
 }
 
 void game_event_add(game_t *g, game_event_t *e){
@@ -102,6 +101,38 @@ void static game_handle_events(game_t *g){
 
 void static game_send_udp(game_t *g){
 	/* Arma el buffer UDP y envia los datos */
+	char buffer[MAX_UDP_BUFFER];
+	int i,j = 0
+
+	while(i < g->buffer_size){
+		j = 0;
+		while(j < MAX_UDP_BUFFER){
+			g->buffer[i]
+			i++;
+			j++;
+		}
+		/* Luego de armados los datos, los enviamos */
+		sendto(game->sockfd, &buffer, strlen(buffer),
+			0, (const struct sockaddr *) &(game->servaddr), 
+			sizeof(game->servaddr));
+}
+
+int game_init_udp(game_t *g, char *ip, int port){
+	if ( (g->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+		perror("socket creation failed");
+		g->state = G_WAIT_CONNECT;
+		return 0;
+	}
+  
+	memset(&(g->servaddr), 0, sizeof(g->servaddr));
+      
+	// Filling server information
+	g->servaddr.sin_family = AF_INET;
+	g->servaddr.sin_port = htons(port);
+	g->servaddr.sin_addr.s_addr = inet_addr(ip);
+
+	g->state = G_READY;
+	return 1;
 }
 
 static void game_play(game_t *g){
