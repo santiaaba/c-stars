@@ -70,7 +70,7 @@ void static req_key_press(game_t *g, req_t *req, res_t *res){
 
 	event = (game_event_t*)malloc(sizeof(game_event_t));
 	event->key = ((req_key_press_t*)(req->body))->key;
-	event->key_type = ((req_key_press_t*)(req->body))->mode;
+	event->key_type = ((req_key_press_t*)(req->body))->action;
 	game_event_add(g,event);
 }
 

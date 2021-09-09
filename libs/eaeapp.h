@@ -2,9 +2,17 @@
 #define EAEAPP_H
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
 
 /* Version minima aceptada */
 #define VERSION			1
+
+#define REQ_HEAD_SIZE		16
+#define RES_HEAD_SIZE		16
+#define DATA_HEAD_SIZE		8
+#define MAX_DATA_BODY		200
 
 /* Los diferentes mensajes que puede recibir el servidor */
 #define C_CONNECT_1		0
@@ -21,7 +29,6 @@
 #define RES_OK					0
 #define RES_INCORRECT		1
 #define RES_ERROR_VERSION	2
-#define MAX_DATA_BODY		200
 
 /*********************************************/
 /* Estructuas para el envio de datos por UDP */
@@ -49,6 +56,10 @@ typedef struct {
 /************************************************/
 /* Estructuas para el envio de comandos por TCP */
 /************************************************/
+
+/***********/
+/* Request */
+/***********/
 typedef struct req_connect {
 	uint16_t udp;
 	uint16_t version;
@@ -56,8 +67,8 @@ typedef struct req_connect {
 
 typedef struct req_key_press {
 	uint16_t key;		// Codigo ASSCI tecla presionada
-	uint16_t mode;		// Presionada o soltada
-} req_key_press_t;
+	uint16_t action;		// Presionada o soltada
+} req_kp_t;
 
 typedef uint32_t req_level_t ;
 
@@ -73,7 +84,9 @@ typedef struct {
 	void *body;			// Los body varian en base al mensaje
 } req_t;
 
-/* Para las respuestas */
+/************/
+/* Response */
+/************/
 typedef struct {
 	uint8_t cod;
 	uint8_t resp;
@@ -87,10 +100,14 @@ typedef struct {
 } res_t;
 
 /* Para el protocolo TCP de comunicación */
-int req_parse(req_t *req, char *buffer, int size);
-int res_parse(res_t *res, char **buffer, int *size);
+void req_to_buffer(req_t *req, char **buffer, int *size);
+int buffer_to_req(res_t *res, char *buffer, int size);
 
-int data_send();
-int data_recv();
+void res_to_buffer(res_t *res, char **buffer, int *size);
+int buffer_to_res(res_t *res, char *buffer, int size);
+
+/* Para el protocolo UDP de datos */
+void data_send(data_t *data, char **buffer, int *size);
+void data_recv(data_t *data, char *buffer, int size);
 
 #endif

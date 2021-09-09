@@ -16,6 +16,7 @@
 typedef struct {
 	SDL_Rect dest;
 	SDL_Rect frame;
+	SDL_Renderer *renderer;
 	SDL_Texture *off;
 	SDL_Texture *on;
 	int focus;
@@ -25,7 +26,7 @@ typedef struct {
 
 void input_init(input_t *input, int x, int y, int focus, SDL_Renderer *renderer);
 
-void input_draw(input_t *input, SDL_Renderer *renderer);
+void input_draw(input_t *input);
 
 void input_add_char(input_t *input, char c);
 

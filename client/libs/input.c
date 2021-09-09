@@ -25,17 +25,19 @@ void input_init(input_t *input,
 	input->dest.h = TEXT_HEIGHT;	 	/* Alto fijo al input */
 
 	strcpy(input->text,"");
+
+	input->renderer = renderer;
 }
 
-void input_draw(input_t *input, SDL_Renderer *renderer){
+void input_draw(input_t *input){
 	int i;
 	SDL_Rect char_frame;
 	SDL_Rect char_dest;
 
 	if(input->focus){
-		SDL_RenderCopy(renderer,input->on,&(input->frame),&(input->dest));
+		SDL_RenderCopy(input->renderer,input->on,&(input->frame),&(input->dest));
 	} else {
-		SDL_RenderCopy(renderer,input->off,&(input->frame),&(input->dest));
+		SDL_RenderCopy(input->renderer,input->off,&(input->frame),&(input->dest));
 	}
 	/* Ahora dibujamos el texto */
 	char_frame.y = 0;
@@ -82,7 +84,7 @@ void input_draw(input_t *input, SDL_Renderer *renderer){
 				char_frame.x = 10 * CHAR_WIDTH;
 				break;
 		}
-		SDL_RenderCopy(renderer,input->alphabet,&char_frame,&char_dest);
+		SDL_RenderCopy(input->renderer,input->alphabet,&char_frame,&char_dest);
 		char_dest.x += CHAR_WIDTH;
 	}
 }
