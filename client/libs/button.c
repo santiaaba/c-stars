@@ -1,4 +1,3 @@
-
 #include "button.h"
 
 void button_init(button_t *button,

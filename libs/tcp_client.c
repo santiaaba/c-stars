@@ -3,7 +3,7 @@
 uint8_t tcp_client_init(tcp_client_t *cs, char *serv_ip, int port){
 	cs->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (cs -> sockfd == -1){
-		printf("Error al crear el socket TCP\n");
+		printf("Error al crear el socket TCP del cliente\n");
 		return 0;
 	}
 	bzero(&(cs->servaddr),sizeof(cs->servaddr));
@@ -12,6 +12,7 @@ uint8_t tcp_client_init(tcp_client_t *cs, char *serv_ip, int port){
 	cs->servaddr.sin_family = AF_INET;
 	cs->servaddr.sin_addr.s_addr = inet_addr(serv_ip);
 	cs->servaddr.sin_port = htons(port);
+	return 1;
 }
 
 uint8_t tcp_client_connect(tcp_client_t *cs){

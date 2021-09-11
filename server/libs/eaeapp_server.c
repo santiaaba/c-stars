@@ -69,8 +69,8 @@ void static req_key_press(game_t *g, req_t *req, res_t *res){
 	}
 
 	event = (game_event_t*)malloc(sizeof(game_event_t));
-	event->key = ((req_key_press_t*)(req->body))->key;
-	event->key_type = ((req_key_press_t*)(req->body))->action;
+	event->key = ((req_kp_t*)(req->body))->key;
+	event->key_type = ((req_kp_t*)(req->body))->action;
 	game_event_add(g,event);
 }
 
@@ -80,17 +80,17 @@ void static req_game_start(game_t *g, req_t *req, res_t *res){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
-	game_start(g,(req_level_t)(req->body));
-	//game_set_state(g,G_PLAYING);
+	game_start(g);
 }
 
 void static req_game_stop(game_t *g, req_t *req, res_t *res){
+	/* Finaliza el juego. */
 	if(game_get_state(g) != G_PAUSE ||
 		game_get_state(g) != G_PLAYING){
 			res->header.resp = RES_INCORRECT;
 			return;
 	}
-	game_set_state(g,G_STOP);
+	game_stop(g);
 }
 
 void static req_game_pause(game_t *g, req_t *req, res_t *res){
@@ -98,7 +98,7 @@ void static req_game_pause(game_t *g, req_t *req, res_t *res){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
-	game_set_state(g,G_PAUSE);
+	game_pause(g);
 }
 
 void static req_game_resume(game_t *g, req_t *req, res_t *res){
@@ -106,7 +106,7 @@ void static req_game_resume(game_t *g, req_t *req, res_t *res){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
-	game_set_state(g,G_PLAYING);
+	game_resume(g);
 }
 
 void static req_game_status(game_t *g, req_t *req, res_t *res){
@@ -119,10 +119,7 @@ void static req_keep_alive(game_t *g, req_t *req, res_t *res){
 
 void server_protocol_handle(game_t *g,char *req_buffer, int req_size,
 									 char *res_buffer, int *res_size){
-	/* Se encarga de recibir la consulta del cliente y
-	 * retornar en los dos últimos parámetros la respuesta.
-	 * El server es el encargado de enviarla al cliente */
-
+	/* Se encarga de procesar los mensajes del cliente */
 	req_t req;
 	res_t res;
 
@@ -147,11 +144,11 @@ void server_protocol_handle(game_t *g,char *req_buffer, int req_size,
 			req_keep_alive(g,&req,&res);
 			break;
 		case C_GAME_START:
-			/* Inicia el nivel indicado */
+			/* Inicia el juego desde el nivel 1 */
 			req_game_start(g,&req,&res);
 			break;
 		case C_GAME_STOP:
-			/* Detiene el nivel que se esta jugando */
+			/* Detiene el juego */
 			req_game_stop(g,&req,&res);
 			break;
 		case C_GAME_PAUSE:

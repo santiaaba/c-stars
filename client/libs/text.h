@@ -9,6 +9,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #define TEXT_VALUE_LIMIT 100 
+#define FONT "fonts/turret-road.extrabold.ttf"
 
 typedef struct {
 	SDL_Rect dest;
@@ -18,7 +19,7 @@ typedef struct {
 	SDL_Renderer *renderer;
 } text_t;
 
-void text_init(text_t *text, int x, int y, SDL_Renderer *renderer);
+void text_init(text_t *text, int x, int y, int size, SDL_Renderer *renderer);
 
 void text_draw(text_t *text);
 

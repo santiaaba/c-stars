@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 
 /* Version minima aceptada */
-#define VERSION			1
+#define EAEAPP_VERSION		1
 
 #define REQ_HEAD_SIZE		16
 #define RES_HEAD_SIZE		16
@@ -26,9 +26,10 @@
 #define C_GAME_RESUME	8
 #define C_GAME_STATUS	9
 
-#define RES_OK					0
-#define RES_INCORRECT		1
-#define RES_ERROR_VERSION	2
+#define RES_OK						20
+#define RES_ERROR_PORT			40
+#define RES_ERROR_VERSION		41
+#define RES_INCORRECT			50
 
 /*********************************************/
 /* Estructuas para el envio de datos por UDP */
@@ -101,7 +102,7 @@ typedef struct {
 
 /* Para el protocolo TCP de comunicación */
 void req_to_buffer(req_t *req, char **buffer, int *size);
-int buffer_to_req(res_t *res, char *buffer, int size);
+int buffer_to_req(req_t *req, char *buffer, int size);
 
 void res_to_buffer(res_t *res, char **buffer, int *size);
 int buffer_to_res(res_t *res, char *buffer, int size);

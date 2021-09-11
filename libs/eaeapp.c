@@ -30,23 +30,23 @@ void req_to_buffer(req_t *req, char **buffer, int *size){
 
 int buffer_to_req(req_t *req, char *buffer, int size){
 
-	req->cod = (uint8_t)buffer[0];
-	req->aux = (uint8_t)buffer[1];
-	req->size = ntohs(buffer[2]);
-	req->qid = ntohl(buffer[4]);
+	req->header.cod = (uint8_t)buffer[0];
+	req->header.aux = (uint8_t)buffer[1];
+	req->header.size = ntohs(buffer[2]);
+	req->header.qid = ntohl(buffer[4]);
 
 	if(req->body != NULL)
 		free(req->body);
 	switch(req->header.cod){
 		case C_CONNECT_1:
 			req->body = (req_connect_t*)malloc(sizeof(req_connect_t));
-			(req_connect_t)(req->body).udp = ntohs(buffer[8]);
-			(req_connect_t)(req->body).version = ntohs(buffer[10]);
+			((req_connect_t*)(req->body))->udp = ntohs(buffer[8]);
+			((req_connect_t*)(req->body))->version = ntohs(buffer[10]);
 			break;
 		case C_KEY_PRESS:
 			req->body = (req_kp_t*)malloc(sizeof(req_kp_t));
-			(req_kp_t)(req->body).key = ntohs(buffer[8]);
-			(req_kp_t)(req->body).action = ntohs(buffer[10]);
+			((req_kp_t*)(req->body))->key = ntohs(buffer[8]);
+			((req_kp_t*)(req->body))->action = ntohs(buffer[10]);
 			break;
 	}
 	return 1;
@@ -62,24 +62,24 @@ void res_to_buffer(res_t *res, char **buffer, int *size){
 
 	switch(res->header.cod){
 		case C_CONNECT_1:
-			memcpy(*buffer[8],res->body, res->(header.size - RES_HEAD_SIZE)/8);
+			memcpy(buffer[8],res->body,res->header.size);
 			break;
 	}
 }
 
 int buffer_to_res(res_t *res, char *buffer, int size){
 
-	res->cod = (uint8_t)buffer[0];
-	res->resp = (uint8_t)buffer[1];
-	res->size = ntohs(buffer[2]);
-	res->qid = ntohl(buffer[4]);
+	res->header.cod = (uint8_t)buffer[0];
+	res->header.resp = (uint8_t)buffer[1];
+	res->header.size = ntohs(buffer[2]);
+	res->header.qid = ntohl(buffer[4]);
 
 	if(res->body != NULL)
 		free(res->body);
 	switch(res->header.cod){
 		case C_CONNECT_1:
 			res->body = (char*)malloc(res->header.size);
-			memcpy(res->body,buffer[8],req->header.size/8);
+			memcpy(&(res->body),&buffer[8],res->header.size/8);
 			break;
 	}
 	return 1;
@@ -98,7 +98,7 @@ void data_send(data_t *data, char **buffer, int *size){
 	/* Encabezado */
 	if(*size < DATA_HEAD_SIZE + (data->header.size * 8)){
 		*size = DATA_HEAD_SIZE + (data->header.size * 8);
-		*buffer = (char *)realloc(*buffer,size);
+		*buffer = (char *)realloc(*buffer,*size);
 	}
 	*buffer[0] = htonl(data->header.frame);
 	*buffer[4] = data->header.type;

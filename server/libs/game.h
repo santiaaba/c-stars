@@ -66,6 +66,7 @@ typedef struct {
 	int status;
 	uint32_t score;
 	sem_t *sem_event;						/* Semaphore para la zona critica de eventos */
+	sem_t *sem_status;					/* Semaphore para la zona critica de status */
 	render_t buffer[BUFFER_SIZE];			/* Buffer para el envio UDP */
 	int buffer_size; 	 	 				/* Tamano logico del buffer para UDP */
 	key_direction_t direction;
@@ -81,9 +82,10 @@ typedef struct {
 
 void game_init(game_t *g, sem_t *sem_event);
 void game_event_add(game_t *g, game_event_t *e);
-void game_init_udp(game_t *g);
+void game_start(game_t *g);
+int game_init_udp(game_t *g, char *ip, int port);
 void game_run(game_t *g);
-void game_start(game_t *g, int level);
+void game_level_start(game_t *g, int level);
 void game_pause(game_t *g);
 int game_udp_negociate(game_t *g, char *ip, int port);
 void game_over(game_t *g);

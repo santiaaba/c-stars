@@ -10,6 +10,7 @@ void game_init(game_t *g, sem_t *sem_event){
 	g->status = G_WAIT_CONNECT;
 	g->score = 0;
 	g->sem_event = sem_event;
+	sem_init(&(g->sem_status),0,1);
 
    g->player = (ship_t *)malloc(sizeof(ship_t));
 	g->enemies = (lista_t *)malloc(sizeof(lista_t));
@@ -28,11 +29,44 @@ void game_init(game_t *g, sem_t *sem_event){
 	//sem_post(g->sem_event);
 }
 
-void game_start(game_t *g, int idLevel){
+
+void game_level_start(game_t *g, int idLevel){
+	/* Daja preparado el juego para el nivel en cuestion */
+
 	level_destroy(&(g->level));
 	level_init(&(g->level),idLevel,g->clock);
+	lista_clean(g->shoot_enemies,&shoot_destroy);
+	lista_clean(g->shoot_player,&shoot_destroy);
+	lista_clean(g->enemies,&ship_destroy);
 	ship_set_position(g->player,100,300);
 	g->status = G_PLAYING;
+}
+
+void game_start(game_t *g){
+	/* Resetea el juego y lo inicia en el nivel 1 */
+	g->score = 0;
+	game_level_start(g,1);
+	game_set_status(g,G_PLAYING);
+}
+
+void game_stop(game_t *g){
+	/* Finaliza el juego. No implica mucho.
+		Solo salir del bucle y no ingresar a el
+		nuevamente salvo que se realice un game_start */
+		game_set_status(g,G_STOP);
+}
+
+void game_pause(game_t *g){
+	/* Pausa el juego. No implica mucho.
+	   Solo salir del bucle e ingresar a el
+		nuevamente con un game_resume */
+		game_set_status(g,G_PAUSE);
+}
+
+void game_resume(game_t *g){
+	/* Pausa el juego. No implica mucho.
+	   Solo salir ingresar nuevamente al bucle */
+		game_set_status(g,G_PLAYING);
 }
 
 void game_event_add(game_t *g, game_event_t *e){
@@ -102,40 +136,54 @@ void static game_handle_events(game_t *g){
 void static game_send_udp(game_t *g){
 	/* Arma el buffer UDP y envia los datos */
 	char buffer[MAX_UDP_BUFFER];
-	int i,j = 0
+	int i,j = 0;
 
 	while(i < g->buffer_size){
 		j = 0;
 		while(j < MAX_UDP_BUFFER){
-			g->buffer[i]
+			g->buffer[i];
 			i++;
 			j++;
 		}
 		/* Luego de armados los datos, los enviamos */
-		sendto(game->sockfd, &buffer, strlen(buffer),
-			0, (const struct sockaddr *) &(game->servaddr), 
-			sizeof(game->servaddr));
+		sendto(g->sockfd, &buffer, strlen(buffer),
+			0, (const struct sockaddr *) &(g->servaddr), 
+			sizeof(g->servaddr));
+	}
 }
 
 int game_init_udp(game_t *g, char *ip, int port){
 	if ( (g->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
 		perror("socket creation failed");
-		g->state = G_WAIT_CONNECT;
+		g->status = G_WAIT_CONNECT;
 		return 0;
 	}
   
 	memset(&(g->servaddr), 0, sizeof(g->servaddr));
-      
-	// Filling server information
 	g->servaddr.sin_family = AF_INET;
 	g->servaddr.sin_port = htons(port);
 	g->servaddr.sin_addr.s_addr = inet_addr(ip);
 
-	g->state = G_READY;
+	g->status = G_READY;
 	return 1;
 }
 
-static void game_play(game_t *g){
+void static game_ingress_level(game_t *g){
+	/* Bucle de la animacion que presenta
+		el nivel. Muestra la nave del jugador
+		ingresando por la zquierda de la pantalla */
+
+}
+
+void static game_egress_level(game_t *g){
+	/* Bucle de la animacion que finaliza
+	   el nivel. Muestra a la nave del jugador
+		saliendo por la derecha de la pantalla */
+}
+
+void static game_playing_level(game_t *g){
+	/* Bucle que posee la logica del juego.
+		GENERA un FRAME del juego  */
 
 	render_t *r;
 	int i = 0;
@@ -215,8 +263,10 @@ int game_get_state(game_t *g){
 	return g->status;
 }
 
-void game_set_state(game_t *g, int state){
-	g->status = state;
+void game_set_state(game_t *g, int status){
+	sem_wait(g->sem_status);
+		g->status = status;
+	sem_post(g->sem_status);
 }
 
 void game_run(game_t *g){
@@ -224,20 +274,10 @@ void game_run(game_t *g){
 	while (g->status != G_LEAVE){
 		switch(g->status){
 			case G_PLAYING:
-				/* Juego en ejecucion */
-				game_play(g);
-				break;
-			case G_READY:
-				/* Juego listo */
-				break;
-			case G_PAUSE:
-				/* Juego pausado */
-				break;
-			case G_STOP:
-				/* Juego terminado */
-				break;
-		}
+				game_ingress_level(g);
+				game_playing_level(g);
+				game_egress_level(g);
+			case G_
 		usleep(NANOTIME);
-		//nanosleep(NANOTIME);
 	}
 }

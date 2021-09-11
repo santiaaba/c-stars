@@ -4,7 +4,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
+#include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
 #include "entity.h"
 #include "button.h"
 #include "input.h"
@@ -12,6 +14,7 @@
 #include "../../libs/eaeapp.h"
 #include "../../libs/tcp_client.h"
 
+#define SRV_PORT			2525
 #define SCREEN_WIDTH    1024
 #define SCREEN_HEIGHT   600
 #define SCREEN_BPP      24
@@ -39,11 +42,13 @@ typedef struct {
 	tcp_client_t *command_cli;
 	entities_t entities[10];
 	sem_t *sem_render;
+	int udp;
+	sem_t sem_status;
 	data_t *buffer_render;			// Buffer render
 	int buffer_render_size;			// Cantidad de elementos en el buffer render
 } game_t;
 
-int game_init(game_t *game, tcp_client_t *command_cli);
+int game_init(game_t *game);
 void *game_run(game_t *game);
 void game_hello(game_t *game);
 void game_connect(game_t *game);

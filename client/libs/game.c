@@ -1,6 +1,6 @@
 #include "game.h"
 
-int game_init(game_t *g, tcp_client_t *command_cli){
+int game_init(game_t *g){
 	
 	if(SDL_Init(SDL_INIT_VIDEO) < 0){
 		printf("No fue posible iniciar el video.\n");
@@ -18,9 +18,18 @@ int game_init(game_t *g, tcp_client_t *command_cli){
 		return 1;
 	}
 
+	if(TTF_Init() == -1){
+		printf("Error al inicializar la librería TTF\n");
+		return 1;
+	}
+
 	g->renderer = SDL_CreateRenderer(g->window, -1, 0);
 	g->status = HELLO;
-	g->command_cli = command_cli;
+	g->udp = 20000;	// Lo fijamos
+	printf("ACA");
+	sem_init(&(g->sem_status),0,1);
+	g->command_cli = (tcp_client_t *)malloc(sizeof(tcp_client_t));
+	printf("ACA paso");
 }
 
 int game_check_connect(){
@@ -59,6 +68,7 @@ void game_hello(game_t *g){
 	SDL_Event event;
 	SDL_Rect bg_frame, bg_dest;
 	SDL_Texture *bg_texture;
+	text_t label1;
 
 	bg_frame.x = 0;
 	bg_frame.y = 0;
@@ -72,6 +82,8 @@ void game_hello(game_t *g){
 
 	bg_texture = IMG_LoadTexture(g->renderer, "img/hello_bg.jpg");
 
+	text_init(&label1,200,200,60,g->renderer);
+	text_set(&label1,"C-STAR");
 	while(g->status == HELLO){
 		/* Si presionamos cualquier tecla, pasamos la pantalla */
 		while(SDL_PollEvent(&event)){
@@ -82,9 +94,9 @@ void game_hello(game_t *g){
 		SDL_RenderClear(g->renderer);
 		/* Pintamos el background */
 		SDL_RenderCopy(g->renderer, bg_texture, &bg_frame, &bg_dest);
+		text_draw(&label1);
 		/* Le pedimos al screen que renderise */
 		SDL_RenderPresent(g->renderer);
-		SDL_Delay(SCREEN_REFRESH);
 
 		/* Movemos el background */
 		if(bg_frame.x < 200){
@@ -126,7 +138,7 @@ void game_play(game_t *g){
 
 				((req_kp_t*)(req.body))->key = event.key.keysym.sym;
 				((req_kp_t*)(req.body))->action = event.type;
-				req_parse(&req,&buffer_req,&buffer_req_size);
+				req_to_buffer(&req,&buffer_req,&buffer_req_size);
 				tcp_client_send(g->command_cli,buffer_req,buffer_req_size,NULL);
 			}
 		}
@@ -170,6 +182,12 @@ void game_play(game_t *g){
 	}
 }
 
+void static game_set_status(game_t *g, int status){
+	sem_wait(&(g->sem_status));
+		g->status = status;
+	sem_post(&(g->sem_status));
+}
+
 void game_connect(game_t *g){
 	/* En este modo, el juego presenta una pantalla
 		para ingresar la ip del servidor e intentar
@@ -177,39 +195,76 @@ void game_connect(game_t *g){
 		no se logra la conexión. Presionando ESC
 	   se regresa a la pantalla hello */
 
-	void try_to_connect(game_t *g){
-
-		void server_response_handle(char *buffer_res, int buffer_size){
-			command_recv(buffer_res,
-		}
-
-		game_t gg = g;
-		req_t req;
-		char *buffer_req;
-		int rbuffer_req_size;
-		
-		if(!tcp_client_connect(g->command_server)){
-			return;
-		}
-
-		req->body = (req_connect_t*)malloc(sizeof(req_connect_t));
-		(req_connect_t)(req->body).udp = game->ufp;
-		(req_connect_t)(req->body).version = game->version;
-		req_parse(&req,&buffer_req,&buffer_req_size);
-		tcp_client_send(g->command_server,buffer_req,buffer_req_size,&server_response_handle);
-	}
-
 	input_t ip_server;
 	text_t error;
 	int key = 0;
 	SDL_Event event;
 	int key_press = 0;
 	int wait = false;
+	char *srv_ip;
 	pthread_t th;
+	char message[200];
+
+	void *try_to_connect(void *g){
+
+		game_t *gg = (game_t*)g;
+		req_t req;
+		char *buffer_req;
+		int buffer_req_size;
+
+		void server_response_handle(char *buffer_res, int buffer_size){
+			res_t *res;
+
+			buffer_to_res(res,buffer_res,buffer_size);
+			if(res->header.resp == RES_OK){
+				game_set_status(gg,MAINMENU);
+			} else {
+				switch(res->header.resp){
+					case RES_ERROR_PORT:
+						strcat(message,"Puerto UDP no aceptado");
+						break;
+					case RES_ERROR_VERSION:
+						strcat(message,res->body);
+						break;
+					default:
+						strcat(message,"Error indefinido");
+				}
+			}
+			wait = false;
+		}
+
+		printf("Creando el fileDescriptor %s:%i\n",srv_ip,SRV_PORT);
+		if(!tcp_client_init(gg->command_cli,srv_ip,SRV_PORT)){
+			text_set(&error,"Error fatal al crear el socket");
+			printf("Error al crear el FD\n");
+			wait = false;
+			return NULL;
+		}
+		
+		printf("Conectando contra el servidor\n");
+		if(!tcp_client_connect(gg->command_cli)){
+			text_set(&error,"Server no responde");
+			printf("Error server no responde\n");
+			wait = false;
+			return NULL;
+		}
+
+		printf("Enviando udp y version\n");
+		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
+		printf("paso\n");
+		((req_connect_t*)(req.body))->udp = gg->udp;
+		printf("paso\n");
+		((req_connect_t*)(req.body))->version = EAEAPP_VERSION;
+		printf("paso\n");
+		req_to_buffer(&req,&buffer_req,&buffer_req_size);
+		printf("paso\n");
+		tcp_client_send(gg->command_cli,buffer_req,buffer_req_size,&server_response_handle);
+		printf("paso\n");
+		return NULL;
+	}
 
 	input_init(&ip_server,100,100,1,g->renderer);
-	text_init(&error,200,200,g->renderer);
-	//text_set(&error,"");
+	text_init(&error,200,200,25,g->renderer);
 
 	while(g->status == CONNECT){
 		/* Borramos la pantalla */
@@ -230,8 +285,11 @@ void game_connect(game_t *g){
 					if (key == SDLK_ESCAPE)
 						g->status = HELLO;
 					if (key == SDLK_RETURN){
-						pthread_create(&th,NULL,&try_to_connect,g)
 						wait = true;
+						srv_ip = input_get_value(&ip_server);
+						printf("Creando el hilo\n");
+						text_set(&error,"Tratando de conectar");
+						pthread_create(&th,NULL,&try_to_connect,g);
 						/* CONECTAR */
 					}
 				} else {
