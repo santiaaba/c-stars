@@ -52,7 +52,7 @@ int buffer_to_req(req_t *req, char *buffer, int size){
 	return 1;
 }
 
-void res_to_buffer(res_t *res, char **buffer, int *size){
+void res_to_buffer(res_t *res, char **buffer, int *size, void f(char*,void*)){
 
 	*buffer = (char *)realloc(*buffer,RES_HEAD_SIZE + res->header.size);
 	*buffer[0] = res->header.cod;
@@ -64,10 +64,12 @@ void res_to_buffer(res_t *res, char **buffer, int *size){
 		case C_CONNECT_1:
 			memcpy(buffer[8],res->body,res->header.size);
 			break;
+		case C_GAME_STATUS:
+			f(buffer[8],res->body);
 	}
 }
 
-int buffer_to_res(res_t *res, char *buffer, int size){
+int buffer_to_res(res_t *res, char *buffer, int size,void f(char*,void*)){
 
 	res->header.cod = (uint8_t)buffer[0];
 	res->header.resp = (uint8_t)buffer[1];
@@ -81,6 +83,8 @@ int buffer_to_res(res_t *res, char *buffer, int size){
 			res->body = (char*)malloc(res->header.size);
 			memcpy(&(res->body),&buffer[8],res->header.size/8);
 			break;
+		case C_GAME_STATUS:
+			f(&buffer[8],&(res->body));
 	}
 	return 1;
 }
@@ -88,7 +92,7 @@ int buffer_to_res(res_t *res, char *buffer, int size){
 /******************************************************
  *							Para UDP									*
  ******************************************************/
-void data_send(data_t *data, char **buffer, int *size){
+void data_to_buffer(data_t *data, char **buffer, int *size){
 	/* Convierte la estructura data en buffer. Evitamos
 		tener que andar redimencionando continuamente el
 	   buffer. Asi que size debe ser un reflejo fiel del
@@ -115,7 +119,7 @@ void data_send(data_t *data, char **buffer, int *size){
 	}
 }
 
-void data_recv(data_t *data, char *buffer, int size){
+void buffer_to_data(data_t *data, char *buffer, int size){
 	/* Convierte la estructura buffer en data */
 	int j=0;
 
@@ -133,4 +137,12 @@ void data_recv(data_t *data, char *buffer, int size){
 		data->body[j].sprite = (uint8_t)buffer[8 * (j+1) + 1];
 		data->body[j].frame = (uint8_t)buffer[8 * (j+1) + 1];
 	}
+}
+
+void data_entity_copy(data_render_t *dest, data_render_t orig){
+	dest->entity_class = orig.entity_class;
+   dest->pos_x = orig.pos_x;
+   dest->pos_y = orig.pos_y;
+   dest->sprite = orig.sprite;
+   dest->frame =  orig.frame;
 }

@@ -31,6 +31,8 @@ Son en total 8 bytes
 #include "clockgame.h"
 #include "../../libs/eaeapp.h"
 
+#define G_MAX_ENTITY		100 //Cantidad maxima de entidades permitidas
+
 #define	G_WAIT_CONNECT				0
 #define	G_CONNECT_STEP_ONE		1
 #define	G_READY						2
@@ -63,14 +65,16 @@ typedef struct {
 typedef struct {
 	game_event_t *events[EVENT_LIMIT_SIZE];
 	int event_size;						/* Tamano logico del vector key */
-	int status;
+	int state;
+	uint32_t frame;
 	uint32_t score;
 	sem_t *sem_event;						/* Semaphore para la zona critica de eventos */
-	sem_t *sem_status;					/* Semaphore para la zona critica de status */
-	render_t buffer[BUFFER_SIZE];			/* Buffer para el envio UDP */
-	int buffer_size; 	 	 				/* Tamano logico del buffer para UDP */
+	sem_t *sem_state;					/* Semaphore para la zona critica de state */
+	data_render_t buffer[G_MAX_ENTITY];			/* Buffer para el envio UDP */
+	int buffer_cant; 	 	 				/* cantidad de elementos data_reder_t en el buffer */
 	key_direction_t direction;
 	ship_t *player;
+	int request_status;		/* 1 si requiere que el cliente solicite el estado */
 	lista_t *enemies;
 	lista_t *shoot_enemies;
 	lista_t *shoot_player;

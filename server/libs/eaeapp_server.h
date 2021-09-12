@@ -3,6 +3,7 @@
 
 #include "./game.h"
 #include "../../libs/eaeapp.h"
+#include "../../libs/game_info.h"
 
 #define VERSION 1
 

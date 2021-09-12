@@ -111,6 +111,12 @@ void static req_game_resume(game_t *g, req_t *req, res_t *res){
 
 void static req_game_status(game_t *g, req_t *req, res_t *res){
 	// Armamos la respuesta
+
+	if(res->body != NULL)
+		free(res->body)
+
+	res->body = (game_info_t)malloc(sizeof(game_info_t));
+	game_set_info(g,res->body);
 }
 
 void static req_keep_alive(game_t *g, req_t *req, res_t *res){

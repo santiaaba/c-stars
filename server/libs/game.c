@@ -7,16 +7,17 @@ void game_init(game_t *g, sem_t *sem_event){
 	for(i=0;i<EVENT_LIMIT_SIZE;i++)
 		g->events[i] = NULL;
 
-	g->status = G_WAIT_CONNECT;
+	g->state; = G_WAIT_CONNECT;
 	g->score = 0;
 	g->sem_event = sem_event;
-	sem_init(&(g->sem_status),0,1);
+	sem_init(&(g->sem_state;),0,1);
 
    g->player = (ship_t *)malloc(sizeof(ship_t));
 	g->enemies = (lista_t *)malloc(sizeof(lista_t));
    g->shoot_enemies = (lista_t *)malloc(sizeof(lista_t));
    g->shoot_player = (lista_t *)malloc(sizeof(lista_t));
 	g->clock = (clockgame_t *)malloc(sizeof(clockgame_t));
+	g->request_status = 0;
 
 	ship_init(g->player,PLAYER, g->clock);
 	lista_init(g->enemies,sizeof(ship_t));
@@ -29,7 +30,6 @@ void game_init(game_t *g, sem_t *sem_event){
 	//sem_post(g->sem_event);
 }
 
-
 void game_level_start(game_t *g, int idLevel){
 	/* Daja preparado el juego para el nivel en cuestion */
 
@@ -39,34 +39,35 @@ void game_level_start(game_t *g, int idLevel){
 	lista_clean(g->shoot_player,&shoot_destroy);
 	lista_clean(g->enemies,&ship_destroy);
 	ship_set_position(g->player,100,300);
-	g->status = G_PLAYING;
+	g->frame = 0;
+
+	game_set_state;(g,G_PLAYING);
 }
 
 void game_start(game_t *g){
 	/* Resetea el juego y lo inicia en el nivel 1 */
 	g->score = 0;
 	game_level_start(g,1);
-	game_set_status(g,G_PLAYING);
 }
 
 void game_stop(game_t *g){
 	/* Finaliza el juego. No implica mucho.
 		Solo salir del bucle y no ingresar a el
 		nuevamente salvo que se realice un game_start */
-		game_set_status(g,G_STOP);
+		game_set_state;(g,G_STOP);
 }
 
 void game_pause(game_t *g){
 	/* Pausa el juego. No implica mucho.
 	   Solo salir del bucle e ingresar a el
 		nuevamente con un game_resume */
-		game_set_status(g,G_PAUSE);
+		game_set_state;(g,G_PAUSE);
 }
 
 void game_resume(game_t *g){
 	/* Pausa el juego. No implica mucho.
 	   Solo salir ingresar nuevamente al bucle */
-		game_set_status(g,G_PLAYING);
+		game_set_state;(g,G_PLAYING);
 }
 
 void game_event_add(game_t *g, game_event_t *e){
@@ -136,17 +137,27 @@ void static game_handle_events(game_t *g){
 void static game_send_udp(game_t *g){
 	/* Arma el buffer UDP y envia los datos */
 	char buffer[MAX_UDP_BUFFER];
-	int i,j = 0;
+	int i, j, body_size = 0;
+	int buffer_size;
+	data_t data;
 
-	while(i < g->buffer_size){
+	data.header->frame = g->frame;
+	data.header->type = D_VIDEO;
+	data.header->aux = 0 || g->request_status;
+	data.header->size = sizeof(data_render_t) * g->buffer_size;
+	/* Enviamos todos los elementos de video */
+	while(i < g->buffer_cant){
+		/* Armamos el body hasta su capasidad maxima */
 		j = 0;
-		while(j < MAX_UDP_BUFFER){
-			g->buffer[i];
+		while((body_size + DATA_ENTITY_SIZE) < MAX_UDP_BUFFER){
+			data_entity_copy(&(data.body[j]),g->buffer[i]);
 			i++;
 			j++;
 		}
-		/* Luego de armados los datos, los enviamos */
-		sendto(g->sockfd, &buffer, strlen(buffer),
+		/* Luego de armados los datos, los convertimos a buffer char */
+		data_to_buffer(data,&buffer,&buffer_size);
+		/* Luego los enviamos */
+		sendto(g->sockfd, &buffer, buffer_size,
 			0, (const struct sockaddr *) &(g->servaddr), 
 			sizeof(g->servaddr));
 	}
@@ -155,7 +166,7 @@ void static game_send_udp(game_t *g){
 int game_init_udp(game_t *g, char *ip, int port){
 	if ( (g->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
 		perror("socket creation failed");
-		g->status = G_WAIT_CONNECT;
+		g->state; = G_WAIT_CONNECT;
 		return 0;
 	}
   
@@ -164,120 +175,148 @@ int game_init_udp(game_t *g, char *ip, int port){
 	g->servaddr.sin_port = htons(port);
 	g->servaddr.sin_addr.s_addr = inet_addr(ip);
 
-	g->status = G_READY;
+	g->state; = G_READY;
 	return 1;
-}
-
-void static game_ingress_level(game_t *g){
-	/* Bucle de la animacion que presenta
-		el nivel. Muestra la nave del jugador
-		ingresando por la zquierda de la pantalla */
-
-}
-
-void static game_egress_level(game_t *g){
-	/* Bucle de la animacion que finaliza
-	   el nivel. Muestra a la nave del jugador
-		saliendo por la derecha de la pantalla */
 }
 
 void static game_playing_level(game_t *g){
 	/* Bucle que posee la logica del juego.
 		GENERA un FRAME del juego  */
 
-	render_t *r;
 	int i = 0;
 
 	/* Leemos de un listado de acciones */
-	game_handle_events(g);
 
-	/* Gestionamos enemigos */
-	lista_first(g->enemies);
-	while(!lista_eol(g->enemies)){
-		/* movemos la nave del enemigo */
-		ship_move(lista_get(g->enemies));
+	while(g->state == G_PLAYING){
 
-		/* Calculamos colision con jugador */
-		ship_colision_ship(lista_get(g->enemies),g->player);
+		if(level_get_state(g->level) == L_PLAYING)
+			game_handle_events(g);
 
-		/* Calculamos colision con disparos jugador */
+		/* Gestionamos enemigos */
+		lista_first(g->enemies);
+		while(!lista_eol(g->enemies)){
+			/* movemos la nave del enemigo */
+			ship_move(lista_get(g->enemies));
+	
+			/* Calculamos colision con jugador */
+			ship_colision_ship(lista_get(g->enemies),g->player);
+	
+			/* Calculamos colision con disparos jugador */
+			lista_first(g->shoot_player);
+			while(!lista_eol(g->shoot_player)){
+				ship_colision_shoot(	lista_get(g->enemies),
+											lista_get(g->shoot_player));
+				lista_next(g->shoot_player);
+			}
+	
+			/* render info para cliente */
+			ship_render(lista_get(g->enemies),&(g->buffer[i]));
+			i++;
+			/* Disparamos */
+			//ship_shoot(g->player,g->shoot_enemies);
+	
+			lista_next(g->enemies);
+		}
+		/* Gestionamos disparos jugador */
 		lista_first(g->shoot_player);
 		while(!lista_eol(g->shoot_player)){
-			ship_colision_shoot(	lista_get(g->enemies),
-										lista_get(g->shoot_player));
+			shoot_move(lista_get(g->shoot_player));
+			/* Calculamos colision con enemigos */
+			/* Esto quizas pueda eliminarse ya que se
+		      realiza cuando se gestionan los enemigos */
+	
+			lista_first(g->shoot_player);
+			while(!lista_eol(g->shoot_player)){
+				ship_colision_shoot(	lista_get(g->enemies),
+											lista_get(g->shoot_player));
+				lista_next(g->shoot_player);
+			}
+	
+			/* render info para cliente */
+			shoot_render(lista_get(g->shoot_player),&(g->buffer[i]));
+			i++;
 			lista_next(g->shoot_player);
 		}
-
-		/* render info para cliente */
-		ship_render(lista_get(g->enemies),&(g->buffer[i]));
+	
+		/* Movemos disparos enemigos */
+		lista_first(g->shoot_enemies);
+		while(!lista_eol(g->shoot_enemies)){
+			shoot_move(lista_get(g->shoot_enemies));
+			/* Calculamos colision con jugador */
+			ship_colision_shoot(g->player,lista_get(g->shoot_enemies));
+			shoot_render(lista_get(g->shoot_player),&(g->buffer[i]));
+			i++;
+			lista_next(g->shoot_enemies);
+		}
+	
+		/* Movemos al jugador */
+		ship_move(g->player);
+		//r = (render_t *)malloc(sizeof(render_t));
+		ship_render(g->player,&(g->buffer[i]));
 		i++;
-		/* Disparamos */
-		//ship_shoot(g->player,g->shoot_enemies);
+		g->buffer_cant = i;
+	
+		/* Lanzamos nuevos enemigos si corresponde */
+		level_run(g->level,g->enemies);
 
-		lista_next(g->enemies);
-	}
-	/* Gestionamos disparos jugador */
-	lista_first(g->shoot_player);
-	while(!lista_eol(g->shoot_player)){
-		shoot_move(lista_get(g->shoot_player));
-		/* Calculamos colision con enemigos */
-		/* Esto quizas pueda eliminarse ya que se
-	      realiza cuando se gestionan los enemigos */
-
-		lista_first(g->shoot_player);
-		while(!lista_eol(g->shoot_player)){
-			ship_colision_shoot(	lista_get(g->enemies),
-										lista_get(g->shoot_player));
-			lista_next(g->shoot_player);
+		switch(level_get_state(game->level)){
+			case L_INGRESS:
+				/* Si level esta en L_INGRESS, lo pasamos a L_PLAYING
+					cuando la nave del jugador esté a 20 pixeles del lado
+					izquierdo */
+				if(point_get_x(ship_get_position(g->player)) >= 100)
+					level_set_state(g->level,L_PLAYING);
+				break;
+			case L_PLAYING:
+				if((g->level) && lista_size(g->enemies) == 0 &&
+					lista_size(g->shoot_enemies) == 0){
+						level_set_state(g->level,L_EGRESS);
+				}
+				break;
+			case L_EGRESS:
+				/* Cuando la nave sale de la pantalla hemos terminado
+					el nivel */
+				if(point_get_x(ship_get_position(g->player)) >= 900){
+					level_set_state(g->level,L_END);
+					g->request_status = 1;
+				}
+				ACA ME QUEDE. RESOLVER CUANDO EL SERVER LE INFORMA
+				AL CLIENTE QUE HA FINALIZADO EL NIVEL
+				break;
+			case L_END:
 		}
 
-		/* render info para cliente */
-		shoot_render(lista_get(g->shoot_player),&(g->buffer[i]));
-		i++;
-		lista_next(g->shoot_player);
+		/* Si level está en L_PLAYING, lo pasamos a L_EGRESS 4
+			segundos luego de que no haya mas enemigos activos
+			y para generar */
+	
+		game_send_udp(g);
 	}
+}
 
-	/* Movemos disparos enemigos */
-	lista_first(g->shoot_enemies);
-	while(!lista_eol(g->shoot_enemies)){
-		shoot_move(lista_get(g->shoot_enemies));
-		/* Calculamos colision con jugador */
-		ship_colision_shoot(g->player,lista_get(g->shoot_enemies));
-		shoot_render(lista_get(g->shoot_player),&(g->buffer[i]));
-		i++;
-		lista_next(g->shoot_enemies);
-	}
-
-	/* Movemos al jugador */
-	ship_move(g->player);
-	//r = (render_t *)malloc(sizeof(render_t));
-	ship_render(g->player,&(g->buffer[i]));
-
-	/* Lanzamos nuevos enemigos si corresponde */
-	level_run(g->level,g->enemies);
-
-	game_send_udp(g);
+void game_status(game_t *g){
+	/* Retorna información del estado del juego.
+		Se coloca el parametro que lo fuerza en 0 */
+	g->request_status = 0;
+	
 }
 
 int game_get_state(game_t *g){
-	return g->status;
+	return g->state;;
 }
 
-void game_set_state(game_t *g, int status){
-	sem_wait(g->sem_status);
-		g->status = status;
-	sem_post(g->sem_status);
+void game_set_state(game_t *g, int state;){
+	sem_wait(g->sem_state;);
+		g->state; = status;
+	sem_post(g->sem_state;);
 }
 
 void game_run(game_t *g){
 	/* funcion principal a entregar al hilo del juego */
-	while (g->status != G_LEAVE){
-		switch(g->status){
+	while (g->state; != G_LEAVE){
+		switch(g->state;){
 			case G_PLAYING:
-				game_ingress_level(g);
 				game_playing_level(g);
-				game_egress_level(g);
-			case G_
-		usleep(NANOTIME);
+		}
 	}
 }

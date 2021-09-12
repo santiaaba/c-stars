@@ -9,10 +9,15 @@
 /* Version minima aceptada */
 #define EAEAPP_VERSION		1
 
+/* Para determinar si es video o audio */
+#define D_VIDEO	0
+#define D_SOUND	1
+
 #define REQ_HEAD_SIZE		16
 #define RES_HEAD_SIZE		16
 #define DATA_HEAD_SIZE		8
-#define MAX_DATA_BODY		200
+#define MAX_DATA_BODY		200			// En bytes
+#define DATA_ENTITY_SIZE	8				// cantidad de bytes de un entity
 
 /* Los diferentes mensajes que puede recibir el servidor */
 #define C_CONNECT_1		0
@@ -37,7 +42,7 @@
 typedef struct {
 	uint32_t frame;
 	uint8_t type;
-	uint16_t size;
+	uint16_t size;		/* Cantidad de elementos del body en bytes */
 	uint8_t aux;
 } data_header_t;
 
@@ -47,11 +52,11 @@ typedef struct {
 	int16_t pos_y;
 	uint8_t sprite;
 	uint8_t frame;
-} data_body_t;
+} data_render_t;
 
 typedef struct {
 	data_header_t header;
-	data_body_t body[MAX_DATA_BODY];
+	data_render_t body[MAX_DATA_BODY];
 } data_t;
 
 /************************************************/
@@ -85,6 +90,9 @@ typedef struct {
 	void *body;			// Los body varian en base al mensaje
 } req_t;
 
+/* Se permiten bodys customizados. Es el caso de un mensaje
+C_GAME_STATUS */
+
 /************/
 /* Response */
 /************/
@@ -104,11 +112,13 @@ typedef struct {
 void req_to_buffer(req_t *req, char **buffer, int *size);
 int buffer_to_req(req_t *req, char *buffer, int size);
 
-void res_to_buffer(res_t *res, char **buffer, int *size);
-int buffer_to_res(res_t *res, char *buffer, int size);
+void res_to_buffer(res_t *res, char **buffer, int *size,void f(char*,void*));
+int buffer_to_res(res_t *res, char *buffer, int size,void f(char*,void*));
 
 /* Para el protocolo UDP de datos */
-void data_send(data_t *data, char **buffer, int *size);
-void data_recv(data_t *data, char *buffer, int size);
+void data_to_buffer(data_t *data, char **buffer, int *size);
+void buffer_to_data(data_t *data, char *buffer, int size);
 
+/* Otras funciones auxiliares */
+void data_entity_copy(data_render_t *dest, data_render_t orig);
 #endif
