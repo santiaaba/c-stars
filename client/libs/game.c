@@ -209,8 +209,8 @@ void game_connect(game_t *g){
 
 		game_t *gg = (game_t*)g;
 		req_t req;
-		char *buffer_req;
-		int buffer_req_size;
+		char *buffer_req = NULL;
+		int buffer_req_size = 0;
 
 		void server_response_handle(char *buffer_res, int buffer_size){
 			res_t *res;

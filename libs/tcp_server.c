@@ -53,6 +53,7 @@ void *tcp_server_start(void *server){
 		confd = accept(s->fd_server, (struct sockaddr*)&s->clientaddr, &len);
 		if(confd > 0){
 			s->status = S_ESTABLISHED;
+			printf("Cliente connected\n");
 			while(s->status == S_ESTABLISHED){
 				/* Aguardamos a recibir una instruccion */
 

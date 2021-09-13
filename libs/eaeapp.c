@@ -19,15 +19,19 @@ void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 }
 
 void req_to_buffer(req_t *req, char **buffer, int *size){
-	uint32_t aux;
+	uint16_t aux;
 
-	*buffer = (char *)realloc(*buffer,REQ_HEAD_SIZE + req->header.size);
-	*buffer[0] = (char unsigned)(req->header.cod);
-	*buffer[1] = (char unsigned)(req->header.aux);
-	*buffer[2] = htons(req->header.size);
-	*buffer[4] = htonl(req->header.qid);
+	printf("entro %lu\n", (int long unsigned)(REQ_HEAD_SIZE + req->header.size));
 
-	printf("req_to_buffer\n");
+	*buffer = (char *)realloc(*buffer,
+		(int long unsigned)(REQ_HEAD_SIZE + req->header.size));
+	(*buffer)[0] = (char unsigned)(req->header.cod);
+	(*buffer)[1] = (char unsigned)(req->header.aux);
+	(*buffer)[2] = htons(req->header.size);
+
+	(*buffer)[4] = htonl(req->header.qid);
+
+	printf("req_to_buffer %lu\n",sizeof(*buffer));
 
 	switch(req->header.cod){
 		case C_CONNECT_1:
@@ -35,6 +39,7 @@ void req_to_buffer(req_t *req, char **buffer, int *size){
 			memcpy(buffer[8],&aux,2);
 			aux = htons(((req_connect_t*)(req->body))->version);
 			memcpy(buffer[10],&aux,2);
+			printf("entro u5\n");
 			break;
 		case C_KEY_PRESS:
 			aux = htons(((req_kp_t*)(req->body))->key);
@@ -46,6 +51,8 @@ void req_to_buffer(req_t *req, char **buffer, int *size){
 }
 
 int buffer_to_req(req_t *req, char *buffer, int size){
+
+	printf("entro\n");
 
 	req->header.cod = (uint8_t)buffer[0];
 	req->header.aux = (uint8_t)buffer[1];

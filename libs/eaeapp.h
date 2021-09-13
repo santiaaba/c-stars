@@ -14,8 +14,8 @@
 #define D_VIDEO	0
 #define D_SOUND	1
 
-#define REQ_HEAD_SIZE		16
-#define RES_HEAD_SIZE		16
+#define REQ_HEAD_SIZE		8				// En Bytes
+#define RES_HEAD_SIZE		8				// En Bytes
 #define DATA_HEAD_SIZE		8
 #define MAX_DATA_BODY		200			// En bytes
 #define DATA_ENTITY_SIZE	8				// cantidad de bytes de un entity
