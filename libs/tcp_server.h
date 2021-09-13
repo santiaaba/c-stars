@@ -27,10 +27,9 @@ typedef struct{
 uint8_t tcp_server_init(tcp_server_t *server, uint32_t port);
 
 void tcp_server_assign_protocol(tcp_server_t *server,
-		void (*protocol)(char*, int, char*, int));
-//		void *protocol(char *req_buffer,int req_size, char *res_buffer, int *res_size));
+		void (*protocol)(void*, char*, int, char*, int*));
 
-void tcp_server_start(tcp_server_t *server);
+void *tcp_server_start(void *server);
 
 void tcp_server_close(tcp_server_t *server);
 

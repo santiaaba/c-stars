@@ -113,70 +113,70 @@ void static req_game_status(game_t *g, req_t *req, res_t *res){
 	// Armamos la respuesta
 
 	if(res->body != NULL)
-		free(res->body)
+		free(res->body);
 
-	res->body = (game_info_t)malloc(sizeof(game_info_t));
-	game_set_info(g,res->body);
+	res->body = (game_info_t*)malloc(sizeof(game_info_t));
+	game_info(g,res->body);
 }
 
 void static req_keep_alive(game_t *g, req_t *req, res_t *res){
 	res->header.cod = RES_OK;
 }
 
-void server_protocol_handle(game_t *g,char *req_buffer, int req_size,
+void server_protocol_handle(void *g,char *req_buffer, int req_size,
 									 char *res_buffer, int *res_size){
 	/* Se encarga de procesar los mensajes del cliente */
 	req_t req;
 	res_t res;
 
-	req_parse(&req,req_buffer,req_size);
+	buffer_to_req(&req,req_buffer,req_size);
 	res.header.cod = req.header.cod;
 
 	switch(req.header.cod) {
 		case C_CONNECT_1:
 			/* Se conecta el cliente. Paso 1 */
-			req_connect_step_one(g,&req,&res);
+			req_connect_step_one((game_t *)g,&req,&res);
 			break;
 		case C_CONNECT_2:
 			/* Se conecta el cliente. Paso 2 */
-			req_connect_step_two(g,&req,&res);
+			req_connect_step_two((game_t *)g,&req,&res);
 			break;
 		case C_DISCONNECT:
 			/* Se desconecta el cliente */
-			req_disconnect(g,&req,&res);
+			req_disconnect((game_t *)g,&req,&res);
 			break;
 		case C_KEEPALIVE:
 			/* Cliente informa al server que esta vivo */
-			req_keep_alive(g,&req,&res);
+			req_keep_alive((game_t *)g,&req,&res);
 			break;
 		case C_GAME_START:
 			/* Inicia el juego desde el nivel 1 */
-			req_game_start(g,&req,&res);
+			req_game_start((game_t *)g,&req,&res);
 			break;
 		case C_GAME_STOP:
 			/* Detiene el juego */
-			req_game_stop(g,&req,&res);
+			req_game_stop((game_t *)g,&req,&res);
 			break;
 		case C_GAME_PAUSE:
 			/* Pausa el juego */
-			req_game_pause(g,&req,&res);
+			req_game_pause((game_t *)g,&req,&res);
 			break;
 		case C_GAME_RESUME:
 			/* Continua el juego pausado */
-			req_game_resume(g,&req,&res);
+			req_game_resume((game_t *)g,&req,&res);
 			break;
 		case C_GAME_STATUS:
 			/* Retorna estado y datos del juego */
-			req_game_status(g,&req,&res);
+			req_game_status((game_t *)g,&req,&res);
 			break;
 		case C_KEY_PRESS:
 			/* Tecla presionada */
-			req_key_press(g,&req,&res);
+			req_key_press((game_t *)g,&req,&res);
 			break;
 		default:
 			printf("Error de codigo");
 	}
 
 	/* Una vez obtenida la respuesta, la convertimos en res_buffer */
-	res_parse(&res,&res_buffer,res_size);
+	res_to_buffer(&res,&res_buffer,res_size,NULL);
 }

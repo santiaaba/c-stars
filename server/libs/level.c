@@ -14,6 +14,7 @@ void static level_load(level_t *l, int id){
 	
 	sprintf(datafile,"LEVEL%i",id);
 
+	l->id = id;
 	fdIN = fopen(datafile,"rb");
 	fread(&cantShips,sizeof(int16_t),1,fdIN);	/* Cantidad Naves */
 	fread(&num,sizeof(int16_t),1,fdIN);		/* Bakgroud */
@@ -55,8 +56,8 @@ void level_init(level_t **l, int id, clockgame_t *clockgame){
 	level_load((*l),id);
 }
 
-void attack_destroy(attack_t **attack){
-	ship_destroy(&((*attack)->ship));
+void attack_destroy(void **attack){
+	ship_destroy((void*)(&(((attack_t*)(*attack))->ship)));
 }
 
 void level_destroy(level_t **l){
@@ -89,10 +90,14 @@ int level_eol(level_t *l){
 	return lista_eol(l->attacks);
 }
 
-void level_set_state(level_t *l int state){
+uint8_t level_get_id(level_t *l){
+	return l->id;
+}
+
+void level_set_state(level_t *l, uint8_t state){
 	l->state = state;
 }
 
-int level_get_state(level_t *l){
+uint8_t level_get_state(level_t *l){
 	return l->state;
 }

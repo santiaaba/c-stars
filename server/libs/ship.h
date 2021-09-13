@@ -4,17 +4,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "vector.h"
+#include "../../libs/eaeapp.h"
 #include "border.h"
 #include "rect.h"
 #include "shoot.h"
-#include "render.h"
 #include "clockgame.h"
 
-#define PLAYER			0
-#define ENEMIE1		1
-#define ENEMIE2		2
-#define ENEMIE3		3
-#define ENEMIE4		4
+/* Los 20 y 30 son tipos de naves.
+Los 0 y 10 son tipos de disparos. Ver shoot.h */
+#define PLAYER			20
+#define ENEMIE1		21
+#define ENEMIE2		22
+#define ENEMIE3		23
+#define ENEMIE4		24
 
 typedef struct t_ia_mov{
 	vector_t *vector;
@@ -37,6 +39,8 @@ typedef struct t_ship{
 	uint8_t type;		// ID tipo nave
 	ia_t *ia;
 	uint8_t ia_activated;
+	uint8_t sprite;
+	uint8_t frame;
 } ship_t;
 
 /* Inicializa una nave */
@@ -95,10 +99,10 @@ ia_t *ship_get_ia(ship_t *ship);
 void ship_ia_activate(ship_t *ship);
 
 /* Destruye una nave */
-void ship_destroy(ship_t **ship);
+void ship_destroy(void **ship);
 
 /* Genera los datos de la nave en el buffer */
-void ship_render(ship_t *ship, render_t *render);
+void ship_render(ship_t *ship, data_render_t *data);
 
 /****************************
 			Para la IA

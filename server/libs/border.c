@@ -27,7 +27,7 @@ uint8_t border_collision(border_t *border, border_t *border2){
 	return crash;
 }
 
-void border_add_vector(border_t*border, vector_t *vector){
+void border_add_vector(border_t* border, vector_t *vector){
 	lista_first(border->lista);
 	while(!lista_eol(border->lista)){
 		point_add_vector(rect_get_point((rect_t *)lista_get(border->lista)),vector);
@@ -35,7 +35,7 @@ void border_add_vector(border_t*border, vector_t *vector){
 	}
 }
 
-void border_destroy(border_t **border){
-	lista_clean((*border)->lista,&rect_destroy);
+void border_destroy(void **border){
+	lista_clean(((border_t *)(*border))->lista,&rect_destroy);
 	free(*border);
 }

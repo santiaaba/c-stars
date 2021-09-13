@@ -29,41 +29,43 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port){
 		return 0;
 	}
 	server->status = S_LISTEN;
-	printf("Servidor listo para recibir una conexion\n")
+	printf("Servidor listo para recibir una conexion\n");
 	return 1;
 }
 
 void tcp_server_assign_protocol(tcp_server_t *server,
-      void (*protocol)(char*, int, char*, int)){
+      void (*protocol)(void*, char*, int, char*, int*)){
 	server->protocol = protocol;
 	printf("Protocolo asignado\n");
 }
 
-void tcp_server_start(tcp_server_t *server){
+void *tcp_server_start(void *server){
 	char req_buffer[MAXBUFFER];
 	char res_buffer[MAXBUFFER];
 	int req_size;
 	int res_size;
 	int confd, len;
+	tcp_server_t *s;
 
-	while(server->status == S_LISTEN){
+	s = (tcp_server_t*)server;
+	while(s->status == S_LISTEN){
 		/* Aguardamos que un cliente establezca una conexion */
-		confd = accept(server->fd_server, (struct sockaddr*)&server->clientaddr, &len);
+		confd = accept(s->fd_server, (struct sockaddr*)&s->clientaddr, &len);
 		if(confd > 0){
-			server->status = S_ESTABLISHED;
-			while(server->status == S_ESTABLISHED){
+			s->status = S_ESTABLISHED;
+			while(s->status == S_ESTABLISHED){
 				/* Aguardamos a recibir una instruccion */
 
 				//read(server->fd_server, req_buffer, sizeof(req_buffer));
-				req_size = recv(server->fd_server, req_buffer , MAXBUFFER , 0);
+				req_size = recv(s->fd_server, req_buffer , MAXBUFFER , 0);
 				if(req_size > 0){
-					(server->protocol)(req_buffer,req_size,res_buffer,&res_size);
+					(s->protocol)(req_buffer,req_size,res_buffer,&res_size);
 					/* Respondemos al cliente */
 					if(res_size > 0)
-						send(server->fd_server,res_buffer,res_size,0);
+						send(s->fd_server,res_buffer,res_size,0);
 				}
 			}
-			close(server->fd_server);
+			close(s->fd_server);
 		}
 	}
 }

@@ -30,6 +30,7 @@ Son en total 8 bytes
 #include "game.h"
 #include "clockgame.h"
 #include "../../libs/eaeapp.h"
+#include "../../libs/game_info.h"
 
 #define G_MAX_ENTITY		100 //Cantidad maxima de entidades permitidas
 
@@ -88,9 +89,12 @@ void game_init(game_t *g, sem_t *sem_event);
 void game_event_add(game_t *g, game_event_t *e);
 void game_start(game_t *g);
 int game_init_udp(game_t *g, char *ip, int port);
-void game_run(game_t *g);
+void *game_run(void *g);
 void game_level_start(game_t *g, int level);
+void game_info(game_t *g, game_info_t *info);
 void game_pause(game_t *g);
+void game_resume(game_t *g);
+void game_stop(game_t *g);
 int game_udp_negociate(game_t *g, char *ip, int port);
 void game_over(game_t *g);
 int game_get_state(game_t *g);

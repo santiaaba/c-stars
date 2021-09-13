@@ -6,6 +6,8 @@ void shoot_init(shoot_t *shoot, int type){
 	point_set(shoot->position,0,0);
 	border_init(shoot->border);
 	vector_init(shoot->vector);
+	shoot->sprite = 0;
+	shoot->frame = 0;
 }
 
 void shoot_set_position(shoot_t *shoot, point_t position){
@@ -32,18 +34,17 @@ border_t *shoot_get_border(shoot_t *shoot){
 	return shoot->border;
 }
 
-void shoot_render(shoot_t *shoot, render_t *render){
-	render->entity = shoot->type;
-	render->x = point_get_x(shoot->position);
-	render->y = point_get_y(shoot->position);
-	render->sprite = 1;     //MOMENTANEO
-	render->frame = 1;      //MOMENTANEO
+void shoot_render(shoot_t *shoot, data_render_t *data){
+	data->entity_class = shoot->type;
+	data->pos_x = point_get_x(shoot->position);
+	data->pos_y = point_get_y(shoot->position);
+	data->sprite = shoot->sprite;
+	data->frame = shoot->frame;
 }
 
-void shoot_destroy(shoot_t **shoot){
-	border_destroy((*shoot)->border);
-	free((*shoot)->position);
-	free((*shoot)->vector);
+void shoot_destroy(void **shoot){
+	border_destroy((void *)(&(((shoot_t*)(*shoot))->border)));
+	free(((shoot_t*)(*shoot))->position);
+	free(((shoot_t*)(*shoot))->vector);
 	free(*shoot);
-	
 }

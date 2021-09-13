@@ -55,6 +55,8 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			border_add_rect(ship->border,rect);
 			break;
 	}
+	ship->sprite = 0;
+	ship->frame = 0;
 }
 
 void ship_set_speed(ship_t *ship, float speed){
@@ -132,19 +134,27 @@ void ship_ia_activate(ship_t *ship){
 	ship -> ia_activated = 1;
 }
 
-void ship_destroy(ship_t **ship){
-	free((*ship)->position);
-	border_destroy(&((*ship)->border));
-	free((*ship)->vector);
-	ia_destroy(&((*ship)-> ia));
+void ship_destroy(void **ship){
+	free(((ship_t*)(*ship))->position);
+	border_destroy((void *)(&(((ship_t*)(*ship))->border)));
+	free(((ship_t*)(*ship))->vector);
+	ia_destroy(&(((ship_t*)(*ship))-> ia));
 }
 
-void ship_render(ship_t *ship, render_t *render){
-	render->entity = ship->type;
-	render->x = point_get_x(ship->position);
-	render->y = point_get_y(ship->position);
-	render->sprite = 1;		//MOMENTANEO
-	render->frame = 1;		//MOMENTANEO
+void ship_data(ship_t *ship, data_render_t *data){
+	data->entity_class = ship->type;
+	data->pos_x = point_get_x(ship->position);
+	data->pos_y = point_get_y(ship->position);
+	data->sprite = ship->sprite;
+	data->frame = ship->frame;
+}
+
+void ship_render(ship_t *ship, data_render_t *data){
+	data->entity_class = ship->type;
+	data->pos_x = point_get_x(ship->position);
+	data->pos_y = point_get_y(ship->position);
+	data->sprite = ship->sprite;
+	data->frame = ship->frame;
 }
 
 /***************************************
@@ -177,8 +187,8 @@ void ia_drive_ship(ia_t *ia, ship_t *ship){
 			ship_set_vector(ship, aux->vector);
 }
 
-void ia_mov_destroy(ia_mov_t **ia_mov){
-	free((*ia_mov)->vector);
+void ia_mov_destroy(void **ia_mov){
+	free(((ia_mov_t*)(*ia_mov))->vector);
 }
 
 void ia_destroy(ia_t **ia){

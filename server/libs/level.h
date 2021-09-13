@@ -11,6 +11,7 @@
 #define L_INGRESS		0
 #define L_PLAYING		1
 #define L_EGRESS		2
+#define L_END			3
 
 #include <stdint.h>
 #include "../../libs/lista.h"
@@ -23,9 +24,10 @@ typedef struct t_attack{
 } attack_t;
 
 typedef struct t_level{
+	uint8_t id;
 	int background;
 	int soundTrak;
-	int state;
+	uint8_t state;
 	clockgame_t *clockgame;
 	lista_t *attacks;	/* Posee las secuencias de ataque */
 } level_t;
@@ -39,9 +41,11 @@ void level_run(level_t *l, lista_t *enemies);
 /* Destruye las estructuras internas del level */
 void level_destroy(level_t **l);
 
-void level_set_state(level_t *l int state);
+void level_set_state(level_t *l, uint8_t state);
 
-int level_get_state(level_t *l);
+uint8_t level_get_id(level_t *l);
+
+uint8_t level_get_state(level_t *l);
 
 int level_eol(level_t *l);
 

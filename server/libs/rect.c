@@ -49,7 +49,7 @@ uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	(o_y + o_h < b_y && o_y + o_h > b_y - b_h)));
 }
 
-void rect_destroy(rect_t **rect){
-	free((*rect)->point);
+void rect_destroy(void **rect){
+	free(((rect_t*)(*rect))->point);
 	free(*rect);
 }
