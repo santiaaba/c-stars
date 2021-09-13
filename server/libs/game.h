@@ -70,7 +70,7 @@ typedef struct {
 	uint32_t frame;
 	uint32_t score;
 	sem_t *sem_event;						/* Semaphore para la zona critica de eventos */
-	sem_t *sem_state;					/* Semaphore para la zona critica de state */
+	sem_t sem_state;					/* Semaphore para la zona critica de state */
 	data_render_t buffer[G_MAX_ENTITY];			/* Buffer para el envio UDP */
 	int buffer_cant; 	 	 				/* cantidad de elementos data_reder_t en el buffer */
 	key_direction_t direction;

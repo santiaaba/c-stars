@@ -3,14 +3,31 @@
 /******************************************************
  *							Para TCP									*
  ******************************************************/
+
+void req_init(req_t *req, uint8_t cod, uint16_t size){
+	req->header.cod = cod;
+	req->header.qid = 0;		// POR EL MOMENTO
+	req->header.aux = 0;
+	req->header.size = size;
+}
+
+void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
+	res->header.cod = cod;
+	res->header.resp = resp;
+	res->header.size = size;
+	res->header.qid = 0;	// POR EL momento
+}
+
 void req_to_buffer(req_t *req, char **buffer, int *size){
 	uint32_t aux;
 
 	*buffer = (char *)realloc(*buffer,REQ_HEAD_SIZE + req->header.size);
-	*buffer[0] = req->header.cod;
-	*buffer[1] = req->header.aux;
+	*buffer[0] = (char unsigned)(req->header.cod);
+	*buffer[1] = (char unsigned)(req->header.aux);
 	*buffer[2] = htons(req->header.size);
 	*buffer[4] = htonl(req->header.qid);
+
+	printf("req_to_buffer\n");
 
 	switch(req->header.cod){
 		case C_CONNECT_1:
@@ -34,6 +51,8 @@ int buffer_to_req(req_t *req, char *buffer, int size){
 	req->header.aux = (uint8_t)buffer[1];
 	req->header.size = ntohs(buffer[2]);
 	req->header.qid = ntohl(buffer[4]);
+	
+	printf("Buffer_to_req\n");
 
 	if(req->body != NULL)
 		free(req->body);

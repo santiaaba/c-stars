@@ -15,4 +15,4 @@ cd ..
 rm c-start
 
 # Compilamos y enlazamos
-gcc c-start.c ../libs/tcp_client.o ../libs/eaeapp.o libs/entity.o libs/button.o libs/text.o libs/textures.o libs/game.o libs/input.o libs/playground.o -lpthread -lSDL2_ttf -lSDL2_image -lSDL2main -lSDL2 -o c-start
+gcc c-start.c ../libs/tcp_client.o ../libs/eaeapp.o libs/entity.o libs/button.o libs/text.o libs/textures.o libs/game.o libs/input.o libs/playground.o -lpthread -lSDL2_ttf -lSDL2_image -lSDL2main -lSDL2 -o c-start --debug

@@ -215,7 +215,7 @@ void game_connect(game_t *g){
 		void server_response_handle(char *buffer_res, int buffer_size){
 			res_t *res;
 
-			buffer_to_res(res,buffer_res,buffer_size);
+			buffer_to_res(res,buffer_res,buffer_size,NULL);
 			if(res->header.resp == RES_OK){
 				game_set_status(gg,MAINMENU);
 			} else {
@@ -251,13 +251,16 @@ void game_connect(game_t *g){
 
 		printf("Enviando udp y version\n");
 		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
+
+		req_init(&req,C_CONNECT_1,sizeof(req_connect_t));
+
 		printf("paso\n");
 		((req_connect_t*)(req.body))->udp = gg->udp;
 		printf("paso\n");
 		((req_connect_t*)(req.body))->version = EAEAPP_VERSION;
 		printf("paso\n");
 		req_to_buffer(&req,&buffer_req,&buffer_req_size);
-		printf("paso\n");
+		printf("paso. Buffer\n");
 		tcp_client_send(gg->command_cli,buffer_req,buffer_req_size,&server_response_handle);
 		printf("paso\n");
 		return NULL;

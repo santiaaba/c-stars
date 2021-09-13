@@ -14,7 +14,7 @@ void game_init(game_t *g, sem_t *sem_event){
 	printf("ACA 1 game\n");
 	g->sem_event = sem_event;	// Debe venir ya inicializado
 	printf("ACA 1 game\n");
-	sem_init(g->sem_state,0,1);
+	sem_init(&(g->sem_state),0,1);
 	printf("ACA 2 game\n");
 
    g->player = (ship_t *)malloc(sizeof(ship_t));
@@ -312,9 +312,9 @@ int game_get_state(game_t *g){
 }
 
 void game_set_state(game_t *g, int state){
-	sem_wait(g->sem_state);
+	sem_wait(&(g->sem_state));
 		g->state = state;
-	sem_post(g->sem_state);
+	sem_post(&(g->sem_state));
 }
 
 void game_info(game_t *g, game_info_t *info){

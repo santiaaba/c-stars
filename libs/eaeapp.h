@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
 
@@ -109,6 +110,9 @@ typedef struct {
 } res_t;
 
 /* Para el protocolo TCP de comunicación */
+void req_init(req_t *req, uint8_t cod, uint16_t size);
+void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
+
 void req_to_buffer(req_t *req, char **buffer, int *size);
 int buffer_to_req(req_t *req, char *buffer, int size);
 
