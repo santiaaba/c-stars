@@ -1,0 +1,15 @@
+client/c-start
+client/libs/*.o
+
+libs/*.o
+
+server/c-startd
+server/check_level
+server/make_level
+server/demo_server_sock
+server/*.o
+server/libs/*.o
+
+demo2
+demo
+demo_buffer
