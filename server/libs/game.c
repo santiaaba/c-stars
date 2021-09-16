@@ -195,6 +195,10 @@ void static game_playing_level(game_t *g){
 		GENERA un FRAME del juego  */
 
 	int i = 0;
+	struct timespec ts;
+
+	ts.tv_sec = GAME_SLEEP / 1000;
+	ts.tv_nsec = (GAME_SLEEP % 1000) * 1000000;
 
 	/* Leemos de un listado de acciones */
 
@@ -295,8 +299,9 @@ void static game_playing_level(game_t *g){
 					g->request_status = 1;
 				}
 		}
-
 		game_send_udp(g);
+
+		nanosleep(&ts, &ts);
 	}
 }
 

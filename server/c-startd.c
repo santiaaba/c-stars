@@ -49,7 +49,7 @@ int main(void *args){
 	}
 
 	pthread_join(th_command, NULL);
-   pthread_join(th_game, NULL);
+	pthread_join(th_game, NULL);
 	printf("Fin\n");
 
 	return 0;

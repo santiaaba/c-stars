@@ -21,33 +21,37 @@ void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 void req_to_buffer(req_t *req, char **buffer, int *size){
 	uint16_t aux;
 
-	printf("entro %lu\n", (int long unsigned)(REQ_HEAD_SIZE + req->header.size));
+	printf("size body: %i\n",req->header.size);
+	*size = REQ_HEAD_SIZE + req->header.size;
+	printf("entro %lu\n", (int long unsigned)(*size));
 
-	*buffer = (char *)realloc(*buffer,
-		(int long unsigned)(REQ_HEAD_SIZE + req->header.size));
+	(*buffer) = (char *)realloc(*buffer,(int long unsigned)(*size));
 	(*buffer)[0] = (char unsigned)(req->header.cod);
 	(*buffer)[1] = (char unsigned)(req->header.aux);
 	(*buffer)[2] = htons(req->header.size);
 
 	(*buffer)[4] = htonl(req->header.qid);
 
-	printf("req_to_buffer %lu\n",sizeof(*buffer));
-
 	switch(req->header.cod){
 		case C_CONNECT_1:
 			aux = htons(((req_connect_t*)(req->body))->udp);
-			memcpy(buffer[8],&aux,2);
+			memcpy(&(*buffer)[8],&aux,2);
+			printf("entro u4\n");
 			aux = htons(((req_connect_t*)(req->body))->version);
-			memcpy(buffer[10],&aux,2);
+			memcpy(&(*buffer)[10],&aux,2);
 			printf("entro u5\n");
 			break;
 		case C_KEY_PRESS:
 			aux = htons(((req_kp_t*)(req->body))->key);
-			memcpy(buffer[8],&aux,2);
+			memcpy(&(*buffer)[8],&aux,2);
 			aux = htons(((req_kp_t*)(req->body))->action);
-			memcpy(buffer[10],&aux,2);
+			memcpy(&(*buffer)[10],&aux,2);
 			break;
 	}
+	//(*buffer)[0] = 'A';
+	//(*buffer)[1] = 'B';
+	//(*buffer)[2] = 'A';
+	//(*buffer)[3] = '\n';
 }
 
 int buffer_to_req(req_t *req, char *buffer, int size){
@@ -80,7 +84,8 @@ int buffer_to_req(req_t *req, char *buffer, int size){
 
 void res_to_buffer(res_t *res, char **buffer, int *size, void f(char*,void*)){
 
-	*buffer = (char *)realloc(*buffer,RES_HEAD_SIZE + res->header.size);
+	*size = RES_HEAD_SIZE + res->header.size;
+	*buffer = (char *)realloc(*buffer,(int long unsigned)(*size));
 	*buffer[0] = res->header.cod;
 	*buffer[1] = res->header.resp;
 	*buffer[2] = htons(res->header.size);
@@ -88,7 +93,7 @@ void res_to_buffer(res_t *res, char **buffer, int *size, void f(char*,void*)){
 
 	switch(res->header.cod){
 		case C_CONNECT_1:
-			memcpy(buffer[8],res->body,res->header.size);
+			memcpy(&(*buffer)[8],res->body,res->header.size);
 			break;
 		case C_GAME_STATUS:
 			f(buffer[8],res->body);

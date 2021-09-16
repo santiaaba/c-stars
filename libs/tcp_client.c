@@ -35,30 +35,16 @@ void tcp_client_send(tcp_client_t *cs, char *req, int req_size, void handle_res(
 	   procesar el mensaje obtenido */
 	char res_buffer[MAX_RES_BUFFER];
 	int buffer_size;
+
+	memcpy(&res_buffer,req,req_size);
+	res_buffer[req_size + 1] = '\n';
+	printf("Enviando al cliente. SIZE: %i, BUFFER: %s\n",req_size,req);
 	send(cs->sockfd,req,req_size,0);
 	if(handle_res != NULL){
 		bzero(res_buffer, MAX_RES_BUFFER);
+		printf("Esperando respuesta del server\n");
 		buffer_size = recv(cs->sockfd,res_buffer,MAX_RES_BUFFER,0);
+		printf("Recivido del servidor\n");
 		handle_res(res_buffer,buffer_size);
 	}
 }
-
-/*
-void cs_run(tcp_client_t *cs){
-	char *buffer_aux[100];
-	int buffer_size;
-
-	while(true){
-		if(strlen(cs->buffer_size) > 0){
-			memcpy(buffer_aux,cs->buffer,100);
-			buffer_size = strlen(buffer_aux);
-			while(buffer_size){
-				write(cs->sockfd, cs->buffer, sizeof(cs->buffer));
-				bzero(cs->buffer, sizeof(cs->buffer));
-				read(cs->sockfd, cs->buffer, sizeof(cs->buffer));
-				buffer_size = 0;
-			}
-		}
-	}
-}
-*/

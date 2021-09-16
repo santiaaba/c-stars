@@ -204,6 +204,7 @@ void game_connect(game_t *g){
 	char *srv_ip;
 	pthread_t th;
 	char message[200];
+	char borrar[1000];
 
 	void *try_to_connect(void *g){
 
@@ -260,9 +261,10 @@ void game_connect(game_t *g){
 		((req_connect_t*)(req.body))->version = EAEAPP_VERSION;
 		printf("paso\n");
 		req_to_buffer(&req,&buffer_req,&buffer_req_size);
-		printf("paso. Buffer\n");
+		memcpy(&borrar,buffer_req,buffer_req_size);
+		printf("paso. Buffer: %i - %s\n",buffer_req_size,borrar);
 		tcp_client_send(gg->command_cli,buffer_req,buffer_req_size,&server_response_handle);
-		printf("paso\n");
+		printf("paso envio a servidor\n");
 		return NULL;
 	}
 

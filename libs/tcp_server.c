@@ -56,14 +56,17 @@ void *tcp_server_start(void *server){
 			printf("Cliente connected\n");
 			while(s->status == S_ESTABLISHED){
 				/* Aguardamos a recibir una instruccion */
-
+				printf("Esperando recibir datos del cliente\n");
 				//read(server->fd_server, req_buffer, sizeof(req_buffer));
 				req_size = recv(s->fd_server, req_buffer , MAXBUFFER , 0);
+				printf("Datos recibidos bytes: %i\n",req_size);
 				if(req_size > 0){
 					(s->protocol)(req_buffer,req_size,res_buffer,&res_size);
 					/* Respondemos al cliente */
 					if(res_size > 0)
 						send(s->fd_server,res_buffer,res_size,0);
+				} else {
+					printf("Error fatal de recepcion de datos\n");
 				}
 			}
 			close(s->fd_server);
