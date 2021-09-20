@@ -123,14 +123,8 @@ void static req_keep_alive(game_t *g, req_t *req, res_t *res){
 	res->header.cod = RES_OK;
 }
 
-void server_protocol_handle(void *g,char *req_buffer, int req_size,
-									 char *res_buffer, int *res_size){
+void server_protocol_handle(game_t *g, req_t *req, res_t *res){
 	/* Se encarga de procesar los mensajes del cliente */
-	req_t req;
-	res_t res;
-
-	buffer_to_req(&req,req_buffer,req_size);
-	res.header.cod = req.header.cod;
 
 	switch(req.header.cod) {
 		case C_CONNECT_1:
@@ -176,7 +170,4 @@ void server_protocol_handle(void *g,char *req_buffer, int req_size,
 		default:
 			printf("Error de codigo");
 	}
-
-	/* Una vez obtenida la respuesta, la convertimos en res_buffer */
-	res_to_buffer(&res,&res_buffer,res_size,NULL);
 }

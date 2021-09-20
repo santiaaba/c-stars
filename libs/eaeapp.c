@@ -18,6 +18,63 @@ void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 	res->header.qid = 0;	// POR EL momento
 }
 
+
+
+
+void eaeapp_req_char2header(req_t *req, char *buffer, int size){
+	req->header.cod = (uint8_t)buffer[0];
+   req->header.aux = (uint8_t)buffer[1];
+   req->header.size = ntohs(buffer[2]);
+   req->header.qid = ntohl(buffer[4]);
+}
+
+void eaeapp_req_char2body(req_t *req, char *buffer, int size){
+	if(req->body != NULL)
+		free(req->body);
+	switch(req->header.cod){
+		case C_CONNECT_1:
+			req->body = (req_connect_t*)malloc(sizeof(req_connect_t));
+			((req_connect_t*)(req->body))->udp = ntohs(buffer[8]);
+			((req_connect_t*)(req->body))->version = ntohs(buffer[10]);
+			break;
+		case C_KEY_PRESS:
+			req->body = (req_kp_t*)malloc(sizeof(req_kp_t));
+			((req_kp_t*)(req->body))->key = ntohs(buffer[8]);
+			((req_kp_t*)(req->body))->action = ntohs(buffer[10]);
+			break;
+	}
+}
+
+void eaeapp_req_header2char(req_t *req, char *buffer, int *size){}
+void eaeapp_req_body2char(req_t *req, char *buffer, int *size){}
+
+
+
+void eaeapp_res_header2char(res_t *res, char *buffer, int *size){
+	*size = RES_HEAD_SIZE + res->header.size;
+	*buffer = (char *)realloc(*buffer,(int long unsigned)(*size));
+	*buffer[0] = res->header.cod;
+	*buffer[1] = res->header.resp;
+	*buffer[2] = htons(res->header.size);
+	*buffer[4] = htonl(res->header.qid);
+}
+
+void eaeapp_res_body2char(res_t *res, char *buffer, int *size){
+	switch(res->header.cod){
+		case C_CONNECT_1:
+			memcpy(&(*buffer)[8],res->body,res->header.size);
+			break;
+		case C_GAME_STATUS:
+			f(buffer[8],res->body);
+	}
+}
+
+void eaeapp_res_char2header(res_t *res, char *buffer, int size){}
+void eaeapp_res_char2body(res_t *res, char *buffer, int size){}
+
+
+
+
 void req_to_buffer(req_t *req, char **buffer, int *size){
 	uint16_t aux;
 

@@ -110,6 +110,20 @@ typedef struct {
 } res_t;
 
 /* Para el protocolo TCP de comunicación */
+void eaeapp_req_char2header(req_t *req, char *buffer, int size);
+void eaeapp_req_char2body(req_t *req, char *buffer, int size);
+void eaeapp_req_header2char(req_t *req, char *buffer, int *size);
+void eaeapp_req_body2char(req_t *req, char *buffer, int *size);
+
+
+void eaeapp_res_char2header(res_t *res, char *buffer, int size);
+void eaeapp_res_char2body(res_t *res, char *buffer, int size);
+void eaeapp_res_header2char(res_t *res, char *buffer, int *size);
+void eaeapp_res_body2char(res_t *res, char *buffer, int *size);
+
+
+
+
 void req_init(req_t *req, uint8_t cod, uint16_t size);
 void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
 
