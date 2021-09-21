@@ -21,16 +21,17 @@
 #define DATA_ENTITY_SIZE	8				// cantidad de bytes de un entity
 
 /* Los diferentes mensajes que puede recibir el servidor */
-#define C_CONNECT_1		0
-#define C_CONNECT_2		1
-#define C_DISCONNECT		2
-#define C_KEEPALIVE		3
-#define C_KEY_PRESS		4
-#define C_GAME_START		5
-#define C_GAME_STOP		6
-#define C_GAME_PAUSE		7
-#define C_GAME_RESUME	8
-#define C_GAME_STATUS	9
+#define C_SIN_RESP		0
+#define C_CONNECT_1		1
+#define C_CONNECT_2		2
+#define C_DISCONNECT		3
+#define C_KEEPALIVE		4
+#define C_KEY_PRESS		5
+#define C_GAME_START		6
+#define C_GAME_STOP		7
+#define C_GAME_PAUSE		8
+#define C_GAME_RESUME	9
+#define C_GAME_STATUS	10
 
 #define RES_OK						20
 #define RES_ERROR_PORT			40
@@ -110,28 +111,18 @@ typedef struct {
 } res_t;
 
 /* Para el protocolo TCP de comunicación */
+void req_init(req_t *req, uint8_t cod, uint16_t size);
+void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
+
 void eaeapp_req_char2header(req_t *req, char *buffer, int size);
 void eaeapp_req_char2body(req_t *req, char *buffer, int size);
 void eaeapp_req_header2char(req_t *req, char *buffer, int *size);
 void eaeapp_req_body2char(req_t *req, char *buffer, int *size);
 
-
 void eaeapp_res_char2header(res_t *res, char *buffer, int size);
-void eaeapp_res_char2body(res_t *res, char *buffer, int size);
+void eaeapp_res_char2body(res_t *res, char *buffer, int size, void(*f)(char*, void*));
 void eaeapp_res_header2char(res_t *res, char *buffer, int *size);
-void eaeapp_res_body2char(res_t *res, char *buffer, int *size);
-
-
-
-
-void req_init(req_t *req, uint8_t cod, uint16_t size);
-void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
-
-void req_to_buffer(req_t *req, char **buffer, int *size);
-int buffer_to_req(req_t *req, char *buffer, int size);
-
-void res_to_buffer(res_t *res, char **buffer, int *size,void f(char*,void*));
-int buffer_to_res(res_t *res, char *buffer, int size,void f(char*,void*));
+void eaeapp_res_body2char(res_t *res, char *buffer, int *size, void(*f)(char*, void*));
 
 /* Para el protocolo UDP de datos */
 void data_to_buffer(data_t *data, char **buffer, int *size);

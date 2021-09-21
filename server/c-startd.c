@@ -1,11 +1,11 @@
 #include <stdio.h>
+#include <pthread.h>
+#include <sys/socket.h>
 #include "libs/point.h"
 #include "libs/ship.h"
 #include "libs/shoot.h"
 #include "libs/game.h"
-#include <pthread.h>
-#include "../libs/tcp_server.h"
-#include <sys/socket.h>
+#include "libs/tcp_server.h"
 #include "libs/eaeapp_server.h"
 
 int main(void *args){
@@ -32,14 +32,14 @@ int main(void *args){
 
 	/* Inicializamos el server */
 	printf("Inicializamos server tcp\n");
-	if(!tcp_server_init(&command_server,2525)){
+	if(!tcp_server_init(&command_server,2525,&game,)){
 		printf("Error al querer generar el server");
 		return 1;
 	}
 
 	/* Asignamos el protocolo al server TCP */
-	printf("Asignamos protocolo\n");
-	tcp_server_assign_protocol(&command_server,&server_protocol_handle);
+//	printf("Asignamos protocolo\n");
+//	tcp_server_assign_protocol(&command_server,&server_protocol_handle);
 
 	/* Creamos el hilo que se encarga del servidor de comandos */
 	printf("Hilo para el server\n");

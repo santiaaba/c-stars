@@ -100,4 +100,7 @@ void game_over(game_t *g);
 int game_get_state(game_t *g);
 void game_set_state(game_t *g, int state);
 
+void game_status2char();
+void game_char2status();
+
 #endif

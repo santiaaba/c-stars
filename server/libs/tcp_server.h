@@ -26,9 +26,12 @@ typedef struct{
 	game_t *game;
 	struct sockaddr_in serveraddr;
 	struct sockaddr_in clientaddr;
+	void (*status_char2body)(char*, void*);
+	void (*status_body2char)(char*, void*);
 } tcp_server_t;
 
-uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game);
+uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
+			void (*char2body)(char*, void*), void (*body2char)(char*, void*));
 
 void *tcp_server_start(void *server);
 

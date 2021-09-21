@@ -1,9 +1,14 @@
 #include "tcp_server.h"
 
-uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game){
+uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
+	void (*char2body)(char*, void*), void (*body2char)(char*, void*)){
+
 	printf("Iniciamos el server\n");
 	server->status = S_NOTLISTEN;
 	server->game = game;
+	server->status_char2body = char2body;
+	server->status_body2char = body2char;
+
 	/* Creamos el socket */
 	server->fd_server=socket(AF_INET, SOCK_STREAM, 0);
 	if(server->fd_server == -1){
@@ -34,11 +39,13 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game){
 	return 1;
 }
 
+/*
 void tcp_server_assign_protocol(tcp_server_t *server,
       void (*protocol)(void*, char*, int, char*, int*)){
 	server->protocol = protocol;
 	printf("Protocolo asignado\n");
 }
+*/
 
 void *tcp_server_start(void *server){
 	char buffer[MAXBUFFER];
@@ -60,20 +67,22 @@ void *tcp_server_start(void *server){
 
 				/* Aguardamos a recibir un encabezado */
 				printf("Esperando recibir un encabezado del cliente\n");
-				size = recv(s->fd_server, req_buffer , REQ_HEADER_SIZE , 0);
+				size = recv(s->fd_server, buffer , REQ_HEADER_SIZE , 0);
 				if(size < 0){
 					printf("Ha ocurrido un error fatal al recibir el encabezado\n");
 				} else {
 					if(size != REQ_HEADER_SIZE){
-						printf("El encabezado no respeta el tamano esperado\n")
+						printf("El encabezado no respeta el tamano esperado\n");
 					}
 				}
-				eaeapp_req_char2header(&req, req_buffer, size);
+				eaeapp_req_char2header(&req, buffer, size);
 
 				/* Pasamos a recibir el body */
 				total = 0;
-				while(total < req->header.size){
-					bytes = recv(s->fd_server, req_buffer[body_received] , req->header.size , 0);
+				while(total < req.header.size){
+					bytes = recv(	s->fd_server,
+										&(buffer[REQ_HEADER_SIZE + total]),
+										req.header.size , 0);
 					if(bytes > 0)
 						total += bytes;
 					else
@@ -83,23 +92,23 @@ void *tcp_server_start(void *server){
 							/* Se ha cerrado el socket */
 							printf("Socket cerrado????\n");
 				}
-				eaeapp_req_char2body(&req, req_buffer, total);
+				eaeapp_req_char2body(&req, buffer, total);
 
 				/* Ya tenemos todos los datos. Ejecutamos el protocolo */
-				server_protocol_handle(game, &req, &res)
+				server_protocol_handle(s->game, &req, &res);
 				
 				/* Respondemos al cliente si cod es distinto de 0 */
-				if(res.cod != 0){
+				if(res.header.cod != 0){
 					/* Enviamos el encabezado */
-					eaeapp_res_header2char(res, &buffer, &size);
+					eaeapp_res_header2char(&res,buffer, &size);
 					send(s->fd_server,buffer,size,0);
 					/* Enviamos el body */
-					eaeapp_res_body2char(res,&buffer,&size);
+					eaeapp_res_body2char(&res,buffer,&size,s->status_body2char);
 					total = 0;
-					while(total < res.size){
+					while(total < res.header.size){
 						bytes = send(s->fd_server,buffer,size,0);
 						if(bytes > 0)
-							total += size
+							total += size;
 						else
 							if(bytes < 0)
 								printf("ERROR al envir la respuesta\n");

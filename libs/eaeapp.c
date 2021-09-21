@@ -19,9 +19,8 @@ void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 }
 
 
-
-
 void eaeapp_req_char2header(req_t *req, char *buffer, int size){
+	/* Convierte un array char en un encabezado request */
 	req->header.cod = (uint8_t)buffer[0];
    req->header.aux = (uint8_t)buffer[1];
    req->header.size = ntohs(buffer[2]);
@@ -29,6 +28,7 @@ void eaeapp_req_char2header(req_t *req, char *buffer, int size){
 }
 
 void eaeapp_req_char2body(req_t *req, char *buffer, int size){
+	/* Convierte un array char en un body request */
 	if(req->body != NULL)
 		free(req->body);
 	switch(req->header.cod){
@@ -45,125 +45,70 @@ void eaeapp_req_char2body(req_t *req, char *buffer, int size){
 	}
 }
 
-void eaeapp_req_header2char(req_t *req, char *buffer, int *size){}
-void eaeapp_req_body2char(req_t *req, char *buffer, int *size){}
-
-
-
-void eaeapp_res_header2char(res_t *res, char *buffer, int *size){
-	*size = RES_HEAD_SIZE + res->header.size;
-	*buffer = (char *)realloc(*buffer,(int long unsigned)(*size));
-	*buffer[0] = res->header.cod;
-	*buffer[1] = res->header.resp;
-	*buffer[2] = htons(res->header.size);
-	*buffer[4] = htonl(res->header.qid);
-}
-
-void eaeapp_res_body2char(res_t *res, char *buffer, int *size){
-	switch(res->header.cod){
-		case C_CONNECT_1:
-			memcpy(&(*buffer)[8],res->body,res->header.size);
-			break;
-		case C_GAME_STATUS:
-			f(buffer[8],res->body);
-	}
-}
-
-void eaeapp_res_char2header(res_t *res, char *buffer, int size){}
-void eaeapp_res_char2body(res_t *res, char *buffer, int size){}
-
-
-
-
-void req_to_buffer(req_t *req, char **buffer, int *size){
-	uint16_t aux;
-
+void eaeapp_req_header2char(req_t *req, char *buffer, int *size){
+	/* Convierte un req header en un array char */
 	printf("size body: %i\n",req->header.size);
 	*size = REQ_HEAD_SIZE + req->header.size;
 	printf("entro %lu\n", (int long unsigned)(*size));
 
-	(*buffer) = (char *)realloc(*buffer,(int long unsigned)(*size));
-	(*buffer)[0] = (char unsigned)(req->header.cod);
-	(*buffer)[1] = (char unsigned)(req->header.aux);
-	(*buffer)[2] = htons(req->header.size);
+	//(*buffer) = (char *)realloc(*buffer,(int long unsigned)(*size));
+	buffer[0] = (char unsigned)(req->header.cod);
+	buffer[1] = (char unsigned)(req->header.aux);
+	buffer[2] = htons(req->header.size);
+	buffer[4] = htonl(req->header.qid);
+}
 
-	(*buffer)[4] = htonl(req->header.qid);
-
+void eaeapp_req_body2char(req_t *req, char *buffer, int *size){
+	/* Convierte un req body en un array char */
+	unsigned int aux;
 	switch(req->header.cod){
 		case C_CONNECT_1:
 			aux = htons(((req_connect_t*)(req->body))->udp);
-			memcpy(&(*buffer)[8],&aux,2);
+			memcpy(&buffer[8],&aux,2);
 			printf("entro u4\n");
 			aux = htons(((req_connect_t*)(req->body))->version);
-			memcpy(&(*buffer)[10],&aux,2);
+			memcpy(&buffer[10],&aux,2);
 			printf("entro u5\n");
 			break;
 		case C_KEY_PRESS:
 			aux = htons(((req_kp_t*)(req->body))->key);
-			memcpy(&(*buffer)[8],&aux,2);
+			memcpy(&buffer[8],&aux,2);
 			aux = htons(((req_kp_t*)(req->body))->action);
-			memcpy(&(*buffer)[10],&aux,2);
+			memcpy(&buffer[10],&aux,2);
 			break;
 	}
-	//(*buffer)[0] = 'A';
-	//(*buffer)[1] = 'B';
-	//(*buffer)[2] = 'A';
-	//(*buffer)[3] = '\n';
 }
 
-int buffer_to_req(req_t *req, char *buffer, int size){
-
-	printf("entro\n");
-
-	req->header.cod = (uint8_t)buffer[0];
-	req->header.aux = (uint8_t)buffer[1];
-	req->header.size = ntohs(buffer[2]);
-	req->header.qid = ntohl(buffer[4]);
-	
-	printf("Buffer_to_req\n");
-
-	if(req->body != NULL)
-		free(req->body);
-	switch(req->header.cod){
-		case C_CONNECT_1:
-			req->body = (req_connect_t*)malloc(sizeof(req_connect_t));
-			((req_connect_t*)(req->body))->udp = ntohs(buffer[8]);
-			((req_connect_t*)(req->body))->version = ntohs(buffer[10]);
-			break;
-		case C_KEY_PRESS:
-			req->body = (req_kp_t*)malloc(sizeof(req_kp_t));
-			((req_kp_t*)(req->body))->key = ntohs(buffer[8]);
-			((req_kp_t*)(req->body))->action = ntohs(buffer[10]);
-			break;
-	}
-	return 1;
-}
-
-void res_to_buffer(res_t *res, char **buffer, int *size, void f(char*,void*)){
-
+void eaeapp_res_header2char(res_t *res, char *buffer, int *size){
+	/* Convierte un res header en un array char */
 	*size = RES_HEAD_SIZE + res->header.size;
-	*buffer = (char *)realloc(*buffer,(int long unsigned)(*size));
-	*buffer[0] = res->header.cod;
-	*buffer[1] = res->header.resp;
-	*buffer[2] = htons(res->header.size);
-	*buffer[4] = htonl(res->header.qid);
+	//*buffer = (char *)realloc(*buffer,(int long unsigned)(*size));
+	buffer[0] = res->header.cod;
+	buffer[1] = res->header.resp;
+	buffer[2] = htons(res->header.size);
+	buffer[4] = htonl(res->header.qid);
+}
 
+void eaeapp_res_body2char(res_t *res, char *buffer, int *size, void(*f)(char*, void*)){
+	/* Convierte un res body en un array char */
 	switch(res->header.cod){
 		case C_CONNECT_1:
-			memcpy(&(*buffer)[8],res->body,res->header.size);
+			memcpy(&(buffer)[8],res->body,res->header.size);
 			break;
 		case C_GAME_STATUS:
-			f(buffer[8],res->body);
+			f(&buffer[8],res->body);
 	}
 }
 
-int buffer_to_res(res_t *res, char *buffer, int size,void f(char*,void*)){
-
+void eaeapp_res_char2header(res_t *res, char *buffer, int size){
+	/* Convierte un array char en un res header */
 	res->header.cod = (uint8_t)buffer[0];
 	res->header.resp = (uint8_t)buffer[1];
 	res->header.size = ntohs(buffer[2]);
 	res->header.qid = ntohl(buffer[4]);
-
+}
+void eaeapp_res_char2body(res_t *res, char *buffer, int size, void(*f)(char*, void*)){
+	/* Convierte un array char en un res body */
 	if(res->body != NULL)
 		free(res->body);
 	switch(res->header.cod){
@@ -174,7 +119,6 @@ int buffer_to_res(res_t *res, char *buffer, int size,void f(char*,void*)){
 		case C_GAME_STATUS:
 			f(&buffer[8],&(res->body));
 	}
-	return 1;
 }
 
 /******************************************************
