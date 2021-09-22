@@ -29,22 +29,78 @@ void cs_close(tcp_client_t *cs){
 	close(cs->sockfd);
 }
 
-void tcp_client_send(tcp_client_t *cs, char *req, int req_size, void handle_res(char*,int)){
+int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	/* Se encarga de recibir un mensaje a aser enviado y la funcion que se encarga
 	   de prosesar la respuesta. Si dicha función es NULL entonces no es necesario
-	   procesar el mensaje obtenido */
-	char res_buffer[MAX_RES_BUFFER];
-	int buffer_size;
+	   procesar el mensaje obtenido como respuesta. Retorna -1 si ha habido
+		algun error */
+	char buffer[MAX_RES_BUFFER];
+	int size, total, bytes;
+	res_t res;
 
-	memcpy(&res_buffer,req,req_size);
-	res_buffer[req_size + 1] = '\n';
-	printf("Enviando al cliente. SIZE: %i, BUFFER: %s\n",req_size,req);
-	send(cs->sockfd,req,req_size,0);
-	if(handle_res != NULL){
-		bzero(res_buffer, MAX_RES_BUFFER);
-		printf("Esperando respuesta del server\n");
-		buffer_size = recv(cs->sockfd,res_buffer,MAX_RES_BUFFER,0);
-		printf("Recivido del servidor\n");
-		handle_res(res_buffer,buffer_size);
+	/* Enviamos el encabezado de req */
+	bzero(buffer, MAX_RES_BUFFER);
+	eaeapp_req_header2char(req,buffer,&size);
+	bytes = send(cs->sockfd,buffer,size,0);
+	if(bytes < 0){
+		printf("Error al enviar el encabezado al server\n");
+		return -1;
 	}
+
+	/* Enviamos el cuerpo del req */
+	eaeapp_req_body2char(req,buffer,&size);
+	total = 0;
+	while(total < size){
+		bytes = send(cs->sockfd,&buffer[total],req->header.size - total,0);
+		if(bytes > 0)
+			total += bytes;
+		else
+			if(bytes < 0){
+				printf("ERROR al envir la consulta\n");
+				return -1;
+			} else {
+				printf("Socket se ha cerrado\n");
+				return -1;
+			}
+	}
+
+	/* OJO!!!! Quizas nos convega siempre enviar
+	   desde el server la respuesta. Si llegamos a
+		querer enviar una respueta desde el server
+		pero en el cliente no se espera la misma, el
+		server queda colgado tratando de realizar el
+		envío */
+	if(handle_res == NULL)
+		return 0;
+	
+	/* Recibimos el enabezado de res */
+	bzero(buffer, MAX_RES_BUFFER);
+	printf("Esperando encabezado de la respuesta del server\n");
+	bytes = recv(cs->sockfd,buffer,MAX_RES_BUFFER,0);
+	if(bytes < 0){
+		printf("Error al recibir el encabezado de la respuesta\n");
+		return -1;
+	}
+	eaeapp_res_char2header(&res,buffer,bytes);
+
+	/* Recibimos el cuerpo de res */
+	printf("Esperando body de la respuesta del server\n");
+	total = 0;
+	while(total < res.header.size){
+		bytes = recv(cs->sockfd,&buffer[total],MAX_RES_BUFFER,0);
+		if(bytes > 0)
+			total += bytes;
+		else
+			if(bytes < 0){
+				printf("ERROR al envir la consulta\n");
+				return -1;
+			} else {
+				printf("Socket se ha cerrado\n");
+				return -1;
+			}
+	}
+	eaeapp_res_char2body(&res,buffer,total,FALTA_LA_FUNCION);
+	handle_res(&res);
+	return 0;
 }
+

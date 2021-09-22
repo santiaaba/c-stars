@@ -67,28 +67,24 @@ void *tcp_server_start(void *server){
 
 				/* Aguardamos a recibir un encabezado */
 				printf("Esperando recibir un encabezado del cliente\n");
-				size = recv(s->fd_server, buffer , REQ_HEADER_SIZE , 0);
+				size = recv(s->fd_server, buffer, MAXBUFFER ,0);
 				if(size < 0){
 					printf("Ha ocurrido un error fatal al recibir el encabezado\n");
-				} else {
-					if(size != REQ_HEADER_SIZE){
-						printf("El encabezado no respeta el tamano esperado\n");
-					}
+					continue;
 				}
 				eaeapp_req_char2header(&req, buffer, size);
 
 				/* Pasamos a recibir el body */
 				total = 0;
 				while(total < req.header.size){
-					bytes = recv(	s->fd_server,
-										&(buffer[REQ_HEADER_SIZE + total]),
-										req.header.size , 0);
+					bytes = recv(s->fd_server, buffer, MAXBUFFER, 0);
 					if(bytes > 0)
 						total += bytes;
 					else
-						if(bytes < 0)
+						if(bytes < 0){
 							printf("ERROR al recibir el encabezado\n");
-						else
+							continue;
+						} else
 							/* Se ha cerrado el socket */
 							printf("Socket cerrado????\n");
 				}
@@ -101,19 +97,24 @@ void *tcp_server_start(void *server){
 				if(res.header.cod != 0){
 					/* Enviamos el encabezado */
 					eaeapp_res_header2char(&res,buffer, &size);
-					send(s->fd_server,buffer,size,0);
-					/* Enviamos el body */
-					eaeapp_res_body2char(&res,buffer,&size,s->status_body2char);
-					total = 0;
-					while(total < res.header.size){
-						bytes = send(s->fd_server,buffer,size,0);
-						if(bytes > 0)
-							total += size;
-						else
-							if(bytes < 0)
-								printf("ERROR al envir la respuesta\n");
+					bytes = send(s->fd_server,buffer,size,0);
+					if(bytes < 0){
+						printf("Error al enviar el encabezado de respuesta\n");
+					} else {
+						/* Enviamos el body */
+						eaeapp_res_body2char(&res,buffer,&size,s->status_body2char);
+						total = 0;
+						while(total < res.header.size){
+							bytes = send(s->fd_server,&buffer[total],res.header.size-total,0);
+							if(bytes > 0)
+								total += size;
 							else
-								printf("Socket se ha cerrado\n");
+								if(bytes < 0)
+									printf("ERROR al envir la respuesta\n");
+								else
+									printf("Socket se ha cerrado\n");
+								continue;
+						}
 					}
 				}
 			}

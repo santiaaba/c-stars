@@ -12,7 +12,7 @@
 #include "input.h"
 #include "text.h"
 #include "../../libs/eaeapp.h"
-#include "../../libs/tcp_client.h"
+#include "./tcp_client.h"
 
 #define SRV_PORT			2525
 #define SCREEN_WIDTH    1024

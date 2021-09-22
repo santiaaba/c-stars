@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include "../../libs/eaeapp.h"
 
 #define MAX_RES_BUFFER	512
 
@@ -18,7 +19,7 @@ typedef struct {
 
 uint8_t tcp_client_init(tcp_client_t *cs, char *serv_ip, int port);
 uint8_t tcp_client_connect(tcp_client_t *cs);
-void tcp_client_send(tcp_client_t *cs, char *req, int req_size, void response(char*,int));
+int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*));
 void cs_close(tcp_client_t *cs);
 
 
