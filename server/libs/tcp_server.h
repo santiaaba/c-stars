@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "../../libs/eaeapp.h"
+#include "../../libs/game_info.h"
 #include "eaeapp_server.h"
 #include "game.h"
 
@@ -26,12 +27,12 @@ typedef struct{
 	game_t *game;
 	struct sockaddr_in serveraddr;
 	struct sockaddr_in clientaddr;
-	void (*status_char2body)(char*, void*);
-	void (*status_body2char)(char*, void*);
+	void (*status_char2body)(char*, game_info_t*);
+	void (*status_body2char)(char*, game_info_t*);
 } tcp_server_t;
 
 uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
-			void (*char2body)(char*, void*), void (*body2char)(char*, void*));
+			void (*char2body)(char*, game_info_t*), void (*body2char)(char*, game_info_t*));
 
 void *tcp_server_start(void *server);
 

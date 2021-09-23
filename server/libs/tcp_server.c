@@ -1,7 +1,7 @@
 #include "tcp_server.h"
 
 uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
-	void (*char2body)(char*, void*), void (*body2char)(char*, void*)){
+	void (*char2body)(char*, game_info_t*), void (*body2char)(char*, game_info_t*)){
 
 	printf("Iniciamos el server\n");
 	server->status = S_NOTLISTEN;

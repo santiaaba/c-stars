@@ -7,6 +7,7 @@
 #include "libs/game.h"
 #include "libs/tcp_server.h"
 #include "libs/eaeapp_server.h"
+#include "../libs/game_info.h"
 
 int main(void *args){
 	game_t game;
@@ -32,7 +33,7 @@ int main(void *args){
 
 	/* Inicializamos el server */
 	printf("Inicializamos server tcp\n");
-	if(!tcp_server_init(&command_server,2525,&game)){
+	if(!tcp_server_init(&command_server,2525,&game,&game_char2info,&game_info2char)){
 		printf("Error al querer generar el server");
 		return 1;
 	}
