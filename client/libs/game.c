@@ -138,8 +138,7 @@ void game_play(game_t *g){
 
 				((req_kp_t*)(req.body))->key = event.key.keysym.sym;
 				((req_kp_t*)(req.body))->action = event.type;
-				req_to_buffer(&req,&buffer_req,&buffer_req_size);
-				tcp_client_send(g->command_cli,buffer_req,buffer_req_size,NULL);
+				tcp_client_send(g->command_cli,&req,NULL);
 			}
 		}
 
@@ -255,15 +254,9 @@ void game_connect(game_t *g){
 
 		req_init(&req,C_CONNECT_1,sizeof(req_connect_t));
 
-		printf("paso\n");
 		((req_connect_t*)(req.body))->udp = gg->udp;
-		printf("paso\n");
 		((req_connect_t*)(req.body))->version = EAEAPP_VERSION;
-		printf("paso\n");
-		req_to_buffer(&req,&buffer_req,&buffer_req_size);
-		memcpy(&borrar,buffer_req,buffer_req_size);
-		printf("paso. Buffer: %i - %s\n",buffer_req_size,borrar);
-		tcp_client_send(gg->command_cli,buffer_req,buffer_req_size,&server_response_handle);
+		tcp_client_send(gg->command_cli,&req,&server_response_handle);
 		printf("paso envio a servidor\n");
 		return NULL;
 	}

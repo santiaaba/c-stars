@@ -65,36 +65,56 @@ void *tcp_server_start(void *server){
 			printf("Cliente connected\n");
 			while(s->status == S_ESTABLISHED){
 
-				/* Aguardamos a recibir un mensaje */
-				printf("Esperando recibir un mensaje\n");
+				/* Aguardamos a recibir un encabezado */
+				printf("Esperando recibir un encabezado del cliente\n");
+				size = recv(s->fd_server, buffer, MAXBUFFER ,0);
+				if(size < 0){
+					printf("Ha ocurrido un error fatal al recibir el encabezado\n");
+					continue;
+				}
+				eaeapp_req_char2header(&req, buffer, size);
+
+				/* Pasamos a recibir el body */
 				total = 0;
-				/* Cuando bytes sea 0 significa que ya hemos recibido el total de los datos */
-				while (bytes = recv(s->fd_server, &(buffer[total]), MAXBUFFER ,0) > 0){
-					/* Vamos recibiendo los datos */
-					total += bytes;
+				while(total < req.header.size){
+					bytes = recv(s->fd_server, buffer, MAXBUFFER, 0);
+					if(bytes > 0)
+						total += bytes;
+					else
+						if(bytes < 0){
+							printf("ERROR al recibir el encabezado\n");
+							continue;
+						} else
+							/* Se ha cerrado el socket */
+							printf("Socket cerrado????\n");
 				}
-				if(bytes < 0){
-					printf("Ha ocurrido un error fatal al recibir los datos\n");
-					continue;
-				}
-				if(total > MAXBUFFER){
-					printf("Overfflow de Buffer. Descartamos el mensaje\n");
-					continue;
-				}
-				eaeapp_char2req(&req,buffer);
+				eaeapp_req_char2body(&req, buffer, total);
+
 				/* Ya tenemos todos los datos. Ejecutamos el protocolo */
 				server_protocol_handle(s->game, &req, &res);
 				
 				/* Respondemos al cliente si cod es distinto de 0 */
 				if(res.header.cod != 0){
-					eaeapp_res2char(&res,buffer,&size);
-					/* Enviamos la respuesta */
-					total = 0;
-					while(bytes = send(s->fd_server,&(buffer[total]),size-total,0) > 0){
-						total += bytes;
-					}
+					/* Enviamos el encabezado */
+					eaeapp_res_header2char(&res,buffer, &size);
+					bytes = send(s->fd_server,buffer,size,0);
 					if(bytes < 0){
-						printf("Error al enviar la respuesta\n");
+						printf("Error al enviar el encabezado de respuesta\n");
+					} else {
+						/* Enviamos el body */
+						eaeapp_res_body2char(&res,buffer,&size,s->status_body2char);
+						total = 0;
+						while(total < res.header.size){
+							bytes = send(s->fd_server,&buffer[total],res.header.size-total,0);
+							if(bytes > 0)
+								total += size;
+							else
+								if(bytes < 0)
+									printf("ERROR al envir la respuesta\n");
+								else
+									printf("Socket se ha cerrado\n");
+								continue;
+						}
 					}
 				}
 			}

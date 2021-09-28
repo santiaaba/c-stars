@@ -14,8 +14,8 @@
 #define D_VIDEO	0
 #define D_SOUND	1
 
-#define REQ_HEAD_SIZE		8				// En Bytes
-#define RES_HEAD_SIZE		8				// En Bytes
+#define REQ_HEADER_SIZE		8				// En Bytes
+#define RES_HEADER_SIZE		8				// En Bytes
 #define DATA_HEAD_SIZE		8
 #define MAX_DATA_BODY		200			// En bytes
 #define DATA_ENTITY_SIZE	8				// cantidad de bytes de un entity
@@ -110,19 +110,21 @@ typedef struct {
 	void *body;		// Los body varian en base al mensaje
 } res_t;
 
-/* Para el protocolo TCP de comunicación */
+typedef struct{
+   uint32_t score;               // Puntaje adquirido
+   uint16_t state;               // Estado del juego
+   uint8_t level;                // nivel actual
+   uint8_t level_state;          // estado del nivel
+} res_info_t;
+
 void req_init(req_t *req, uint8_t cod, uint16_t size);
 void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
 
-void eaeapp_req_char2header(req_t *req, char *buffer, int size);
-void eaeapp_req_char2body(req_t *req, char *buffer, int size);
-void eaeapp_req_header2char(req_t *req, char *buffer, int *size);
-void eaeapp_req_body2char(req_t *req, char *buffer, int *size);
-
-void eaeapp_res_char2header(res_t *res, char *buffer, int size);
-void eaeapp_res_char2body(res_t *res, char *buffer, int size, void(*f)(char*, void*));
-void eaeapp_res_header2char(res_t *res, char *buffer, int *size);
-void eaeapp_res_body2char(res_t *res, char *buffer, int *size, void(*f)(char*, void*));
+/* Para el protocolo TCP de comunicación */
+void eaeapp_res2char(res_t *res, char *buffer, int *size);
+void eaeapp_req2char(req_t *req, char *buffer, int *size);
+void eaeapp_char2req(req_t *req, char *buffer);
+void eaeapp_char2res(res_t *res, char *buffer);
 
 /* Para el protocolo UDP de datos */
 void data_to_buffer(data_t *data, char **buffer, int *size);

@@ -3,7 +3,6 @@
 /******************************************************
  *							Para TCP									*
  ******************************************************/
-
 void req_init(req_t *req, uint8_t cod, uint16_t size){
 	req->header.cod = cod;
 	req->header.qid = 0;		// POR EL MOMENTO
@@ -19,16 +18,12 @@ void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 }
 
 
-void eaeapp_req_char2header(req_t *req, char *buffer, int size){
-	/* Convierte un array char en un encabezado request */
+void eaeapp_char2req(req_t *req, char *buffer){
 	req->header.cod = (uint8_t)buffer[0];
    req->header.aux = (uint8_t)buffer[1];
    req->header.size = ntohs(buffer[2]);
    req->header.qid = ntohl(buffer[4]);
-}
 
-void eaeapp_req_char2body(req_t *req, char *buffer, int size){
-	/* Convierte un array char en un body request */
 	if(req->body != NULL)
 		free(req->body);
 	switch(req->header.cod){
@@ -45,30 +40,19 @@ void eaeapp_req_char2body(req_t *req, char *buffer, int size){
 	}
 }
 
-void eaeapp_req_header2char(req_t *req, char *buffer, int *size){
-	/* Convierte un req header en un array char */
-	printf("size body: %i\n",req->header.size);
-	*size = REQ_HEAD_SIZE + req->header.size;
-	printf("entro %lu\n", (int long unsigned)(*size));
-
-	//(*buffer) = (char *)realloc(*buffer,(int long unsigned)(*size));
+void eaeapp_req2char(req_t *req, char *buffer, int *size){
+	unsigned int aux;
 	buffer[0] = (char unsigned)(req->header.cod);
 	buffer[1] = (char unsigned)(req->header.aux);
 	buffer[2] = htons(req->header.size);
 	buffer[4] = htonl(req->header.qid);
-}
-
-void eaeapp_req_body2char(req_t *req, char *buffer, int *size){
-	/* Convierte un req body en un array char */
-	unsigned int aux;
+	*size = REQ_HEADER_SIZE + req->header.size;
 	switch(req->header.cod){
 		case C_CONNECT_1:
 			aux = htons(((req_connect_t*)(req->body))->udp);
 			memcpy(&buffer[8],&aux,2);
-			printf("entro u4\n");
 			aux = htons(((req_connect_t*)(req->body))->version);
 			memcpy(&buffer[10],&aux,2);
-			printf("entro u5\n");
 			break;
 		case C_KEY_PRESS:
 			aux = htons(((req_kp_t*)(req->body))->key);
@@ -79,36 +63,30 @@ void eaeapp_req_body2char(req_t *req, char *buffer, int *size){
 	}
 }
 
-void eaeapp_res_header2char(res_t *res, char *buffer, int *size){
-	/* Convierte un res header en un array char */
-	*size = RES_HEAD_SIZE + res->header.size;
-	//*buffer = (char *)realloc(*buffer,(int long unsigned)(*size));
+void eaeapp_res2char(res_t *res, char *buffer, int *size){
 	buffer[0] = res->header.cod;
 	buffer[1] = res->header.resp;
 	buffer[2] = htons(res->header.size);
 	buffer[4] = htonl(res->header.qid);
-}
 
-void eaeapp_res_body2char(res_t *res, char *buffer, int *size, void(*f)(char*, void*)){
-	/* Convierte un res body en un array char */
+	*size = RES_HEADER_SIZE + res->header.size;
 	switch(res->header.cod){
 		case C_CONNECT_1:
-			memcpy(&(buffer)[8],res->body,res->header.size);
+			memcpy(&buffer[8],res->body,res->header.size);
 			break;
 		case C_GAME_STATUS:
-			f(&buffer[8],res->body);
+			buffer[8] = htonl(((res_info_t*)(res->body))->score);
+			buffer[12] = htons(((res_info_t*)(res->body))->state);
+			buffer[14] = (char)(((res_info_t*)(res->body))->level);
+			buffer[15] = (char)(((res_info_t*)(res->body))->level_state);
 	}
 }
 
-void eaeapp_res_char2header(res_t *res, char *buffer, int size){
-	/* Convierte un array char en un res header */
+void eaeapp_char2res(res_t *res, char *buffer){
 	res->header.cod = (uint8_t)buffer[0];
 	res->header.resp = (uint8_t)buffer[1];
 	res->header.size = ntohs(buffer[2]);
 	res->header.qid = ntohl(buffer[4]);
-}
-void eaeapp_res_char2body(res_t *res, char *buffer, int size, void(*f)(char*, void*)){
-	/* Convierte un array char en un res body */
 	if(res->body != NULL)
 		free(res->body);
 	switch(res->header.cod){
@@ -117,7 +95,11 @@ void eaeapp_res_char2body(res_t *res, char *buffer, int size, void(*f)(char*, vo
 			memcpy(&(res->body),&buffer[8],res->header.size/8);
 			break;
 		case C_GAME_STATUS:
-			f(&buffer[8],&(res->body));
+			res->body = (res_info_t*)malloc(sizeof(res_info_t));
+			((res_info_t*)(res->body))->score = htonl((uint32_t)buffer[0]);
+			((res_info_t*)(res->body))->state = htons((uint16_t)buffer[4]);
+			((res_info_t*)(res->body))->level = (uint8_t)buffer[6];
+			((res_info_t*)(res->body))->level_state = (uint8_t)buffer[7];
 	}
 }
 

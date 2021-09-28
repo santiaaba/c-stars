@@ -9,12 +9,11 @@
 #include <unistd.h>
 #include "../../libs/eaeapp.h"
 
-#define MAX_RES_BUFFER	512
+#define MAX_BUFFER	512
 
 typedef struct {
 	int sockfd;
    struct sockaddr_in servaddr;
-	char buffer[100];
 } tcp_client_t;
 
 uint8_t tcp_client_init(tcp_client_t *cs, char *serv_ip, int port);
