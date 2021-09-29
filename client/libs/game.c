@@ -212,10 +212,7 @@ void game_connect(game_t *g){
 		char *buffer_req = NULL;
 		int buffer_req_size = 0;
 
-		void server_response_handle(char *buffer_res, int buffer_size){
-			res_t *res;
-
-			buffer_to_res(res,buffer_res,buffer_size,NULL);
+		void server_response_handle(res_t *res){
 			if(res->header.resp == RES_OK){
 				game_set_status(gg,MAINMENU);
 			} else {
@@ -248,14 +245,16 @@ void game_connect(game_t *g){
 			wait = false;
 			return NULL;
 		}
+		printf("Servidor conectado\n");
+		sleep(10);
 
 		printf("Enviando udp y version\n");
 		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
-
 		req_init(&req,C_CONNECT_1,sizeof(req_connect_t));
 
 		((req_connect_t*)(req.body))->udp = gg->udp;
 		((req_connect_t*)(req.body))->version = EAEAPP_VERSION;
+
 		tcp_client_send(gg->command_cli,&req,&server_response_handle);
 		printf("paso envio a servidor\n");
 		return NULL;

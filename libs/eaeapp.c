@@ -1,5 +1,10 @@
 #include "eaeapp.h"
 
+void printb(char *buffer, int size){
+	for(int i=0;i<size;i++)
+		printf("%i -> %i:%c\n",i,buffer[i],buffer[i]);
+}
+
 /******************************************************
  *							Para TCP									*
  ******************************************************/

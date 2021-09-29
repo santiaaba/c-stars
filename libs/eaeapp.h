@@ -120,6 +120,8 @@ typedef struct{
 void req_init(req_t *req, uint8_t cod, uint16_t size);
 void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
 
+void printb(char *buffer, int size);
+
 /* Para el protocolo TCP de comunicación */
 void eaeapp_res2char(res_t *res, char *buffer, int *size);
 void eaeapp_req2char(req_t *req, char *buffer, int *size);

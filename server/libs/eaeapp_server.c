@@ -123,6 +123,10 @@ void static req_keep_alive(game_t *g, req_t *req, res_t *res){
 	res->header.cod = RES_OK;
 }
 
+void req_error(req_t *req, res_t *res){
+	res->header.resp = RES_INCORRECT;
+}
+
 void server_protocol_handle(game_t *g, req_t *req, res_t *res){
 	/* Se encarga de procesar los mensajes del cliente */
 
@@ -168,6 +172,7 @@ void server_protocol_handle(game_t *g, req_t *req, res_t *res){
 			req_key_press((game_t *)g,req,res);
 			break;
 		default:
-			printf("Error de codigo");
+			printf("Error de codigo\n");
+			req_error(req,res);
 	}
 }

@@ -30,7 +30,7 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
 
 	/* Dejamos el socket en LISTEN */
 	printf("Dejamos socket en LISTEN\n");
-	if(listen(server->fd_server,5) != 0){ 
+	if(listen(server->fd_server,1) != 0){ 
 		printf("error en listen()\n");
 		return 0;
 	}
@@ -62,17 +62,18 @@ void *tcp_server_start(void *server){
 		confd = accept(s->fd_server, (struct sockaddr*)&s->clientaddr, &len);
 		if(confd > 0){
 			s->status = S_ESTABLISHED;
-			printf("Cliente connected\n");
+			printf("Cliente conectado\n");
 			while(s->status == S_ESTABLISHED){
 
 				/* Aguardamos a recibir un mensaje */
 				printf("Esperando recibir un mensaje\n");
-				total = 0;
 				/* Cuando bytes sea 0 significa que ya hemos recibido el total de los datos */
+				total = 0;
 				while (bytes = recv(s->fd_server, &(buffer[total]), MAXBUFFER ,0) > 0){
 					/* Vamos recibiendo los datos */
 					total += bytes;
 				}
+				sleep(10);
 				if(bytes < 0){
 					printf("Ha ocurrido un error fatal al recibir los datos\n");
 					continue;
