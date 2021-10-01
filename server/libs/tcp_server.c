@@ -39,14 +39,6 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
 	return 1;
 }
 
-/*
-void tcp_server_assign_protocol(tcp_server_t *server,
-      void (*protocol)(void*, char*, int, char*, int*)){
-	server->protocol = protocol;
-	printf("Protocolo asignado\n");
-}
-*/
-
 void *tcp_server_start(void *server){
 	char buffer[MAXBUFFER];
 	int size, total, bytes;
@@ -67,9 +59,11 @@ void *tcp_server_start(void *server){
 
 				/* Aguardamos a recibir un mensaje */
 				printf("Esperando recibir un mensaje\n");
-				/* Cuando bytes sea 0 significa que ya hemos recibido el total de los datos */
+				/* Cuando bytes sea 0 significa que ya hemos
+					recibido el total de los datos */
 				total = 0;
-				while (bytes = recv(s->fd_server, &(buffer[total]), MAXBUFFER ,0) > 0){
+				while (bytes = recv(s->fd_server, &(buffer[total]),
+						MAXBUFFER ,0) > 0){
 					/* Vamos recibiendo los datos */
 					total += bytes;
 				}
