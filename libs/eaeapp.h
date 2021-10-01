@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <inttypes.h>
 
 /* Version minima aceptada */
 #define EAEAPP_VERSION		1

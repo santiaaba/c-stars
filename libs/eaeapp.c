@@ -22,57 +22,40 @@ void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 	res->header.qid = 0;	// POR EL momento
 }
 
-
-void eaeapp_char2req(req_t *req, char *buffer){
-	req->header.cod = (uint8_t)buffer[0];
-   req->header.aux = (uint8_t)buffer[1];
-   req->header.size = ntohs(buffer[2]);
-   req->header.qid = ntohl(buffer[4]);
-
-	if(req->body != NULL)
-		free(req->body);
-	switch(req->header.cod){
-		case C_CONNECT_1:
-			req->body = (req_connect_t*)malloc(sizeof(req_connect_t));
-			((req_connect_t*)(req->body))->udp = ntohs(buffer[8]);
-			((req_connect_t*)(req->body))->version = ntohs(buffer[10]);
-			break;
-		case C_KEY_PRESS:
-			req->body = (req_kp_t*)malloc(sizeof(req_kp_t));
-			((req_kp_t*)(req->body))->key = ntohs(buffer[8]);
-			((req_kp_t*)(req->body))->action = ntohs(buffer[10]);
-			break;
-	}
-}
-
 void eaeapp_req2char(req_t *req, char *buffer, int *size){
-	unsigned int aux;
-	buffer[0] = (char unsigned)(req->header.cod);
-	buffer[1] = (char unsigned)(req->header.aux);
-	buffer[2] = htons(req->header.size);
-	buffer[4] = htonl(req->header.qid);
+	uint16_t aux16;
+	buffer[0] = req->header.cod;
+	buffer[1] = req->header.aux;
+	aux16 = htons(req->header.size);
+	memcpy(&(buffer[2]),&aux16,2);
+	aux16 = htons(req->header.qid);
+	memcpy(&(buffer[4]),&aux16,2);
 	*size = REQ_HEADER_SIZE + req->header.size;
 	switch(req->header.cod){
 		case C_CONNECT_1:
-			aux = htons(((req_connect_t*)(req->body))->udp);
-			memcpy(&buffer[8],&aux,2);
-			aux = htons(((req_connect_t*)(req->body))->version);
-			memcpy(&buffer[10],&aux,2);
+			aux16 = htons(((req_connect_t*)(req->body))->udp);
+			memcpy(&buffer[8],&aux16,2);
+			aux16 = htons(((req_connect_t*)(req->body))->version);
+			memcpy(&buffer[10],&aux16,2);
 			break;
 		case C_KEY_PRESS:
-			aux = htons(((req_kp_t*)(req->body))->key);
-			memcpy(&buffer[8],&aux,2);
-			aux = htons(((req_kp_t*)(req->body))->action);
-			memcpy(&buffer[10],&aux,2);
+			aux16 = htons(((req_kp_t*)(req->body))->key);
+			memcpy(&buffer[8],&aux16,2);
+			aux16 = htons(((req_kp_t*)(req->body))->action);
+			memcpy(&buffer[10],&aux16,2);
 			break;
 	}
 }
 
 void eaeapp_res2char(res_t *res, char *buffer, int *size){
+	uint16_t aux16;
+	uint32_t aux32;
 	buffer[0] = res->header.cod;
 	buffer[1] = res->header.resp;
-	buffer[2] = htons(res->header.size);
-	buffer[4] = htonl(res->header.qid);
+	aux16 = htons(res->header.size);
+	memcpy(&(buffer[2]),&aux16,2);
+	aux16 = htons(res->header.qid);
+	memcpy(&(buffer[4]),&aux16,2);
 
 	*size = RES_HEADER_SIZE + res->header.size;
 	switch(res->header.cod){
@@ -80,31 +63,82 @@ void eaeapp_res2char(res_t *res, char *buffer, int *size){
 			memcpy(&buffer[8],res->body,res->header.size);
 			break;
 		case C_GAME_STATUS:
-			buffer[8] = htonl(((res_info_t*)(res->body))->score);
-			buffer[12] = htons(((res_info_t*)(res->body))->state);
-			buffer[14] = (char)(((res_info_t*)(res->body))->level);
-			buffer[15] = (char)(((res_info_t*)(res->body))->level_state);
+			aux32 = htonl(((res_info_t*)(res->body))->score);
+			memcpy(&(buffer[8]),&aux32,4);
+			aux16 = htons(((res_info_t*)(res->body))->state);
+			memcpy(&(buffer[12]),&aux16,2);
+			buffer[14] = ((res_info_t*)(res->body))->level;
+			buffer[15] = ((res_info_t*)(res->body))->level_state;
 	}
 }
 
+void eaeapp_char2req(req_t *req, char *buffer){
+	uint16_t aux16;
+	uint32_t aux32;
+	req->header.cod = buffer[0];
+   req->header.aux = buffer[1];
+	memcpy(&aux16,&(buffer[2]),2);
+	req->header.size = ntohs(aux16);
+	memcpy(&aux32,&(buffer[4]),4);
+	req->header.qid = ntohl(aux32);
+	printf("Encabezado\n");
+	printf("COD: %u | AUX: %u | SIZE: %u | QID: %"PRIu32"\n",
+	req->header.cod,req->header.aux,req->header.size,req->header.qid);
+
+	printf("Body\n");
+	if(req->body != NULL)
+		free(req->body);
+	switch(req->header.cod){
+		case C_CONNECT_1:
+			req->body = (req_connect_t*)malloc(sizeof(req_connect_t));
+			memcpy(&aux16,&(buffer[8]),2);
+			((req_connect_t*)(req->body))->udp = ntohs(aux16);
+			memcpy(&aux16,&(buffer[10]),2);
+			((req_connect_t*)(req->body))->version = ntohs(aux16);
+			printf("UDP: %u | VERSION: %u\n",
+				((req_connect_t*)(req->body))->udp,
+				((req_connect_t*)(req->body))->version);
+			break;
+		case C_KEY_PRESS:
+			req->body = (req_kp_t*)malloc(sizeof(req_kp_t));
+			memcpy(&aux16,&(buffer[8]),2);
+			((req_kp_t*)(req->body))->key = ntohs(aux16);
+			memcpy(&aux16,&(buffer[10]),2);
+			((req_kp_t*)(req->body))->action = ntohs(aux16);
+			printf("KEY: %u | ACTION: %u\n",
+				((req_kp_t*)(req->body))->key,
+				((req_kp_t*)(req->body))->action);
+			break;
+	}
+
+}
+
+
 void eaeapp_char2res(res_t *res, char *buffer){
+	uint16_t aux16;
+	uint32_t aux32;
 	res->header.cod = (uint8_t)buffer[0];
 	res->header.resp = (uint8_t)buffer[1];
-	res->header.size = ntohs(buffer[2]);
-	res->header.qid = ntohl(buffer[4]);
+	memcpy(&aux16,&(buffer[2]),2);
+	res->header.size = ntohs(aux16);
+	memcpy(&aux32,&(buffer[4]),4);
+	res->header.qid = ntohl(aux32);
 	if(res->body != NULL)
 		free(res->body);
 	switch(res->header.cod){
 		case C_CONNECT_1:
 			res->body = (char*)malloc(res->header.size);
-			memcpy(&(res->body),&buffer[8],res->header.size/8);
+			//memcpy(&(res->body),&buffer[8],res->header.size/8); /8 ????
+			memcpy(&(res->body),&buffer[8],res->header.size);
 			break;
 		case C_GAME_STATUS:
 			res->body = (res_info_t*)malloc(sizeof(res_info_t));
-			((res_info_t*)(res->body))->score = htonl((uint32_t)buffer[0]);
-			((res_info_t*)(res->body))->state = htons((uint16_t)buffer[4]);
-			((res_info_t*)(res->body))->level = (uint8_t)buffer[6];
-			((res_info_t*)(res->body))->level_state = (uint8_t)buffer[7];
+			memcpy(&aux32,&(buffer[8]),4);
+			((res_info_t*)(res->body))->score = htonl(aux32);
+			memcpy(&aux16,&(buffer[12]),2);
+			((res_info_t*)(res->body))->state = htons(aux16);
+			((res_info_t*)(res->body))->level = buffer[6];
+			((res_info_t*)(res->body))->level_state = buffer[7];
 	}
 }
 

@@ -41,11 +41,11 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	bzero(buffer, MAX_BUFFER);
 	eaeapp_req2char(req,buffer,&size);
 
-	printb(buffer,size);
+	//printb(buffer,size);
 
 	total = 0;
 	printf("Aguardamos 10 segundos antes de enviar los datos. DEBUG\n");
-	sleep(10);
+	sleep(5);
 	while(bytes = send(cs->sockfd,&(buffer[total]),size-total,0)>0){
 		total += bytes;
 	}

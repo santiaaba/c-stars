@@ -67,6 +67,7 @@ void *tcp_server_start(void *server){
 					/* Vamos recibiendo los datos */
 					total += bytes;
 				}
+				printf("Bytes recibidos:%i\n",bytes);
 				sleep(10);
 				if(bytes < 0){
 					printf("Ha ocurrido un error fatal al recibir los datos\n");
