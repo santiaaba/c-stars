@@ -11,6 +11,7 @@
 #include "../../libs/game_info.h"
 #include "eaeapp_server.h"
 #include "game.h"
+#include <errno.h>
 
 #define	S_NOTLISTEN			0
 #define	S_LISTEN				1
@@ -21,7 +22,6 @@
 
 typedef struct{
 	int fd_server;
-	int fd_client;
 	int running;
 	int status;
 	game_t *game;

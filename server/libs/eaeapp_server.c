@@ -5,7 +5,7 @@ void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 	 * - Verifica la version del cliente.
 	 * - Verificamos si aceptamos el puerto udp. */
 	  
-	res->header.cod = 0;
+	res_init(res,req->header.cod,0,0);
 
 	// Verificamos que el estado sea WAIT_CONNECT
 	if(game_get_state(g) != G_WAIT_CONNECT){
@@ -26,7 +26,6 @@ void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 	// Verificamos que el udp sea aceptada
 
 	// Tomamos el puerto udp ofrecido por el cliente
-
 	game_set_state(g,G_CONNECT_STEP_ONE);
 
 	// Armamos la respuesta afirmativa

@@ -213,6 +213,7 @@ void game_connect(game_t *g){
 		int buffer_req_size = 0;
 
 		void server_response_handle(res_t *res){
+			printf("Manejando la respuesta del cliente\n");
 			if(res->header.resp == RES_OK){
 				game_set_status(gg,MAINMENU);
 			} else {
@@ -245,9 +246,7 @@ void game_connect(game_t *g){
 			wait = false;
 			return NULL;
 		}
-		printf("Servidor conectado\n");
-		sleep(10);
-
+		printf("Servidor conectado. Esperamos 10 Segundos\n");
 		printf("Enviando udp y version\n");
 		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
 		req_init(&req,C_CONNECT_1,sizeof(req_connect_t));
@@ -316,31 +315,41 @@ void game_main_menu(game_t *g){
 	*/
 
 	button_t buttons[4];			// Array de botones
-	int button = 0;				// Indice del array anterior
+	int button = 0;				// Boton en foco
 	int i;
 	int key;
 	SDL_Event event;
+
+	void on_focus(button_t *buttons; int b, int size){
+		ACA ME QUEDE. PASAR ARRAY POR REFERENCIA
+		for(i=0; i<size; i++){
+			if(i==b)
+				button_focus(&(buttons[i]));
+			else
+				button_exit(&(buttons[i]));
+		}
+	}
 
 	while(g->status == MAINMENU){
 		while(SDL_PollEvent(&event)){
 			/* Solo aceptamos las flechas arriba, abajo y enter */
 			key = event.key.keysym.sym;
-			if (key == SDLK_UP && button < 3 )
+			if (key == SDLK_UP && button < 3 ){
 				button++;
-			if (key == SDLK_DOWN && button > 0)
+				on_focus(buttons,button,4);
+			}
+			if (key == SDLK_DOWN && button > 0){
 				button--;
+				on_focus(buttons,button,4);
+			}
 			if (key == SDLK_RETURN)
 				printf("IMPLEMENTAR BOTON\n");
 				/* ejecutar boton seleccionado */
 		}
 		SDL_RenderClear(g->renderer);
-		for(i=0; i<4; i++){
-			if(i==button)
-				button_focus(&(buttons[i]));
-			else
-				button_exit(&(buttons[i]));
+		for(i=0; i<4; i++)
 			button_draw(&(buttons[i]),g->renderer);
-		}
+		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}
 }

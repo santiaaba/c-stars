@@ -5,6 +5,18 @@ void printb(char *buffer, int size){
 		printf("%i -> %i:%c\n",i,buffer[i],buffer[i]);
 }
 
+void print_header_req(req_t *req){
+	printf("Encabezado\n");
+	printf("COD: %u | AUX: %u | SIZE: %u | QID: %"PRIu32"\n",
+	req->header.cod,req->header.aux,req->header.size,req->header.qid);
+}
+
+void print_header_res(res_t *res){
+	printf("Encabezado\n");
+	printf("COD: %u | RESP: %u | SIZE: %u | QID: %"PRIu32"\n",
+	res->header.cod,res->header.resp,res->header.size,res->header.qid);
+}
+
 /******************************************************
  *							Para TCP									*
  ******************************************************/
@@ -81,9 +93,8 @@ void eaeapp_char2req(req_t *req, char *buffer){
 	req->header.size = ntohs(aux16);
 	memcpy(&aux32,&(buffer[4]),4);
 	req->header.qid = ntohl(aux32);
-	printf("Encabezado\n");
-	printf("COD: %u | AUX: %u | SIZE: %u | QID: %"PRIu32"\n",
-	req->header.cod,req->header.aux,req->header.size,req->header.qid);
+
+	print_header_req(req);
 
 	printf("Body\n");
 	if(req->body != NULL)
@@ -123,6 +134,10 @@ void eaeapp_char2res(res_t *res, char *buffer){
 	res->header.size = ntohs(aux16);
 	memcpy(&aux32,&(buffer[4]),4);
 	res->header.qid = ntohl(aux32);
+
+	print_header_res(res);
+
+	printf("Body\n");
 	if(res->body != NULL)
 		free(res->body);
 	switch(res->header.cod){
@@ -139,6 +154,11 @@ void eaeapp_char2res(res_t *res, char *buffer){
 			((res_info_t*)(res->body))->state = htons(aux16);
 			((res_info_t*)(res->body))->level = buffer[6];
 			((res_info_t*)(res->body))->level_state = buffer[7];
+			printf("SCORE:%"PRIu32" | STATE:%u | LEVEL:%u | LEVEL_STATE: %u",
+				((res_info_t*)(res->body))->score,
+				((res_info_t*)(res->body))->state,
+				((res_info_t*)(res->body))->level,
+				((res_info_t*)(res->body))->level_state);
 	}
 }
 

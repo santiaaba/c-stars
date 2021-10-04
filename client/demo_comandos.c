@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #define MAX 80
-#define PORT 8080
+#define PORT 2525
 #define SA struct sockaddr
 void func(int sockfd) {
 	int bytes, total;
@@ -40,7 +40,7 @@ void func(int sockfd) {
 
 int main()
 {
-	int sockfd;
+	int sockfd, connfd;
 	struct sockaddr_in servaddr, cli;
 
 	// socket create and varification

@@ -15,7 +15,7 @@
 // Function designed for chat between client and server.
 void func(int sockfd) {
 	char buff[MAX];
-	int n, bytes;
+	int n, bytes, total;
 	uint8_t lala;
 	uint16_t lala16;
 	uint32_t lala32;
@@ -25,14 +25,17 @@ void func(int sockfd) {
 
 		// read the message from client and copy it in buffer
 		printf("Esperando datos\n");
+		total = 0;
 		bytes = recv(sockfd, buff, sizeof(buff),0);
+		printf("Hemos recibido:%i\n",total);
 		// print buffer which contains the client contents
 		lala = buff[0];
 		memcpy(&lala16,&(buff[1]),2);
 		lala16 = ntohs(lala16);
 		memcpy(&lala32,&(buff[3]),4);
 		lala32 = ntohl(lala32);
-		printf("Bytes: %i - Mensaje del cliente: %u, %u, %"PRIu32"\n", bytes, lala, lala16,lala32);
+		printf("Bytes: %i - Mensaje del cliente: %u, %u, %"PRIu32"\n",
+			bytes, lala, lala16,lala32);
 		bzero(buff, MAX);
 		n = 0;
 		// copy server message in the buffer
@@ -66,7 +69,7 @@ int main()
 		exit(0);
 	}
 	else
-		printf("Socket successfully binded..\n");
+		printf("Socket successfully binded.. %i\n",sockfd);
 
 	// Now server is ready to listen and verification
 	if ((listen(sockfd, 5)) != 0) {

@@ -35,7 +35,7 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	   procesar el mensaje obtenido como respuesta. Retorna -1 si ha habido
 		algun error */
 	char buffer[MAX_BUFFER];
-	int size, total, bytes;
+	int size, bytes;
 	res_t res;
 
 	bzero(buffer, MAX_BUFFER);
@@ -43,13 +43,16 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 
 	//printb(buffer,size);
 
-	total = 0;
-	printf("Aguardamos 10 segundos antes de enviar los datos. DEBUG\n");
-	sleep(5);
-	while(bytes = send(cs->sockfd,&(buffer[total]),size-total,0)>0){
-		total += bytes;
-	}
-	printf("Cantidad bytes enviados:%i\n",total);
+	printf("Presionar ENTER para enviar el encabezado\n");
+	getchar();
+	/* Enviamos el header */
+	printf("Enviamos el header\n");
+	bytes = send(cs->sockfd,&buffer,REQ_HEADER_SIZE,0);
+	printf("Bytes enviados: %i\n",bytes);
+	/* Enviamos el body */
+	printf("Enviamos el body\n");
+	bytes = send(cs->sockfd,&(buffer[REQ_HEADER_SIZE]),req->header.size,0);
+	printf("Bytes enviados: %i\n",bytes);
 	if(bytes < 0){
 		printf("Error al enviar la petición al server\n");
 		return -1;
@@ -64,14 +67,15 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 		return 0;
 	
 	/* Recibimos la respuesta */
-	total = 0;
-	while(bytes = recv(cs->sockfd,&(buffer[total]),MAX_BUFFER-total,0)>0){
-		total += bytes;
-	}
-	if(bytes < 0){
-		printf("Error al recibir el encabezado de la respuesta\n");
-		return -1;
-	}
+	printf("Esperando recibir un encabezado\n");
+	bytes = recv(cs->sockfd,buffer,RES_HEADER_SIZE,0);
+	printf("bytes recibidos: %i\n",bytes);
+	memcpy(&size,&(buffer[2]),2);
+	size = ntohs(size);
+	printf("Recibimos el body\n");
+	bytes = recv(cs->sockfd,&(buffer[RES_HEADER_SIZE]),size,0);
+	printf("bytes recibidos: %i\n",bytes);
+
 	eaeapp_char2res(&res,buffer);
 	handle_res(&res);
 	return 0;
