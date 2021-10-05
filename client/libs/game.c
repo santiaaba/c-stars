@@ -213,9 +213,12 @@ void game_connect(game_t *g){
 		int buffer_req_size = 0;
 
 		void server_response_handle(res_t *res){
-			printf("Manejando la respuesta del cliente\n");
+			req_t req;
+			printf("Manejando la respuesta del cliente hacia el server\n");
 			if(res->header.resp == RES_OK){
 				game_set_status(gg,MAINMENU);
+				/* Enviando confirmacion en paquete req que no espera
+				   respuesta */
 			} else {
 				switch(res->header.resp){
 					case RES_ERROR_PORT:
@@ -227,6 +230,8 @@ void game_connect(game_t *g){
 					default:
 						strcat(message,"Error indefinido");
 				}
+				/* Enviando rechazo en paquete req que no espera
+				   respuesta */
 			}
 			wait = false;
 		}
@@ -314,14 +319,13 @@ void game_main_menu(game_t *g){
 		- Salir
 	*/
 
-	button_t buttons[4];			// Array de botones
+	button_t buttons[4];			// Array de 4 botones
 	int button = 0;				// Boton en foco
 	int i;
 	int key;
 	SDL_Event event;
 
-	void on_focus(button_t *buttons; int b, int size){
-		ACA ME QUEDE. PASAR ARRAY POR REFERENCIA
+	void on_focus(button_t *buttons, int b, int size){
 		for(i=0; i<size; i++){
 			if(i==b)
 				button_focus(&(buttons[i]));
@@ -330,6 +334,22 @@ void game_main_menu(game_t *g){
 		}
 	}
 
+	ACA ME QUEDE. HAY QUE ARMAR LOS BOTONES. DIBUJARLOS
+	Y PROBARLOS
+	button_init(buttons[0],"jugar_off.png",
+		"jugar_on.png",100,100,1,game->renderer);
+
+	button_init(buttons[0],"jugar_off.png",
+		"jugar_on.png",100,100,1,game->renderer);
+
+	button_init(buttons[0],"jugar_off.png",
+		"jugar_on.png",100,100,1,game->renderer);
+
+	button_init(buttons[0],"jugar_off.png",
+		"jugar_on.png",100,100,1,game->renderer);
+
+
+	printf("--- MAIN-MENU ---\n");
 	while(g->status == MAINMENU){
 		while(SDL_PollEvent(&event)){
 			/* Solo aceptamos las flechas arriba, abajo y enter */

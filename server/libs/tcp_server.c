@@ -92,9 +92,11 @@ void *tcp_server_start(void *server){
 					/* Enviamos el encabezado */
 					printf("Enviamos el encabezado de la respuesta\n");
 					bytes = send(confd,buffer,RES_HEADER_SIZE,0);
+					printf("Bytes enviados: %i\n", bytes);
 					/* Enviamos la cuerpo */
 					printf("Enviamos el body de la respuesta\n");
 					bytes = send(confd,&(buffer[RES_HEADER_SIZE]),res.header.size,0);
+					printf("Bytes enviados: %i\n", bytes);
 					if(bytes < 0){
 						printf("Error al enviar la respuesta\n");
 						fprintf(stderr, "recv() failed: %s\n", strerror(errno));

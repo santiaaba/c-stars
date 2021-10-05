@@ -41,10 +41,6 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	bzero(buffer, MAX_BUFFER);
 	eaeapp_req2char(req,buffer,&size);
 
-	//printb(buffer,size);
-
-	printf("Presionar ENTER para enviar el encabezado\n");
-	getchar();
 	/* Enviamos el header */
 	printf("Enviamos el header\n");
 	bytes = send(cs->sockfd,&buffer,REQ_HEADER_SIZE,0);
@@ -62,7 +58,9 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 		querer enviar una respueta desde el server
 		pero en el cliente no se espera la misma, el
 		server queda colgado tratando de realizar el
-		envío */
+		envío. Lo mismo para el server. Nos ha pasado
+		que el server ha quedado esperando un body
+		que nunca fue enviado */
 	if(handle_res == NULL)
 		return 0;
 	
@@ -72,9 +70,11 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	printf("bytes recibidos: %i\n",bytes);
 	memcpy(&size,&(buffer[2]),2);
 	size = ntohs(size);
-	printf("Recibimos el body\n");
-	bytes = recv(cs->sockfd,&(buffer[RES_HEADER_SIZE]),size,0);
-	printf("bytes recibidos: %i\n",bytes);
+	printf("Recibimos el body (%i bytes esperados)\n",size);
+	if(size > 0){
+		bytes = recv(cs->sockfd,&(buffer[RES_HEADER_SIZE]),size,0);
+		printf("bytes recibidos: %i\n",bytes);
+	}
 
 	eaeapp_char2res(&res,buffer);
 	handle_res(&res);

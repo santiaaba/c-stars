@@ -24,46 +24,49 @@ void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 	}
 
 	// Verificamos que el udp sea aceptada
+	// IMPLEMENTAR
 
 	// Tomamos el puerto udp ofrecido por el cliente
 	game_set_state(g,G_CONNECT_STEP_ONE);
 
 	// Armamos la respuesta afirmativa
 	res->header.resp = RES_OK;
-	res->header.size = 0;
 }
 
 void static req_connect_step_two(game_t *g, req_t *req, res_t *res){
 	/* Conecta el cliente con el server. Paso 2:
-    * - Reconfirmamos el puerto udp ofrecido por el cliente. */
+    * - Cliente nos reconfirma el udp. */
 
-	res->header.cod = 0;
+	res_init(res,0,0,0);	// Codigo 0 signifia que no hay respuesta
 
 	// Verificamos que el estado actual sea CONNECT_STEP_ONE
 	if(game_get_state(g) != G_CONNECT_STEP_ONE){
-		res->header.resp = RES_INCORRECT;
-		res->header.size = 0;
+		//res->header.resp = RES_INCORRECT;
+		//res->header.size = 0;
 		return;
 	}
 
 	game_set_state(g,G_READY);
 
 	// Armamos la respuesta
-	res->header.resp = RES_OK;
-	res->header.size = 0;
-	res->body = NULL;
+	//res->header.resp = RES_OK;
+	//res->header.size = 0;
+	//res->body = NULL;
 }
 
 void static req_disconnect(game_t *g, req_t *req, res_t *res){
 	/* Desconecta el cliente del server e informa al cliente*/
+
+	//IMPLEMENTAR
 }
 
 void static req_key_press(game_t *g, req_t *req, res_t *res){
 
 	game_event_t *event;
+	res_init(res,0,0,0);	// Codigo 0 signifia que no hay respuesta
 
 	if(game_get_state(g) != G_PLAYING){
-		res->header.resp = RES_INCORRECT;
+		//res->header.resp = RES_INCORRECT;
 		return;
 	}
 

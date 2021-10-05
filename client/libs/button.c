@@ -25,6 +25,7 @@ void button_init(button_t *button,
 }
 
 void button_draw(button_t *button, SDL_Renderer *renderer){
+	printf("Dibujando boton\n");
 	if(button->focus){
 		SDL_RenderCopy(renderer,button->on,&(button->frame),&(button->dest));
 	} else {
