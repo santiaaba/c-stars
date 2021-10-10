@@ -4,7 +4,11 @@ void static button_text_make(button_t *button){
 
 	SDL_Surface* surface;
 	SDL_Color *text_color;
-	int texture_w, texture_h;
+	SDL_Rect *b_dest;
+	SDL_Rect *t_dest;
+
+	b_dest = &(button->dest);
+	t_dest = &(button->texture_dest);
 
 	if(button->focus)
 		text_color = &(button->font_color_focus);
@@ -14,28 +18,49 @@ void static button_text_make(button_t *button){
    surface = TTF_RenderText_Solid(button->font, button->text, *text_color);
    button->texture = SDL_CreateTextureFromSurface(button->renderer, surface);
    SDL_FreeSurface(surface);
-   SDL_QueryTexture(button->texture, NULL,NULL, &texture_w, &texture_h);
+   SDL_QueryTexture(button->texture, NULL, NULL, &(button->texture_dest.w),
+			&(button->texture_dest.h));
+
+	t_dest->x = b_dest->x + (b_dest->w - t_dest->w)/2;
+	t_dest->y = b_dest->y + (b_dest->h - t_dest->h)/2;
 }
 
 void button_init(button_t *button, int x, int y, int w,
 						int h, int focus, SDL_Renderer *renderer){
 
 	button->focus = focus;
+
 	button->dest.x = x;
 	button->dest.y = y;
 	button->dest.w = w;
 	button->dest.h = h;
+
+	button->bg_color.r = button->bg_color_focus.r = 255;
+	button->bg_color.g = button->bg_color_focus.g = 255;
+	button->bg_color.b = button->bg_color_focus.b = 255;
+
+	button->font_color.r = button->font_color_focus.r = 0;
+	button->font_color.g = button->font_color_focus.g = 0;
+	button->font_color.b = button->font_color_focus.b = 0;
+
+	button->border_color.r = button->border_color_focus.r = 100;
+	button->border_color.g = button->border_color_focus.g = 100;
+	button->border_color.b = button->border_color_focus.b = 100;
+
 	button->renderer = renderer;
 	button->font = TTF_OpenFont(FONT, BUTTON_FONT_SIZE);
 	if(!button->font)
       printf("TTF_OpenFont: %s\n", TTF_GetError());
-	button->text = "";
+	button->text = NULL;
 	button->texture = NULL;
 }
 
 void button_text(button_t *button, char *text){
+	//printf("Asginando texto a boton\n");
 	button->text=(char*)realloc(button->text,strlen(text) + 1);
+	//printf("Copiando texto\n");
 	strcpy(button->text,text);
+	//printf("texto: %s\n",button->text);
 	button_text_make(button);
 }
 
@@ -81,7 +106,7 @@ void button_border_color(button_t *button,
 void button_draw(button_t *button){
 
 	
-	printf("Dibujando el fondo\n");
+	//printf("Dibujando el fondo\n");
 	if(button->focus)
 		SDL_SetRenderDrawColor(button->renderer,
                    button->bg_color_focus.r,
@@ -96,7 +121,7 @@ void button_draw(button_t *button){
                    255);
 	SDL_RenderFillRect(button->renderer,&(button->dest));
 
-	printf("Dibujamos el borde\n");
+	//printf("Dibujamos el borde\n");
 	if(button->focus)
 		SDL_SetRenderDrawColor(button->renderer,
                    button->border_color_focus.r,
@@ -112,8 +137,8 @@ void button_draw(button_t *button){
 
 	SDL_RenderDrawRect(button->renderer,&(button->dest));
 
-	printf("Dibujamos el texto");
-	SDL_RenderCopy(button->renderer,button->texture,NULL,&(button->dest));
+	//printf("Dibujamos el texto\n");
+	SDL_RenderCopy(button->renderer,button->texture,NULL,&(button->texture_dest));
 }
 
 void button_focus(button_t *button){

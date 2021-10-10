@@ -26,10 +26,8 @@ int game_init(game_t *g){
 	g->renderer = SDL_CreateRenderer(g->window, -1, 0);
 	g->status = HELLO;
 	g->udp = 20000;	// Lo fijamos
-	printf("ACA");
 	sem_init(&(g->sem_status),0,1);
 	g->command_cli = (tcp_client_t *)malloc(sizeof(tcp_client_t));
-	printf("ACA paso");
 }
 
 int game_check_connect(){
@@ -107,11 +105,10 @@ void game_hello(game_t *g){
 }
 
 void game_play(game_t *g){
-	/* En este modo, el juego esta corriendo. 
-		Se deben dibujar todos los frames en base
-		a lo que se encuentra en el buffer. Se deben
-		capturar los eventos del teclado y enviar los mismos
-		al servidor del juego */
+	/* En este modo, el juego esta corriendo. Se deben dibujar
+		todos los frames en base a lo que se encuentra en el buffer.
+		Se deben capturar los eventos del teclado y enviar los mismos
+		al servidor del juego. */
 
 	SDL_Event event;
 	SDL_Rect frame;
@@ -196,6 +193,7 @@ void game_connect(game_t *g){
 
 	input_t ip_server;
 	text_t error;
+	pthread_t th;		// Para indicarle al server iniciar el juego
 	int key = 0;
 	SDL_Event event;
 	int key_press = 0;
@@ -318,12 +316,14 @@ void game_main_menu(game_t *g){
 		- Desconectar
 		- Salir
 	*/
+	const int cant_buttons = 3;
 
-	button_t buttons[4];			// Array de 4 botones
-	int button = 0;				// Boton en foco
+	button_t buttons[cant_buttons];		// Array de 3 botones
+	int button = 0;							// Boton en foco
 	int i;
 	int key;
 	SDL_Event event;
+	bool pusshed;
 
 	void on_focus(button_t *buttons, int b, int size){
 		for(i=0; i<size; i++){
@@ -334,41 +334,73 @@ void game_main_menu(game_t *g){
 		}
 	}
 
-	ACA ME QUEDE. HAY QUE ARMAR LOS BOTONES. DIBUJARLOS
-	Y PROBARLOS
-	button_init(buttons[0],"jugar_off.png",
-		"jugar_on.png",100,100,1,game->renderer);
+	void pre_start_game(game_t *g){
+		/* Encargado de enviar al servidor el mensaje de
+			iniciar el juego en el nivel 1 */
+		game_t *gg = (game_t*)g;
+	}
 
-	button_init(buttons[0],"jugar_off.png",
-		"jugar_on.png",100,100,1,game->renderer);
+	button_init(&(buttons[0]),100,50,400,50,1,g->renderer);
+	button_bg_color(&(buttons[0]),100,10,255,100,100,100);
+	button_font_color(&(buttons[0]),0,0,0,200,200,0);
+	button_border_color(&(buttons[0]),0,0,0,200,200,0);
+	button_text(&(buttons[0]),"Jugar");
 
-	button_init(buttons[0],"jugar_off.png",
-		"jugar_on.png",100,100,1,game->renderer);
+	button_init(&(buttons[1]),100,120,400,50,0,g->renderer);
+	button_bg_color(&(buttons[1]),100,10,255,100,100,100);
+	button_font_color(&(buttons[1]),0,0,0,200,200,0);
+	button_border_color(&(buttons[1]),0,0,0,200,200,0);
+	button_text(&(buttons[1]),"Creditos");
 
-	button_init(buttons[0],"jugar_off.png",
-		"jugar_on.png",100,100,1,game->renderer);
-
+	button_init(&(buttons[2]),100,190,400,50,0,g->renderer);
+	button_bg_color(&(buttons[2]),100,10,255,100,100,100);
+	button_font_color(&(buttons[2]),0,0,0,200,200,0);
+	button_border_color(&(buttons[2]),0,0,0,200,200,0);
+	button_text(&(buttons[2]),"Desconectar");
 
 	printf("--- MAIN-MENU ---\n");
+	pusshed = false;
 	while(g->status == MAINMENU){
 		while(SDL_PollEvent(&event)){
-			/* Solo aceptamos las flechas arriba, abajo y enter */
-			key = event.key.keysym.sym;
-			if (key == SDLK_UP && button < 3 ){
-				button++;
-				on_focus(buttons,button,4);
+			if(!pusshed && event.type == SDL_KEYDOWN){
+				pusshed=true;
+				/* Solo aceptamos las flechas arriba, abajo y enter */
+				key = event.key.keysym.sym;
+				if (key == SDLK_DOWN && button < cant_buttons - 1 ){
+					printf("Bajamos en el menu\n");
+					button++;
+					on_focus(buttons,button,cant_buttons);
+				}
+				if (key == SDLK_UP && button > 0){
+					printf("Subimos en el menu\n");
+					button--;
+					on_focus(buttons,button,cant_buttons);
+				}
+				if (key == SDLK_RETURN)
+					switch(button){
+						case 0:
+							/* Pedimos al servidor iniciar el juego
+								desde el nivel 1 */
+							pthread_create(&th,NULL,&pre_start_game,g);
+							ACA ME QUEDE. HAY QUE ARMAR CORRECTAMENTE
+							EL METODO PRE_START_GAME
+							break;
+						case 1:
+							break;
+						case 2:
+							tcp_client_disconnect(g->command_cli);
+							/* FALTA CERRAR EL SERVIDOR UDP */
+							g->status = HELLO;
+					}
+					printf("IMPLEMENTAR BOTON\n");
+					/* ejecutar boton seleccionado */
 			}
-			if (key == SDLK_DOWN && button > 0){
-				button--;
-				on_focus(buttons,button,4);
-			}
-			if (key == SDLK_RETURN)
-				printf("IMPLEMENTAR BOTON\n");
-				/* ejecutar boton seleccionado */
+			if(pusshed && event.type == SDL_KEYUP)
+				pusshed=false;
 		}
 		SDL_RenderClear(g->renderer);
-		for(i=0; i<4; i++)
-			button_draw(&(buttons[i]),g->renderer);
+		for(i=0; i<cant_buttons; i++)
+			button_draw(&(buttons[i]));
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}

@@ -19,7 +19,6 @@ typedef struct {
 uint8_t tcp_client_init(tcp_client_t *cs, char *serv_ip, int port);
 uint8_t tcp_client_connect(tcp_client_t *cs);
 int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*));
-void cs_close(tcp_client_t *cs);
-
+void tcp_client_disconnect(tcp_client_t *cs);
 
 #endif

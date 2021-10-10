@@ -25,7 +25,7 @@ uint8_t tcp_client_connect(tcp_client_t *cs){
 	return 1;
 }
 
-void cs_close(tcp_client_t *cs){
+void tcp_client_disconnect(tcp_client_t *cs){
 	close(cs->sockfd);
 }
 

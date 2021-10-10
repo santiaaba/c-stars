@@ -52,6 +52,20 @@ void *tcp_server_start(void *server){
 	req_t req;
 	res_t res;
 
+	int tcp_server_close(tcp_server_t *s, int *confd){
+		close(*confd);
+		/* Volvamos a dejar el socket en listen */
+/*		printf("Dejamos socket en LISTEN\n");
+		close(s->fd_server);
+		if(listen(s->fd_server,1) != 0){ 
+			printf("error en listen()\n");
+			fprintf(stderr, "recv() failed: %s\n", strerror(errno));
+			return 0;
+		}*/
+		s->status = S_LISTEN;
+		return 1;
+	}
+
 	s = (tcp_server_t*)server;
 	len = sizeof(s->clientaddr);
 	while(s->status == S_LISTEN){
@@ -61,13 +75,14 @@ void *tcp_server_start(void *server){
 			s->status = S_ESTABLISHED;
 			printf("Cliente conectado\n");
 			while(s->status == S_ESTABLISHED){
-				//sleep(10);
 				/* Aguardamos a recibir un mensaje */
 				printf("Esperando recibir un encabezado %i\n",s->fd_server);
 				bzero(buffer, MAXBUFFER);
 				bytes = recv(confd,buffer, REQ_HEADER_SIZE,0);
-				if(bytes < 0){
-					fprintf(stderr, "recv() failed: %s\n", strerror(errno));
+				if(bytes <= 0){
+					fprintf(stderr, "recv() header failed: %s\n", strerror(errno));
+					if(!tcp_server_close(s,&confd))
+						exit(0);
 					continue;
 				}
 				printf("bytes recibidos: %i\n",bytes);
@@ -76,11 +91,15 @@ void *tcp_server_start(void *server){
 				printf("Recibimos el body\n");
 				bytes = recv(confd,&(buffer[REQ_HEADER_SIZE]),size,0);
 				printf("bytes recibidos: %i\n",bytes);
-				if(bytes < 0){
-					printf("Ha ocurrido un error fatal al recibir los datos\n");
+				if(bytes <= 0){
+					fprintf(stderr, "recv() body failed: %s\n", strerror(errno));
+					tcp_server_close(s,&confd);
+					if(!tcp_server_close(s,&confd))
+						exit(0);
 					continue;
 				}
 				eaeapp_char2req(&req,buffer);
+
 				/* Ya tenemos todos los datos. Ejecutamos el protocolo */
 				server_protocol_handle(s->game, &req, &res);
 				
@@ -102,12 +121,15 @@ void *tcp_server_start(void *server){
 						fprintf(stderr, "recv() failed: %s\n", strerror(errno));
 					}
 				}
+
+				if(req.header.cod == C_DISCONNECT)
+					if(!tcp_server_close(s,&confd))
+						exit(0);
 			}
 			close(s->fd_server);
+		} else {
+			fprintf(stderr, "accept() failed: %s - %i\n", strerror(errno),confd);
 		}
 	}
-}
-
-void tcp_server_close(tcp_server_t *server){
-	/* IMPLEMENTAR */
+	printf("Se termino todo señores\n");
 }

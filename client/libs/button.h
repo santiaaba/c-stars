@@ -13,9 +13,12 @@
 
 typedef struct {
 	SDL_Rect dest;
+	SDL_Rect texture_dest;
 	SDL_Renderer *renderer;
 	TTF_Font *font;
 	char *text;
+	int texture_width;
+	int texture_height;
 	SDL_Color font_color;
 	SDL_Color font_color_focus;
 	SDL_Color bg_color;
