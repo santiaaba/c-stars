@@ -26,8 +26,12 @@ int game_init(game_t *g){
 	g->renderer = SDL_CreateRenderer(g->window, -1, 0);
 	g->status = HELLO;
 	g->udp = 20000;	// Lo fijamos
-	sem_init(&(g->sem_status),0,1);
+	if(sem_init(&(g->sem_status),0,1) == -1){
+		fprintf(stderr, "game_init() failed: %s\n", strerror(errno));
+	}
+	printf("Paso\n");
 	g->command_cli = (tcp_client_t *)malloc(sizeof(tcp_client_t));
+	printf("Paso2\n");
 }
 
 int game_check_connect(){
@@ -199,24 +203,24 @@ void game_connect(game_t *g){
 	int key_press = 0;
 	int wait = false;
 	char *srv_ip;
-	pthread_t th;
 	char message[200];
 	char borrar[1000];
 
 	void *try_to_connect(void *g){
-
 		game_t *gg = (game_t*)g;
 		req_t req;
 		char *buffer_req = NULL;
 		int buffer_req_size = 0;
 
 		void server_response_handle(res_t *res){
-			req_t req;
-			printf("Manejando la respuesta del cliente hacia el server\n");
+			printf("Manejando la respuesta del server\n");
 			if(res->header.resp == RES_OK){
 				game_set_status(gg,MAINMENU);
 				/* Enviando confirmacion en paquete req que no espera
 				   respuesta */
+				req.body = NULL;
+				req_fill(&req,C_CONNECT_2,0);
+				tcp_client_send(gg->command_cli,&req,NULL);
 			} else {
 				switch(res->header.resp){
 					case RES_ERROR_PORT:
@@ -234,10 +238,9 @@ void game_connect(game_t *g){
 			wait = false;
 		}
 
-		printf("Creando el fileDescriptor %s:%i\n",srv_ip,SRV_PORT);
 		if(!tcp_client_init(gg->command_cli,srv_ip,SRV_PORT)){
 			text_set(&error,"Error fatal al crear el socket");
-			printf("Error al crear el FD\n");
+			fprintf(stderr, "game_connect() failed: %s\n", strerror(errno));
 			wait = false;
 			return NULL;
 		}
@@ -245,20 +248,19 @@ void game_connect(game_t *g){
 		printf("Conectando contra el servidor\n");
 		if(!tcp_client_connect(gg->command_cli)){
 			text_set(&error,"Server no responde");
-			printf("Error server no responde\n");
+			fprintf(stderr, "game_connect() failed: %s\n", strerror(errno));
 			wait = false;
 			return NULL;
 		}
-		printf("Servidor conectado. Esperamos 10 Segundos\n");
 		printf("Enviando udp y version\n");
+		req_init(&req);
 		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
-		req_init(&req,C_CONNECT_1,sizeof(req_connect_t));
+		req_fill(&req,C_CONNECT_1,sizeof(req_connect_t));
 
 		((req_connect_t*)(req.body))->udp = gg->udp;
 		((req_connect_t*)(req.body))->version = EAEAPP_VERSION;
 
 		tcp_client_send(gg->command_cli,&req,&server_response_handle);
-		printf("paso envio a servidor\n");
 		return NULL;
 	}
 
@@ -324,6 +326,9 @@ void game_main_menu(game_t *g){
 	int key;
 	SDL_Event event;
 	bool pusshed;
+	pthread_t th;
+	bool showButtons;
+	text_t message;
 
 	void on_focus(button_t *buttons, int b, int size){
 		for(i=0; i<size; i++){
@@ -334,10 +339,27 @@ void game_main_menu(game_t *g){
 		}
 	}
 
-	void pre_start_game(game_t *g){
+	void *pre_start_game(void *g){
 		/* Encargado de enviar al servidor el mensaje de
 			iniciar el juego en el nivel 1 */
+
 		game_t *gg = (game_t*)g;
+		req_t req;
+
+		void server_response_handle(res_t *res){
+			if(res->header.resp == RES_OK){
+				printf("Comenzo el juego\n");
+				game_set_status(gg,PLAYING);
+			} else {
+				text_set(&message,"Error");
+				showButtons = true;
+			}
+		}
+
+		/* Enviar mensaje para iniciar el juego */
+		req_init(&req);
+		req_fill(&req,C_GAME_START,0);
+		tcp_client_send(gg->command_cli,&req,&server_response_handle);
 	}
 
 	button_init(&(buttons[0]),100,50,400,50,1,g->renderer);
@@ -360,8 +382,12 @@ void game_main_menu(game_t *g){
 
 	printf("--- MAIN-MENU ---\n");
 	pusshed = false;
+	showButtons = true;
+	text_init(&message,200,200,25,g->renderer);
 	while(g->status == MAINMENU){
 		while(SDL_PollEvent(&event)){
+			if(!showButtons)
+				break;
 			if(!pusshed && event.type == SDL_KEYDOWN){
 				pusshed=true;
 				/* Solo aceptamos las flechas arriba, abajo y enter */
@@ -379,11 +405,10 @@ void game_main_menu(game_t *g){
 				if (key == SDLK_RETURN)
 					switch(button){
 						case 0:
-							/* Pedimos al servidor iniciar el juego
-								desde el nivel 1 */
+							/* Impedimos los eventos */
+							showButtons=false;
+							text_set(&message,"Iniciando Juego");
 							pthread_create(&th,NULL,&pre_start_game,g);
-							ACA ME QUEDE. HAY QUE ARMAR CORRECTAMENTE
-							EL METODO PRE_START_GAME
 							break;
 						case 1:
 							break;
@@ -399,8 +424,10 @@ void game_main_menu(game_t *g){
 				pusshed=false;
 		}
 		SDL_RenderClear(g->renderer);
-		for(i=0; i<cant_buttons; i++)
-			button_draw(&(buttons[i]));
+		if(showButtons)
+			for(i=0; i<cant_buttons; i++)
+				button_draw(&(buttons[i]));
+		text_draw(&message);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}

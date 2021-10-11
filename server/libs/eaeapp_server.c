@@ -1,16 +1,10 @@
 #include "eaeapp_server.h"
 
 void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
-	/* Conecta el cliente con el server. Paso 1:
-	 * - Verifica la version del cliente.
-	 * - Verificamos si aceptamos el puerto udp. */
-	  
-	res_init(res,req->header.cod,0,0);
-
-	// Verificamos que el estado sea WAIT_CONNECT
+	/* Conecta el cliente con el server. Paso 1 */
+	res_fill(res,req->header.cod,0,0);
 	if(game_get_state(g) != G_WAIT_CONNECT){
-		res->header.resp = RES_INCORRECT;		/* Mensaje no aceptado */
-		res->header.size = 0;
+		res->header.resp = RES_INCORRECT;
 		return;
 	} 
 
@@ -23,7 +17,7 @@ void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 		return;
 	}
 
-	// Verificamos que el udp sea aceptada
+	// Verificamos que el udp sea aceptado
 	// IMPLEMENTAR
 
 	// Tomamos el puerto udp ofrecido por el cliente
@@ -37,21 +31,18 @@ void static req_connect_step_two(game_t *g, req_t *req, res_t *res){
 	/* Conecta el cliente con el server. Paso 2:
     * - Cliente nos reconfirma el udp. */
 
-	res_init(res,0,0,0);	// Codigo 0 signifia que no hay respuesta
+	res_fill(res,req->header.cod,0,0);
 
-	// Verificamos que el estado actual sea CONNECT_STEP_ONE
 	if(game_get_state(g) != G_CONNECT_STEP_ONE){
-		//res->header.resp = RES_INCORRECT;
-		//res->header.size = 0;
+		res->header.resp = RES_INCORRECT;
 		return;
 	}
 
+	printf("Asignando G_READY?\n");
 	game_set_state(g,G_READY);
 
 	// Armamos la respuesta
-	//res->header.resp = RES_OK;
-	//res->header.size = 0;
-	//res->body = NULL;
+	res->header.resp = RES_OK;
 }
 
 void static req_disconnect(game_t *g, req_t *req, res_t *res){
@@ -62,60 +53,75 @@ void static req_disconnect(game_t *g, req_t *req, res_t *res){
 
 void static req_key_press(game_t *g, req_t *req, res_t *res){
 
-	game_event_t *event;
-	res_init(res,0,0,0);	// Codigo 0 signifia que no hay respuesta
+	res_fill(res,req->header.cod,0,0);
 
 	if(game_get_state(g) != G_PLAYING){
-		//res->header.resp = RES_INCORRECT;
+		res->header.resp = RES_INCORRECT;
 		return;
 	}
 
-	event = (game_event_t*)malloc(sizeof(game_event_t));
-	event->key = ((req_kp_t*)(req->body))->key;
-	event->key_type = ((req_kp_t*)(req->body))->action;
-	game_event_add(g,event);
+	game_event_add(g,((req_kp_t*)(req->body))->key,
+					((req_kp_t*)(req->body))->action);
+
+	res->header.resp = RES_OK;
 }
 
 void static req_game_start(game_t *g, req_t *req, res_t *res){
 	/* Inicia el nivel indicado. */
+	printf("GAME STATE: %i\n",game_get_state(g));
+
+	res_fill(res,req->header.cod,0,0);
+
 	if(game_get_state(g) != G_READY){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
+	res->header.resp = RES_OK;
+	printf("eaeapp_server(): Llego\n");
 	game_start(g);
 }
 
 void static req_game_stop(game_t *g, req_t *req, res_t *res){
 	/* Finaliza el juego. */
+
+	res_fill(res,req->header.cod,0,0);
+
 	if(game_get_state(g) != G_PAUSE ||
 		game_get_state(g) != G_PLAYING){
 			res->header.resp = RES_INCORRECT;
 			return;
 	}
+	res->header.resp = RES_OK;
 	game_stop(g);
 }
 
 void static req_game_pause(game_t *g, req_t *req, res_t *res){
+
+	res_fill(res,req->header.cod,0,0);
+
 	if(game_get_state(g) != G_PLAYING){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
+	res->header.resp = RES_OK;
 	game_pause(g);
 }
 
 void static req_game_resume(game_t *g, req_t *req, res_t *res){
+
+	res_fill(res,req->header.cod,0,0);
+
 	if(game_get_state(g) != G_PAUSE){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
+	res->header.resp = RES_OK;
 	game_resume(g);
 }
 
 void static req_game_status(game_t *g, req_t *req, res_t *res){
-	// Armamos la respuesta
 
-	if(res->body != NULL)
-		free(res->body);
+	res_fill(res,req->header.cod,0,0);
 
 	res->body = (game_info_t*)malloc(sizeof(game_info_t));
 	game_info(g,res->body);

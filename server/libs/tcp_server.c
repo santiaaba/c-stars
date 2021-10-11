@@ -13,7 +13,6 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
 	/* Creamos el socket */
 	server->fd_server=socket(AF_INET, SOCK_STREAM, 0);
 	if(server->fd_server == -1){
-		printf("error al crear el socket()\n");
 		fprintf(stderr, "recv() failed: %s\n", strerror(errno));
 		return 0;
 	}
@@ -26,7 +25,6 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
 	printf("Bindeamos server\n");
 	if(bind(server->fd_server,(struct sockaddr*)&(server->serveraddr),
 		sizeof(struct sockaddr)) != 0) {
-			printf("error en bind() \n");
 			fprintf(stderr, "recv() failed: %s\n", strerror(errno));
 			return 0;
 	}
@@ -34,7 +32,6 @@ uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
 	/* Dejamos el socket en LISTEN */
 	printf("Dejamos socket en LISTEN\n");
 	if(listen(server->fd_server,1) != 0){ 
-		printf("error en listen()\n");
 		fprintf(stderr, "recv() failed: %s\n", strerror(errno));
 		return 0;
 	}
@@ -68,19 +65,23 @@ void *tcp_server_start(void *server){
 
 	s = (tcp_server_t*)server;
 	len = sizeof(s->clientaddr);
+	req_init(&req);
+	res_init(&res);
 	while(s->status == S_LISTEN){
 		/* Aguardamos que un cliente establezca una conexion */
-		confd = accept(s->fd_server, (struct sockaddr*)&(s->clientaddr), &len);
+		confd = accept(s->fd_server,
+			(struct sockaddr*)&(s->clientaddr), &len);
 		if(confd > 0){
 			s->status = S_ESTABLISHED;
 			printf("Cliente conectado\n");
 			while(s->status == S_ESTABLISHED){
 				/* Aguardamos a recibir un mensaje */
-				printf("Esperando recibir un encabezado %i\n",s->fd_server);
+				printf("Esperando recibir un encabezado\n");
 				bzero(buffer, MAXBUFFER);
 				bytes = recv(confd,buffer, REQ_HEADER_SIZE,0);
-				if(bytes <= 0){
-					fprintf(stderr, "recv() header failed: %s\n", strerror(errno));
+				if(bytes < 0){
+					fprintf(stderr, "recv() header failed: %s\n",
+						strerror(errno));
 					if(!tcp_server_close(s,&confd))
 						exit(0);
 					continue;
@@ -88,38 +89,49 @@ void *tcp_server_start(void *server){
 				printf("bytes recibidos: %i\n",bytes);
 				memcpy(&size,&(buffer[2]),2);
 				size = ntohs(size);
-				printf("Recibimos el body\n");
-				bytes = recv(confd,&(buffer[REQ_HEADER_SIZE]),size,0);
-				printf("bytes recibidos: %i\n",bytes);
-				if(bytes <= 0){
-					fprintf(stderr, "recv() body failed: %s\n", strerror(errno));
-					tcp_server_close(s,&confd);
-					if(!tcp_server_close(s,&confd))
-						exit(0);
-					continue;
+				if(size > 0){
+					printf("Esperando recibir el body. Bytes esperados: %i\n",
+						size);
+					bytes = recv(confd,&(buffer[REQ_HEADER_SIZE]),size,0);
+					printf("bytes recibidos: %i\n",bytes);
+					if(bytes < 0){
+						fprintf(stderr, "recv() body failed: %s\n",
+							strerror(errno));
+						tcp_server_close(s,&confd);
+						if(!tcp_server_close(s,&confd))
+							exit(0);
+						continue;
+					}
 				}
 				eaeapp_char2req(&req,buffer);
 
+				printf("Procesamos el pedido\n");
+				if(res.body != NULL)
+					free(res.body);
 				/* Ya tenemos todos los datos. Ejecutamos el protocolo */
 				server_protocol_handle(s->game, &req, &res);
 				
 				printf("Respuesta COD: %u\n",res.header.cod);
-				/* Respondemos al cliente si cod es distinto de 0 */
-				if(res.header.cod != 0){
-					printf("Enviamos la respuesta\n");
-					eaeapp_res2char(&res,buffer,&size);
-					/* Enviamos el encabezado */
-					printf("Enviamos el encabezado de la respuesta\n");
-					bytes = send(confd,buffer,RES_HEADER_SIZE,0);
-					printf("Bytes enviados: %i\n", bytes);
-					/* Enviamos la cuerpo */
-					printf("Enviamos el body de la respuesta\n");
-					bytes = send(confd,&(buffer[RES_HEADER_SIZE]),res.header.size,0);
-					printf("Bytes enviados: %i\n", bytes);
-					if(bytes < 0){
-						printf("Error al enviar la respuesta\n");
-						fprintf(stderr, "recv() failed: %s\n", strerror(errno));
-					}
+				/* Respondemos al cliente */
+				printf("Enviamos la respuesta\n");
+				eaeapp_res2char(&res,buffer,&size);
+
+				/* Enviamos el encabezado */
+				printf("Enviamos el encabezado de la respuesta\n");
+				bytes = send(confd,buffer,RES_HEADER_SIZE,0);
+				if(bytes < 0){
+					printf("Error al enviar el encabezado de la respuesta\n");
+					fprintf(stderr, "recv() failed: %s\n", strerror(errno));
+				}
+				printf("Bytes enviados: %i\n", bytes);
+
+				/* Enviamos la cuerpo */
+				printf("Enviamos el body de la respuesta\n");
+				bytes = send(confd,&(buffer[RES_HEADER_SIZE]),res.header.size,0);
+				printf("Bytes enviados: %i\n", bytes);
+				if(bytes < 0){
+					printf("Error al enviar el body de la respuesta\n");
+					fprintf(stderr, "recv() failed: %s\n", strerror(errno));
 				}
 
 				if(req.header.cod == C_DISCONNECT)

@@ -10,7 +10,7 @@ int main(char argc, char * argv[]){
 	game = (game_t*)malloc(sizeof(game_t));
 	/* Inicializamos la estructura game */
 	if (game_init(game) < 0)
-		return 1;
+		return 55;
 
 	game_run(game);
 

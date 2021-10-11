@@ -118,8 +118,10 @@ typedef struct{
    uint8_t level_state;          // estado del nivel
 } res_info_t;
 
-void req_init(req_t *req, uint8_t cod, uint16_t size);
-void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
+void req_init(req_t *req);
+void res_init(res_t *res);
+void req_fill(req_t *req, uint8_t cod, uint16_t size);
+void res_fill(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
 
 void printb(char *buffer, int size);
 

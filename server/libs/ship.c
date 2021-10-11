@@ -15,20 +15,18 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 	ship -> power = 0;
 	ship -> speed = 1;
 
-	ship -> position = (point_t *)malloc(sizeof(point_t));
-	point_init(ship -> position);
+	ship->position=(point_t*)malloc(sizeof(point_t));
+	ship->border=(border_t*)malloc(sizeof(border_t));
+	ship->vector=(vector_t*)malloc(sizeof(vector_t));
+	ship->ia=(ia_t*)malloc(sizeof(ia_t));
 
-	ship -> border = (border_t *)malloc(sizeof(border_t));
-	border_init(ship -> border);
-
-	ship -> vector = (vector_t *)malloc(sizeof(vector_t));
-	vector_init(ship -> vector);
-
-	ship -> ia = (ia_t *)malloc(sizeof(ia_t));
+	point_init(ship->position);
+	border_init(ship->border);
+	vector_init(ship->vector);
 	ia_init(ship->ia, clock);
 
-	ship -> type = type;
-	ship -> ia_activated = 0;
+	ship->type = type;
+	ship->ia_activated = 0;
 
 	/* Asignamos los bordes */
 	switch(type){
@@ -134,11 +132,16 @@ void ship_ia_activate(ship_t *ship){
 	ship -> ia_activated = 1;
 }
 
-void ship_destroy(void **ship){
-	free(((ship_t*)(*ship))->position);
-	border_destroy((void *)(&(((ship_t*)(*ship))->border)));
-	free(((ship_t*)(*ship))->vector);
-	ia_destroy(&(((ship_t*)(*ship))-> ia));
+void ship_destroy(ship_t *ship){
+	point_destroy(ship->position);
+	border_destroy(ship->border);
+	vector_destroy(ship->vector);
+	ia_destroy(ship->ia);
+
+	free(ship->position);
+	free(ship->border);
+	free(ship->vector);
+	free(ship->ia);
 }
 
 void ship_data(ship_t *ship, data_render_t *data){
@@ -162,7 +165,6 @@ void ship_render(ship_t *ship, data_render_t *data){
  ***************************************/
 
 void ia_init(ia_t *ia, clockgame_t *clock){
-	ia -> path = (lista_t *)malloc(sizeof(lista_t));
 	lista_init(ia->path,sizeof(ia_mov_t));
 	ia -> clock = clock;
 }
@@ -191,9 +193,8 @@ void ia_mov_destroy(void **ia_mov){
 	free(((ia_mov_t*)(*ia_mov))->vector);
 }
 
-void ia_destroy(ia_t **ia){
-	lista_clean((*ia)->path,&ia_mov_destroy);
-	free(*ia);
+void ia_destroy(ia_t *ia){
 	/* OJO... no eliminar el clock. Ya que es utilizado
 	   por otras estructuras */
+	lista_clean(ia->path,(void*)(void**)&ia_mov_destroy);
 }

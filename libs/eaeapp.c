@@ -20,18 +20,31 @@ void print_header_res(res_t *res){
 /******************************************************
  *							Para TCP									*
  ******************************************************/
-void req_init(req_t *req, uint8_t cod, uint16_t size){
-	req->header.cod = cod;
-	req->header.qid = 0;		// POR EL MOMENTO
+void req_init(req_t *req){
+	req->header.cod = 0;
+	req->header.qid = 0;
 	req->header.aux = 0;
+	req->header.size = 0;
+	req->body = NULL;
+}
+
+void res_init(res_t *res){
+	res->header.cod = 0;
+	res->header.resp = 0;
+	res->header.size = 0;
+	res->header.qid = 0;
+	res->body = NULL;
+}
+
+void req_fill(req_t *req, uint8_t cod, uint16_t size){
+	req->header.cod = cod;
 	req->header.size = size;
 }
 
-void res_init(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
+void res_fill(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 	res->header.cod = cod;
 	res->header.resp = resp;
 	res->header.size = size;
-	res->header.qid = 0;	// POR EL momento
 }
 
 void eaeapp_req2char(req_t *req, char *buffer, int *size){
@@ -96,9 +109,13 @@ void eaeapp_char2req(req_t *req, char *buffer){
 
 	print_header_req(req);
 
-	printf("Body\n");
-	if(req->body != NULL)
+	printf("Body req\n");
+	if(req->body != NULL){
+		printf("Borrando body req:%p\n",req->body);
 		free(req->body);
+		req->body = NULL;
+	}
+	printf("Body req paso %p\n",req->body);
 	switch(req->header.cod){
 		case C_CONNECT_1:
 			req->body = (req_connect_t*)malloc(sizeof(req_connect_t));
@@ -137,9 +154,13 @@ void eaeapp_char2res(res_t *res, char *buffer){
 
 	print_header_res(res);
 
-	printf("Body\n");
-	if(res->body != NULL)
+	printf("Body res\n");
+	if(res->body != NULL){
+		printf("Borrando body res\n");
 		free(res->body);
+		res->body = NULL;
+	}
+	printf("Body res paso\n");
 	switch(res->header.cod){
 		case C_CONNECT_1:
 			res->body = (char*)malloc(res->header.size);

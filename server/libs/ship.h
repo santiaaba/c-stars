@@ -99,7 +99,7 @@ ia_t *ship_get_ia(ship_t *ship);
 void ship_ia_activate(ship_t *ship);
 
 /* Destruye una nave */
-void ship_destroy(void **ship);
+void ship_destroy(ship_t *ship);
 
 /* Genera los datos de la nave en el buffer */
 void ship_render(ship_t *ship, data_render_t *data);
@@ -120,6 +120,6 @@ void ia_drive_ship(ia_t *ia, ship_t *ship);
 
 void ia_add_path(ia_t *ia, uint32_t instant,uint32_t direction, uint32_t speed);
 
-void ia_destroy(ia_t **ia);
+void ia_destroy(ia_t *ia);
 
 #endif

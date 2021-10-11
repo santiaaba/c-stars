@@ -27,3 +27,6 @@ void point_copy(point_t *point, point_t *other){
 	point->x = other->x;
 	point->y = other->y;
 }
+
+void point_destroy(point_t *point){
+}

@@ -2,7 +2,7 @@
 
 /* Inicializa un borde */
 void border_init(border_t *border){
-   border->lista = (lista_t*)malloc(sizeof(lista_t));
+	border->lista=(lista_t*)malloc(sizeof(lista_t));
    lista_init(border->lista,sizeof(rect_t));
 }
 
@@ -35,7 +35,7 @@ void border_add_vector(border_t* border, vector_t *vector){
 	}
 }
 
-void border_destroy(void **border){
-	lista_clean(((border_t *)(*border))->lista,&rect_destroy);
-	free(*border);
+void border_destroy(border_t *border){
+	lista_clean(border->lista,(void*)(void**)&rect_destroy);
+	free(border->lista);
 }

@@ -27,4 +27,6 @@ int32_t point_get_y(point_t *point);
 
 /* Copia las coordenadas de other en point */
 void point_copy(point_t *point, point_t *other);
+
+void point_destroy(point_t *point);
 #endif

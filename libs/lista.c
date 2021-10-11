@@ -1,11 +1,11 @@
 #include "lista.h"
 
 void lista_init(lista_t *l, int e_size){
-	l->e_size = e_size;
-	l->size = 0;
-	l->first = NULL;
-	l->last = NULL;
-	l->actual = NULL;
+	(*l)->e_size = e_size;
+	(*l)->size = 0;
+	(*l)->first = NULL;
+	(*l)->last = NULL;
+	(*l)->actual = NULL;
 }
 
 void lista_add(lista_t *l, void *e){
@@ -171,7 +171,14 @@ void lista_clean(lista_t *l,void(*clean)(void**)){
 		l->first = l->first->next;
 		l->size--;
 		(*clean)(&(aux->data));
+		free(aux->data);
 	}
+}
+
+void lista_destroy(lista_t **l,void(*clean)(void**)){
+	lista_clean(*l,clean);
+	free(*l);
+	*l = NULL;
 }
 
 void *lista_find(lista_t *l, int (*find_id)(void*), int value){

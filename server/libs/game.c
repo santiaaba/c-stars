@@ -8,23 +8,18 @@ void game_init(game_t *g, sem_t *sem_event){
 	for(i=0;i<EVENT_LIMIT_SIZE;i++)
 		g->events[i] = NULL;
 
-	printf("ACA 1 game\n");
 	g->state = G_WAIT_CONNECT;
 	g->score = 0;
-	printf("ACA 1 game\n");
 	g->sem_event = sem_event;	// Debe venir ya inicializado
-	printf("ACA 1 game\n");
 	sem_init(&(g->sem_state),0,1);
-	printf("ACA 2 game\n");
+
+	g->level=(level_t*)malloc(sizeof(level_t));
 
    g->player = (ship_t *)malloc(sizeof(ship_t));
-	g->enemies = (lista_t *)malloc(sizeof(lista_t));
-   g->shoot_enemies = (lista_t *)malloc(sizeof(lista_t));
-   g->shoot_player = (lista_t *)malloc(sizeof(lista_t));
 	g->clock = (clockgame_t *)malloc(sizeof(clockgame_t));
 	g->request_status = 0;
-	printf("ACA 3 game\n");
 
+	printf("ACA 3 game\n");
 	ship_init(g->player,PLAYER, g->clock);
 	printf("ACA 4 game\n");
 	lista_init(g->enemies,sizeof(ship_t));
@@ -44,15 +39,23 @@ void game_init(game_t *g, sem_t *sem_event){
 void game_level_start(game_t *g, int idLevel){
 	/* Daja preparado el juego para el nivel en cuestion */
 
-	level_destroy(&(g->level));
-	level_init(&(g->level),idLevel,g->clock);
+	printf("game_level_start(): inicio\n");
+	level_destroy(g->level);
+	printf("Paso 1\n");
+	level_init(g->level,idLevel,g->clock);
+	printf("Paso 2\n");
 	lista_clean(g->shoot_enemies,&shoot_destroy);
+	printf("Paso 3\n");
 	lista_clean(g->shoot_player,&shoot_destroy);
-	lista_clean(g->enemies,&ship_destroy);
+	printf("Paso 4\n");
+	lista_clean(g->enemies,(void*)(void**)&ship_destroy);
+	printf("Paso 5\n");
 	ship_set_position(g->player,100,300);
+	printf("Paso 6\n");
 	g->frame = 0;
-
+	printf("Paso 7\n");
 	game_set_state(g,G_PLAYING);
+	printf("game_level_start(): fin\n");
 }
 
 void game_start(game_t *g){
@@ -81,7 +84,12 @@ void game_resume(game_t *g){
 		game_set_state(g,G_PLAYING);
 }
 
-void game_event_add(game_t *g, game_event_t *e){
+void game_event_add(game_t *g, uint8_t key, uint8_t key_type){
+	game_event_t *e;
+
+	e = (game_event_t*)malloc(sizeof(game_event_t));
+	e->key = key;
+	e->key_type = key_type;
 	/* Entramos en seccion critica */
 	sem_wait(g->sem_event);
 	if(g->event_size < EVENT_LIMIT_SIZE){
@@ -318,6 +326,7 @@ int game_get_state(game_t *g){
 
 void game_set_state(game_t *g, int state){
 	sem_wait(&(g->sem_state));
+		printf("Asignando GAME STATE:%i\n",state);
 		g->state = state;
 	sem_post(&(g->sem_state));
 }

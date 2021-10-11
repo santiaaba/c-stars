@@ -86,7 +86,7 @@ typedef struct {
 } game_t;
 
 void game_init(game_t *g, sem_t *sem_event);
-void game_event_add(game_t *g, game_event_t *e);
+void game_event_add(game_t *g, uint8_t key, uint8_t key_type);
 void game_start(game_t *g);
 int game_init_udp(game_t *g, char *ip, int port);
 void *game_run(void *g);

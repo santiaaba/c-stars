@@ -12,6 +12,7 @@ void static level_load(level_t *l, int id){
 	ship_t *ship;
 	char datafile[200];
 	
+	printf("level_load(): Carganod el nivel\n");
 	sprintf(datafile,"LEVEL%i",id);
 
 	l->id = id;
@@ -45,24 +46,29 @@ void static level_load(level_t *l, int id){
 	fclose(fdIN);
 }
 
-void level_init(level_t **l, int id, clockgame_t *clockgame){
-	(*l) = (level_t*)malloc(sizeof(level_t));
-	lista_init((*l)->attacks, sizeof(attack_t));
-	(*l)->background = 0;
-	(*l)->soundTrak = 0;
-	(*l)->clockgame = clockgame;
-
-	(*l)->state = L_INGRESS;
-	level_load((*l),id);
+void level_init(level_t *l, int id, clockgame_t *clockgame){
+	printf("level_init() 2\n");
+	l->attacks=(lista_t*)malloc(sizeof(lista_t));
+	lista_init(l->attacks, sizeof(attack_t));
+	printf("level_init() 3\n");
+	l->background = 0;
+	printf("level_init() 4\n");
+	l->soundTrak = 0;
+	printf("level_init() 5\n");
+	l->clockgame = clockgame;
+	printf("level_init() 6\n");
+	l->state = L_INGRESS;
+	printf("level_init() 7\n");
+	level_load(l,id);
 }
 
-void attack_destroy(void **attack){
-	ship_destroy((void*)(&(((attack_t*)(*attack))->ship)));
+void attack_destroy(attack_t *attack){
+	ship_destroy(attack->ship);
+	free(attack->ship);
 }
 
-void level_destroy(level_t **l){
-	lista_clean((*l)->attacks,&attack_destroy);
-	free(*l);
+void level_destroy(level_t *l){
+	lista_clean(l->attacks,(void*)(void**)&attack_destroy);
 }
 
 void level_run(level_t *l, lista_t *enemies){

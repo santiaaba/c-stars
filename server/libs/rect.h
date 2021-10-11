@@ -33,6 +33,6 @@ uint32_t rect_get_height(rect_t *rect);
 uint16_t rect_collision(rect_t *rect, rect_t *rect2);
 
 /* No hace nada. Ya que un rect no esta formado por punteros */
-void rect_destroy(void **rect);
+void rect_destroy(rect_t *rect);
 
 #endif
