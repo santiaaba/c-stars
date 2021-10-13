@@ -10,9 +10,8 @@ void main(char argc, char * argv[]){
 
 	int16_t num;
 	int16_t cantAtaques;
-	int16_t cantShips;
 	int16_t cantMovements;
-	int16_t i,j,k;
+	int16_t j,k;
 	FILE *fdIN;
 
 	fdIN = fopen(argv[1],"rb");
@@ -26,43 +25,33 @@ void main(char argc, char * argv[]){
 	printf("%d\n",num);
 
 	/* Leemos los ataques */
-	i = 0;
-	while(i < cantAtaques){
-		printf("------   ATAQUE   ------\n");
-		fread(&cantShips,sizeof(int16_t),1,fdIN);	/* Cantidad de naves */
-		printf("%d\n",cantShips);
-		fread(&num,sizeof(int16_t),1,fdIN);			/* tiempo de inicio */
+	j = 0;
+	while(j < cantAtaques ){
+		printf("------   NAVE   ------\n");
+		fread(&num,sizeof(int16_t),1,fdIN);			/* Tipo de nave */
 		printf("%d\n",num);
-
-		/* Leemos las naves */
-		j = 0;
-		while(j < cantShips ){
-			printf("------   NAVE   ------\n");
-			fread(&num,sizeof(int16_t),1,fdIN);			/* Tipo de nave */
+		fread(&num,sizeof(int16_t),1,fdIN);			/* Coordenada x */
+		printf("%d\n",num);
+		fread(&num,sizeof(int16_t),1,fdIN);			/* Coordenada y */
+		printf("%d\n",num);
+		fread(&num,sizeof(int16_t),1,fdIN);			/* Tiempo inicio */
+		printf("%d\n",num);
+		fread(&cantMovements,sizeof(int16_t),1,fdIN);			/* cantidad movimientos */
+		printf("%d\n",cantMovements);
+		k = 0;
+		while(k < cantMovements ){
+			printf("------   NAVE Movimiento   ------\n");
+			fread(&num,sizeof(int16_t),1,fdIN);			/* modulo */
 			printf("%d\n",num);
-			fread(&num,sizeof(int16_t),1,fdIN);			/* Coordenada x */
+			fread(&num,sizeof(int16_t),1,fdIN);			/* direccion */
 			printf("%d\n",num);
-			fread(&num,sizeof(int16_t),1,fdIN);			/* Coordenada y */
+			fread(&num,sizeof(int16_t),1,fdIN);			/* tiempo */
 			printf("%d\n",num);
-			fread(&num,sizeof(int16_t),1,fdIN);			/* Tiempo inicio */
-			printf("%d\n",num);
-			fread(&cantMovements,sizeof(int16_t),1,fdIN);			/* cantidad movimientos */
-			printf("%d\n",cantMovements);
-
-			k = 0;
-			while(k < cantMovements ){
-				printf("------   NAVE Movimiento   ------\n");
-				fread(&num,sizeof(int16_t),1,fdIN);			/* modulo */
-				printf("%d\n",num);
-				fread(&num,sizeof(int16_t),1,fdIN);			/* direccion */
-				printf("%d\n",num);
-				fread(&num,sizeof(int16_t),1,fdIN);			/* duracion */
-				printf("%d\n",num);
-				k++;
-			}
-			j++;
+			k++;
+			break;
 		}
-		i++;
+		j++;
+		break;
 	}
 
 	fclose(fdIN);

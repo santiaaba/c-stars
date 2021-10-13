@@ -33,20 +33,15 @@ typedef struct t_level{
 } level_t;
 
 /* Inicializa la estructura del nivel */
-void level_init(level_t *l, int id, clockgame_t *clockgame);
-
+void level_init(level_t *l, clockgame_t *clockgame);
+void level_load(level_t *l, uint8_t id);
 /* Corre el nivel */
 void level_run(level_t *l, lista_t *enemies);
-
 /* Destruye las estructuras internas del level */
 void level_destroy(level_t *l);
-
 void level_set_state(level_t *l, uint8_t state);
-
 uint8_t level_get_id(level_t *l);
-
 uint8_t level_get_state(level_t *l);
-
 int level_eol(level_t *l);
 
 #endif

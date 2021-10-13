@@ -14,23 +14,22 @@ void game_init(game_t *g, sem_t *sem_event){
 	sem_init(&(g->sem_state),0,1);
 
 	g->level=(level_t*)malloc(sizeof(level_t));
+	level_init(g->level,g->clock);
 
    g->player = (ship_t *)malloc(sizeof(ship_t));
 	g->clock = (clockgame_t *)malloc(sizeof(clockgame_t));
 	g->request_status = 0;
 
-	printf("ACA 3 game\n");
+	g->enemies = (lista_t*)malloc(sizeof(lista_t));
+	g->shoot_enemies = (lista_t*)malloc(sizeof(lista_t));
+	g->shoot_player = (lista_t*)malloc(sizeof(lista_t));
+
 	ship_init(g->player,PLAYER, g->clock);
-	printf("ACA 4 game\n");
 	lista_init(g->enemies,sizeof(ship_t));
-	printf("ACA 5 game\n");
 	lista_init(g->shoot_enemies,sizeof(shoot_t));
-	printf("ACA 6 game\n");
 	lista_init(g->shoot_player,sizeof(shoot_t));
-	printf("ACA 7 game\n");
 
 	clockgame_init(g->clock);
-	printf("ACA 8 game\n");
 	
 	/* Inicializamos los semaforos */
 	//sem_post(g->sem_event);
@@ -39,23 +38,14 @@ void game_init(game_t *g, sem_t *sem_event){
 void game_level_start(game_t *g, int idLevel){
 	/* Daja preparado el juego para el nivel en cuestion */
 
-	printf("game_level_start(): inicio\n");
-	level_destroy(g->level);
-	printf("Paso 1\n");
-	level_init(g->level,idLevel,g->clock);
-	printf("Paso 2\n");
+	printf("game_level_start(): inicio level %i\n", idLevel);
+	level_load(g->level,idLevel);
 	lista_clean(g->shoot_enemies,&shoot_destroy);
-	printf("Paso 3\n");
 	lista_clean(g->shoot_player,&shoot_destroy);
-	printf("Paso 4\n");
 	lista_clean(g->enemies,(void*)(void**)&ship_destroy);
-	printf("Paso 5\n");
 	ship_set_position(g->player,100,300);
-	printf("Paso 6\n");
 	g->frame = 0;
-	printf("Paso 7\n");
 	game_set_state(g,G_PLAYING);
-	printf("game_level_start(): fin\n");
 }
 
 void game_start(game_t *g){
@@ -210,12 +200,15 @@ void static game_playing_level(game_t *g){
 
 	/* Leemos de un listado de acciones */
 
+	printf("game_playing_level(): Arrancamos el bucle\n");
+
 	while(g->state == G_PLAYING){
 
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
 
 		/* Gestionamos enemigos */
+		printf("game_playing_level(): Gestionamos enemigos\n");
 		lista_first(g->enemies);
 		while(!lista_eol(g->enemies)){
 			/* movemos la nave del enemigo */
@@ -241,6 +234,7 @@ void static game_playing_level(game_t *g){
 			lista_next(g->enemies);
 		}
 		/* Gestionamos disparos jugador */
+		printf("game_playing_level(): Gestionamos disparos jugador\n");
 		lista_first(g->shoot_player);
 		while(!lista_eol(g->shoot_player)){
 			shoot_move(lista_get(g->shoot_player));
@@ -262,6 +256,7 @@ void static game_playing_level(game_t *g){
 		}
 	
 		/* Movemos disparos enemigos */
+		printf("game_playing_level(): Gestionamos disparos enemigos\n");
 		lista_first(g->shoot_enemies);
 		while(!lista_eol(g->shoot_enemies)){
 			shoot_move(lista_get(g->shoot_enemies));
@@ -273,25 +268,31 @@ void static game_playing_level(game_t *g){
 		}
 	
 		/* Movemos al jugador */
+		printf("game_playing_level(): Movemos jugador\n");
 		ship_move(g->player);
-		//r = (render_t *)malloc(sizeof(render_t));
+		printf("game_playing_level(): render jugador\n");
 		ship_render(g->player,&(g->buffer[i]));
 		i++;
 		g->buffer_cant = i;
 	
 		/* Lanzamos nuevos enemigos si corresponde */
+		printf("game_playing_level(): lanzamos enemigos\n");
 		level_run(g->level,g->enemies);
 
+		printf("game_playing_level(): buscamos cambios de estados level\n");
 		switch(level_get_state(g->level)){
 			case L_INGRESS:
 				/* Si level esta en L_INGRESS, lo pasamos a L_PLAYING
-					cuando la nave del jugador esté a 20 pixeles del lado
-					izquierdo */
-				if(point_get_x(ship_get_position(g->player)) >= 100)
+					cuando hayan pasado 4 segundos de juego */
+				if(clockgame_time(g->clock) >= 4)
 					level_set_state(g->level,L_PLAYING);
 				break;
 			case L_PLAYING:
-				if((g->level) && lista_size(g->enemies) == 0 &&
+				/* Si llegamos al final de la lista de ataques, no hay
+					naves enemigas en pantalla o disparos enemigos,
+					hemos terminado el nivel. La nave del jugador
+					sale de pantalla */
+				if(level_eol(g->level) && lista_size(g->enemies) == 0 &&
 					lista_size(g->shoot_enemies) == 0){
 						level_set_state(g->level,L_EGRESS);
 				}
@@ -307,10 +308,12 @@ void static game_playing_level(game_t *g){
 					g->request_status = 1;
 				}
 		}
+		printf("game_playing_level(): Enviamos udps\n");
 		game_send_udp(g);
 
 		nanosleep(&ts, &ts);
 	}
+	printf("game_playing_level(): Salimos del bucle\n");
 }
 
 void game_status(game_t *g){
