@@ -339,10 +339,24 @@ void game_main_menu(game_t *g){
 		}
 	}
 
+	void close_connection(void *g){
+		game_t *gg = (game_t*)g;
+		req_t req;
+		void server_response_handle(res_t *res){
+			game_set_status(gg,HELLO);
+			printf("Cerramos la conexión\n");
+			tcp_client_disconnect(gg->command_cli);
+		}
+		req_init(&req);
+		req_fill(&req,C_DISCONNECT,0);
+		printf("Enviamos desconectarnos\n");
+		tcp_client_send(gg->command_cli,&req,&server_response_handle);
+		printf("Enviamos desconectarnos. Recibimos respuesta\n");
+	}
+
 	void *pre_start_game(void *g){
 		/* Encargado de enviar al servidor el mensaje de
 			iniciar el juego en el nivel 1 */
-
 		game_t *gg = (game_t*)g;
 		req_t req;
 
@@ -413,9 +427,8 @@ void game_main_menu(game_t *g){
 						case 1:
 							break;
 						case 2:
-							tcp_client_disconnect(g->command_cli);
 							/* FALTA CERRAR EL SERVIDOR UDP */
-							g->status = HELLO;
+							close_connection(g);
 					}
 					printf("IMPLEMENTAR BOTON\n");
 					/* ejecutar boton seleccionado */

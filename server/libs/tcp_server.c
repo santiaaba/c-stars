@@ -49,18 +49,9 @@ void *tcp_server_start(void *server){
 	req_t req;
 	res_t res;
 
-	int tcp_server_close(tcp_server_t *s, int *confd){
+	void tcp_server_close(tcp_server_t *s, int *confd){
 		close(*confd);
-		/* Volvamos a dejar el socket en listen */
-/*		printf("Dejamos socket en LISTEN\n");
-		close(s->fd_server);
-		if(listen(s->fd_server,1) != 0){ 
-			printf("error en listen()\n");
-			fprintf(stderr, "recv() failed: %s\n", strerror(errno));
-			return 0;
-		}*/
 		s->status = S_LISTEN;
-		return 1;
 	}
 
 	s = (tcp_server_t*)server;
@@ -69,9 +60,11 @@ void *tcp_server_start(void *server){
 	res_init(&res);
 	while(s->status == S_LISTEN){
 		/* Aguardamos que un cliente establezca una conexion */
-		confd = accept(s->fd_server,
-			(struct sockaddr*)&(s->clientaddr), &len);
-		if(confd > 0){
+		confd = accept(s->fd_server,(struct sockaddr*)&(s->clientaddr), &len);
+		if(confd < 0){
+			fprintf(stderr, "accept() failed: %s - %i\n", strerror(errno),confd);
+			close(confd);
+		} else{
 			s->status = S_ESTABLISHED;
 			printf("Cliente conectado\n");
 			while(s->status == S_ESTABLISHED){
@@ -82,9 +75,7 @@ void *tcp_server_start(void *server){
 				if(bytes < 0){
 					fprintf(stderr, "recv() header failed: %s\n",
 						strerror(errno));
-					if(!tcp_server_close(s,&confd))
-						exit(0);
-					continue;
+					tcp_server_close(s,&confd);
 				}
 				printf("bytes recibidos: %i\n",bytes);
 				memcpy(&size,&(buffer[2]),2);
@@ -98,9 +89,6 @@ void *tcp_server_start(void *server){
 						fprintf(stderr, "recv() body failed: %s\n",
 							strerror(errno));
 						tcp_server_close(s,&confd);
-						if(!tcp_server_close(s,&confd))
-							exit(0);
-						continue;
 					}
 				}
 				eaeapp_char2req(&req,buffer);
@@ -135,13 +123,10 @@ void *tcp_server_start(void *server){
 				}
 
 				if(req.header.cod == C_DISCONNECT)
-					if(!tcp_server_close(s,&confd))
-						exit(0);
-			}
-			close(s->fd_server);
-		} else {
-			fprintf(stderr, "accept() failed: %s - %i\n", strerror(errno),confd);
-		}
-	}
+					tcp_server_close(s,&confd);
+			}  //While coneccion establecida
+		}	//If accept
+	}   //While listen
+	close(s->fd_server);
 	printf("Se termino todo señores\n");
 }

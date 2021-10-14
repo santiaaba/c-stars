@@ -309,7 +309,7 @@ void static game_playing_level(game_t *g){
 				}
 		}
 		printf("game_playing_level(): Enviamos udps\n");
-		game_send_udp(g);
+		//game_send_udp(g);
 
 		nanosleep(&ts, &ts);
 	}

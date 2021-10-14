@@ -47,8 +47,10 @@ void static req_connect_step_two(game_t *g, req_t *req, res_t *res){
 
 void static req_disconnect(game_t *g, req_t *req, res_t *res){
 	/* Desconecta el cliente del server e informa al cliente*/
-
-	//IMPLEMENTAR
+	printf("Armamos respuesta disconnect\n");
+	res_fill(res,req->header.cod,0,0);
+	game_set_state(g,G_WAIT_CONNECT);
+	res->header.resp = RES_OK;
 }
 
 void static req_key_press(game_t *g, req_t *req, res_t *res){

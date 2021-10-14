@@ -38,6 +38,7 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	int size, bytes;
 	res_t res;
 
+	res_init(&res);
 	bzero(buffer, MAX_BUFFER);
 	eaeapp_req2char(req,buffer,&size);
 
