@@ -460,8 +460,85 @@ void game_main_menu(game_t *g){
 
 void game_pause(game_t *g){
 	/* Loop cuando se esta presentando la pausa */
+
+	const int cant_buttons = 2;
+
+	button_t buttons[cant_buttons];		// Array de 3 botones
+	int button = 0;							// Boton en foco
+
+	/* Continuar juego */
+	void resume_game(void *g){
+ACA ME QUEDE
+/*
+		game_t *gg = (game_t*)g;
+		req_t req;
+		void server_response_handle(res_t *res){
+			game_set_status(gg,HELLO);
+			printf("Cerramos la conexión\n");
+			tcp_client_disconnect(gg->command_cli);
+		}
+		req_init(&req);
+		req_fill(&req,C_DISCONNECT,0);
+		printf("Enviamos desconectarnos\n");
+		tcp_client_send(gg->command_cli,&req,&server_response_handle);
+		printf("Enviamos desconectarnos. Recibimos respuesta\n");
+		req_destroy(&req);
+*/
+	}
+
+	/* Terminar juego */
+	void end_game(void *g){
+	}
+
+	button_init(&(buttons[0]),100,50,400,50,1,g->renderer);
+	button_bg_color(&(buttons[0]),100,10,255,100,100,100);
+	button_font_color(&(buttons[0]),0,0,0,200,200,0);
+	button_border_color(&(buttons[0]),0,0,0,200,200,0);
+	button_text(&(buttons[0]),"Continuar");
+
+	button_init(&(buttons[1]),100,120,400,50,1,g->renderer);
+	button_bg_color(&(buttons[1]),100,10,255,100,100,100);
+	button_font_color(&(buttons[1]),0,0,0,200,200,0);
+	button_border_color(&(buttons[1]),0,0,0,200,200,0);
+	button_text(&(buttons[1]),"Terminar");
+
+	pusshed = false;
 	while(g->status == PAUSE){
-		printf("IMPLEMENTAR\n");
+		while(SDL_PollEvent(&event)){
+			if(!showButtons)
+				break;
+			if(!pusshed && event.type == SDL_KEYDOWN){
+				pusshed=true;
+				/* Solo aceptamos las flechas arriba, abajo y enter */
+				key = event.key.keysym.sym;
+				if (key == SDLK_DOWN && button < cant_buttons - 1 ){
+					printf("Bajamos en el menu\n");
+					button++;
+					on_focus(buttons,button,cant_buttons);
+				}
+				if (key == SDLK_UP && button > 0){
+					printf("Subimos en el menu\n");
+					button--;
+					on_focus(buttons,button,cant_buttons);
+				}
+				if (key == SDLK_RETURN)
+					switch(button){
+						case 0:
+							/* Continuar el juego */
+							break;
+						case 1:
+							/* Finalizar el juego */
+							break;
+					}
+			}
+			if(pusshed && event.type == SDL_KEYUP)
+				pusshed=false;
+		}
+		SDL_RenderClear(g->renderer);
+		if(showButtons)
+			for(i=0; i<cant_buttons; i++)
+				button_draw(&(buttons[i]));
+		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}
 }
