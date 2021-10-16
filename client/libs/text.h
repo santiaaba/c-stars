@@ -20,9 +20,8 @@ typedef struct {
 } text_t;
 
 void text_init(text_t *text, int x, int y, int size, SDL_Renderer *renderer);
-
 void text_draw(text_t *text);
-
 void text_set(text_t *text, char *value);
+void text_destroy(text_t *text);
 
 #endif

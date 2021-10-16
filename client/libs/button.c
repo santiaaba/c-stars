@@ -56,11 +56,8 @@ void button_init(button_t *button, int x, int y, int w,
 }
 
 void button_text(button_t *button, char *text){
-	//printf("Asginando texto a boton\n");
 	button->text=(char*)realloc(button->text,strlen(text) + 1);
-	//printf("Copiando texto\n");
 	strcpy(button->text,text);
-	//printf("texto: %s\n",button->text);
 	button_text_make(button);
 }
 
@@ -149,4 +146,9 @@ void button_focus(button_t *button){
 void button_exit(button_t *button){
 	button->focus = 0;
 	button_text_make(button);
+}
+
+void button_destroy(button_t *button){
+	SDL_DestroyTexture(button->texture);
+	free(button->text);
 }

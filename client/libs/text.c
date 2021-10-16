@@ -2,11 +2,8 @@
 
 #include "text.h"
 
-void text_init(text_t *text,
-							int x,
-							int y,
-							int size,
-							SDL_Renderer *renderer){
+void text_init(text_t *text, int x, int y, int size,
+					SDL_Renderer *renderer){
 
 	text->dest.x = x;
 	text->dest.y = y;
@@ -23,18 +20,18 @@ void text_init(text_t *text,
 }
 
 void text_draw(text_t *text){
-	
-//	printf("TEXT mensaje: %p\n",text->message);
 	if(text->message != NULL)
 		SDL_RenderCopy(text->renderer, text->message, NULL, &(text->dest));
 }
 
 void text_set(text_t *text, char *value){
-
 	SDL_Surface* surface;
-
 	surface = TTF_RenderText_Solid(text->font, value, text->color); 
 	text->message = SDL_CreateTextureFromSurface(text->renderer, surface);
 	SDL_FreeSurface(surface);
 	SDL_QueryTexture(text->message, NULL,NULL, &(text->dest.w), &(text->dest.h));
+}
+
+void text_destroy(text_t *text){
+	SDL_DestroyTexture(text->message);
 }

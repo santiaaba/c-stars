@@ -32,28 +32,22 @@ typedef struct {
 void button_init(button_t *button, int x, int y,
 						int w, int h, int focus,
 						SDL_Renderer *renderer);
-
 void button_text(button_t *button, char *text);
-
 void button_bg_color(button_t *button,
 							uint8_t r, uint8_t g, uint8_t b,
 							uint8_t focus_r, uint8_t focus_g,
 							uint8_t focus_b);
-
 void button_font_color(button_t *button,
 							  uint8_t r, uint8_t g, uint8_t b,
 							  uint8_t focus_r, uint8_t focus_g,
 							  uint8_t focus_b);
-
 void button_border_color(button_t *button,
 								 uint8_t r, uint8_t g, uint8_t b,
 								 uint8_t focus_r,uint8_t focus_g,
 								 uint8_t focus_b);
-
 void button_draw(button_t *button);
-
 void button_focus(button_t *button);
-
 void button_exit(button_t *button);
+void button_destroy(button_t *button);
 
 #endif

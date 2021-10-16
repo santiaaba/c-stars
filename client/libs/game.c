@@ -129,6 +129,17 @@ void game_play(game_t *g){
 	data_t *data;
 	req_t req;
 
+	/* Pausar juego */
+	void pause_game(game_t *g){
+		req_t req;
+		req_init(&req);
+		req_fill(&req,C_GAME_PAUSE,0);
+		printf("Enviamos pausar\n");
+		tcp_client_send(g->command_cli,&req,NULL);
+		game_set_status(g,PAUSE);
+		req_destroy(&req);
+	}
+
 	req_init(&req);
 	req_fill(&req,C_KEY_PRESS,4);
 	req.body = (req_kp_t*)malloc(sizeof(req_kp_t));
@@ -140,7 +151,7 @@ void game_play(game_t *g){
 		while(SDL_PollEvent(&event)){
 			if(event.type == SDL_KEYUP &&
 				event.key.keysym.sym == SDLK_ESCAPE){
-					game_set_status(g,MAINMENU);
+					pause_game(g);
 					break;
 			}
 			if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) &&
@@ -326,28 +337,13 @@ void game_main_menu(game_t *g){
 		- Jugar
 		- Creditos
 		- Desconectar
-		- Salir
 	*/
-	const int cant_buttons = 3;
-
-	button_t buttons[cant_buttons];		// Array de 3 botones
-	int button = 0;							// Boton en foco
-	int i;
+	menu_t menu;
 	int key;
 	SDL_Event event;
 	bool pusshed;
 	pthread_t th;
-	bool showButtons;
 	text_t message;
-
-	void on_focus(button_t *buttons, int b, int size){
-		for(i=0; i<size; i++){
-			if(i==b)
-				button_focus(&(buttons[i]));
-			else
-				button_exit(&(buttons[i]));
-		}
-	}
 
 	void close_connection(void *g){
 		game_t *gg = (game_t*)g;
@@ -377,7 +373,8 @@ void game_main_menu(game_t *g){
 				game_set_status(gg,PLAYING);
 			} else {
 				text_set(&message,"Error");
-				showButtons = true;
+				menu_unlooked(&menu);
+				menu_show(&menu);
 			}
 		}
 
@@ -388,159 +385,134 @@ void game_main_menu(game_t *g){
 		req_destroy(&req);
 	}
 
-	button_init(&(buttons[0]),100,50,400,50,1,g->renderer);
-	button_bg_color(&(buttons[0]),100,10,255,100,100,100);
-	button_font_color(&(buttons[0]),0,0,0,200,200,0);
-	button_border_color(&(buttons[0]),0,0,0,200,200,0);
-	button_text(&(buttons[0]),"Jugar");
-
-	button_init(&(buttons[1]),100,120,400,50,0,g->renderer);
-	button_bg_color(&(buttons[1]),100,10,255,100,100,100);
-	button_font_color(&(buttons[1]),0,0,0,200,200,0);
-	button_border_color(&(buttons[1]),0,0,0,200,200,0);
-	button_text(&(buttons[1]),"Creditos");
-
-	button_init(&(buttons[2]),100,190,400,50,0,g->renderer);
-	button_bg_color(&(buttons[2]),100,10,255,100,100,100);
-	button_font_color(&(buttons[2]),0,0,0,200,200,0);
-	button_border_color(&(buttons[2]),0,0,0,200,200,0);
-	button_text(&(buttons[2]),"Desconectar");
-
 	printf("--- MAIN-MENU ---\n");
+	menu_init(&menu,100,100,g->renderer);
+	menu_add(&menu,"Jugar");
+	menu_add(&menu,"Creditos");
+	menu_add(&menu,"Desconectar");
+
 	pusshed = false;
-	showButtons = true;
 	text_init(&message,200,200,25,g->renderer);
 	while(g->status == MAINMENU){
 		while(SDL_PollEvent(&event)){
-			if(!showButtons)
+			if(menu_is_looked(&menu))
 				break;
 			if(!pusshed && event.type == SDL_KEYDOWN){
 				pusshed=true;
 				/* Solo aceptamos las flechas arriba, abajo y enter */
 				key = event.key.keysym.sym;
-				if (key == SDLK_DOWN && button < cant_buttons - 1 ){
-					printf("Bajamos en el menu\n");
-					button++;
-					on_focus(buttons,button,cant_buttons);
+				switch(key){
+					case SDLK_DOWN:
+						menu_down(&menu);
+						break;
+					case SDLK_UP:
+						menu_up(&menu);
+						break;
+					case SDLK_RETURN:
+						switch(menu_get_index(&menu)){
+							case 0:
+								/* Impedimos los eventos */
+								menu_looked(&menu);
+								text_set(&message,"Iniciando Juego");
+								pthread_create(&th,NULL,&pre_start_game,g);
+								break;
+							case 1:
+								break;
+							case 2:
+								/* FALTA CERRAR EL SERVIDOR UDP */
+								close_connection(g);
+						}
 				}
-				if (key == SDLK_UP && button > 0){
-					printf("Subimos en el menu\n");
-					button--;
-					on_focus(buttons,button,cant_buttons);
-				}
-				if (key == SDLK_RETURN)
-					switch(button){
-						case 0:
-							/* Impedimos los eventos */
-							showButtons=false;
-							text_set(&message,"Iniciando Juego");
-							pthread_create(&th,NULL,&pre_start_game,g);
-							break;
-						case 1:
-							break;
-						case 2:
-							/* FALTA CERRAR EL SERVIDOR UDP */
-							close_connection(g);
-					}
-					printf("IMPLEMENTAR BOTON\n");
-					/* ejecutar boton seleccionado */
 			}
 			if(pusshed && event.type == SDL_KEYUP)
 				pusshed=false;
 		}
 		SDL_RenderClear(g->renderer);
-		if(showButtons)
-			for(i=0; i<cant_buttons; i++)
-				button_draw(&(buttons[i]));
+		menu_draw(&menu);
 		text_draw(&message);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}
+	menu_destroy;
+	text_destroy;
 }
 
 void game_pause(game_t *g){
 	/* Loop cuando se esta presentando la pausa */
 
-	const int cant_buttons = 2;
-
-	button_t buttons[cant_buttons];		// Array de 3 botones
-	int button = 0;							// Boton en foco
+   menu_t menu;
+   int key;
+   SDL_Event event;
+   bool pusshed;
 
 	/* Continuar juego */
 	void resume_game(void *g){
-ACA ME QUEDE
-/*
 		game_t *gg = (game_t*)g;
 		req_t req;
-		void server_response_handle(res_t *res){
-			game_set_status(gg,HELLO);
-			printf("Cerramos la conexión\n");
-			tcp_client_disconnect(gg->command_cli);
-		}
 		req_init(&req);
-		req_fill(&req,C_DISCONNECT,0);
-		printf("Enviamos desconectarnos\n");
-		tcp_client_send(gg->command_cli,&req,&server_response_handle);
-		printf("Enviamos desconectarnos. Recibimos respuesta\n");
+		req_fill(&req,C_GAME_RESUME,0);
+		printf("Enviamos continuar\n");
+		tcp_client_send(gg->command_cli,&req,NULL);
+		game_set_status(gg,PLAYING);
 		req_destroy(&req);
-*/
 	}
 
 	/* Terminar juego */
 	void end_game(void *g){
+		game_t *gg = (game_t*)g;
+		req_t req;
+		req_init(&req);
+		req_fill(&req,C_GAME_STOP,0);
+		printf("Enviamos terminar\n");
+		tcp_client_send(gg->command_cli,&req,NULL);
+		game_set_status(gg,END);
+		req_destroy(&req);
 	}
 
-	button_init(&(buttons[0]),100,50,400,50,1,g->renderer);
-	button_bg_color(&(buttons[0]),100,10,255,100,100,100);
-	button_font_color(&(buttons[0]),0,0,0,200,200,0);
-	button_border_color(&(buttons[0]),0,0,0,200,200,0);
-	button_text(&(buttons[0]),"Continuar");
-
-	button_init(&(buttons[1]),100,120,400,50,1,g->renderer);
-	button_bg_color(&(buttons[1]),100,10,255,100,100,100);
-	button_font_color(&(buttons[1]),0,0,0,200,200,0);
-	button_border_color(&(buttons[1]),0,0,0,200,200,0);
-	button_text(&(buttons[1]),"Terminar");
+	printf("--- PAUSE ---\n");
+	menu_init(&menu,100,100,g->renderer);
+	menu_add(&menu,"Continuar");
+	menu_add(&menu,"Terminar");
 
 	pusshed = false;
 	while(g->status == PAUSE){
 		while(SDL_PollEvent(&event)){
-			if(!showButtons)
+			if(menu_is_looked(&menu))
 				break;
 			if(!pusshed && event.type == SDL_KEYDOWN){
 				pusshed=true;
 				/* Solo aceptamos las flechas arriba, abajo y enter */
 				key = event.key.keysym.sym;
-				if (key == SDLK_DOWN && button < cant_buttons - 1 ){
-					printf("Bajamos en el menu\n");
-					button++;
-					on_focus(buttons,button,cant_buttons);
+				switch(key){
+					case SDLK_DOWN:
+						menu_down(&menu);
+						break;
+					case SDLK_UP:
+						menu_up(&menu);
+						break;
+					case SDLK_RETURN:
+						switch(menu_get_index(&menu)){
+							case 0:
+								/* Impedimos los eventos */
+								menu_looked(&menu);
+								resume_game(g);
+								break;
+							case 1:
+								menu_looked(&menu);
+								end_game(g);
+								break;
+						}
 				}
-				if (key == SDLK_UP && button > 0){
-					printf("Subimos en el menu\n");
-					button--;
-					on_focus(buttons,button,cant_buttons);
-				}
-				if (key == SDLK_RETURN)
-					switch(button){
-						case 0:
-							/* Continuar el juego */
-							break;
-						case 1:
-							/* Finalizar el juego */
-							break;
-					}
 			}
 			if(pusshed && event.type == SDL_KEYUP)
 				pusshed=false;
 		}
 		SDL_RenderClear(g->renderer);
-		if(showButtons)
-			for(i=0; i<cant_buttons; i++)
-				button_draw(&(buttons[i]));
+		menu_draw(&menu);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}
+	menu_destroy;
 }
 
 void game_free(game_t *g){

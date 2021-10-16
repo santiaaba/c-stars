@@ -6,15 +6,10 @@ void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 	   y regresar a foja 0 */
 	game_set_state(g,G_WAIT_CONNECT);
 	res_fill(res,req->header.cod,0,0);
-/*
-	if(game_get_state(g) != G_WAIT_CONNECT){
-		res->header.resp = RES_INCORRECT;
-		return;
-	} 
-*/
+
 	// Verificamos version
 	if(((req_connect_t*)(req->body))->version < VERSION){
-		res->header.resp = RES_ERROR_VERSION;		/* version no aceptada */
+		res->header.resp = RES_ERROR_VERSION;
 		res->header.size = 1;
 		res->body = (int*)malloc(sizeof(int));
 		*(int*)(res->body) = VERSION;
@@ -24,10 +19,7 @@ void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 	// Verificamos que el udp sea aceptado
 	// IMPLEMENTAR
 
-	// Tomamos el puerto udp ofrecido por el cliente
 	game_set_state(g,G_CONNECT_STEP_ONE);
-
-	// Armamos la respuesta afirmativa
 	res->header.resp = RES_OK;
 }
 
@@ -42,16 +34,12 @@ void static req_connect_step_two(game_t *g, req_t *req, res_t *res){
 		return;
 	}
 
-	printf("Asignando G_READY?\n");
 	game_set_state(g,G_READY);
-
-	// Armamos la respuesta
 	res->header.resp = RES_OK;
 }
 
 void static req_disconnect(game_t *g, req_t *req, res_t *res){
 	/* Desconecta el cliente del server e informa al cliente*/
-	printf("Armamos respuesta disconnect\n");
 	res_fill(res,req->header.cod,0,0);
 	game_set_state(g,G_WAIT_CONNECT);
 	res->header.resp = RES_OK;
@@ -60,24 +48,19 @@ void static req_disconnect(game_t *g, req_t *req, res_t *res){
 void static req_key_press(game_t *g, req_t *req, res_t *res){
 
 	res_fill(res,req->header.cod,0,0);
-
 	if(game_get_state(g) != G_PLAYING){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
-
 	game_event_add(g,((req_kp_t*)(req->body))->key,
 					((req_kp_t*)(req->body))->action);
-
 	res->header.resp = RES_OK;
 }
 
 void static req_game_start(game_t *g, req_t *req, res_t *res){
 	/* Inicia el nivel indicado. */
 	printf("GAME STATE: %i\n",game_get_state(g));
-
 	res_fill(res,req->header.cod,0,0);
-
 	if(game_get_state(g) != G_READY){
 		res->header.resp = RES_INCORRECT;
 		return;
@@ -89,9 +72,7 @@ void static req_game_start(game_t *g, req_t *req, res_t *res){
 
 void static req_game_stop(game_t *g, req_t *req, res_t *res){
 	/* Finaliza el juego. */
-
 	res_fill(res,req->header.cod,0,0);
-
 	if(game_get_state(g) != G_PAUSE ||
 		game_get_state(g) != G_PLAYING){
 			res->header.resp = RES_INCORRECT;
@@ -102,9 +83,7 @@ void static req_game_stop(game_t *g, req_t *req, res_t *res){
 }
 
 void static req_game_pause(game_t *g, req_t *req, res_t *res){
-
 	res_fill(res,req->header.cod,0,0);
-
 	if(game_get_state(g) != G_PLAYING){
 		res->header.resp = RES_INCORRECT;
 		return;

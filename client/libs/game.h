@@ -11,6 +11,7 @@
 #include "entity.h"
 #include "button.h"
 #include "input.h"
+#include "menu.h"
 #include "text.h"
 #include "../../libs/eaeapp.h"
 #include "./tcp_client.h"
