@@ -36,16 +36,33 @@ void res_init(res_t *res){
 	res->body = NULL;
 }
 
+void req_destroy(req_t *req){
+	if(req->body!=NULL){
+		free(req->body);
+		req->body = NULL;
+	}
+}
+
 void req_fill(req_t *req, uint8_t cod, uint16_t size){
 	req->header.cod = cod;
 	req->header.size = size;
+	req_destroy(req);
+}
+
+void res_destroy(res_t *res){
+	if(res->body!=NULL){
+		free(res->body);
+		res->body = NULL;
+	}
 }
 
 void res_fill(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 	res->header.cod = cod;
 	res->header.resp = resp;
 	res->header.size = size;
+	res_destroy(res);
 }
+
 
 void eaeapp_req2char(req_t *req, char *buffer, int *size){
 	uint16_t aux16;
@@ -109,13 +126,10 @@ void eaeapp_char2req(req_t *req, char *buffer){
 
 	print_header_req(req);
 
-	printf("Body req\n");
 	if(req->body != NULL){
-		printf("Borrando body req:%p\n",req->body);
 		free(req->body);
 		req->body = NULL;
 	}
-	printf("Body req paso %p\n",req->body);
 	switch(req->header.cod){
 		case C_CONNECT_1:
 			req->body = (req_connect_t*)malloc(sizeof(req_connect_t));
@@ -154,13 +168,10 @@ void eaeapp_char2res(res_t *res, char *buffer){
 
 	print_header_res(res);
 
-	printf("Body res\n");
 	if(res->body != NULL){
-		printf("Borrando body res\n");
 		free(res->body);
 		res->body = NULL;
 	}
-	printf("Body res paso\n");
 	switch(res->header.cod){
 		case C_CONNECT_1:
 			res->body = (char*)malloc(res->header.size);

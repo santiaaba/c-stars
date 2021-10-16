@@ -42,24 +42,43 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	bzero(buffer, MAX_BUFFER);
 	eaeapp_req2char(req,buffer,&size);
 
-	/* Enviamos el mensaje */
-	printf("----------------------------\n");
-	printf("Enviamos el mensaje\n");
-	bytes = send(cs->sockfd,&buffer,size,0);
+	/* Enviamos el header */
+	printf("Enviamos el header\n");
+	bytes = send(cs->sockfd,&buffer,REQ_HEADER_SIZE,0);
+	printf("Bytes enviados: %i\n",bytes);
+	/* Enviamos el body */
+	printf("Enviamos el body\n");
+	bytes = send(cs->sockfd,&(buffer[REQ_HEADER_SIZE]),req->header.size,0);
 	printf("Bytes enviados: %i\n",bytes);
 	if(bytes < 0){
 		printf("Error al enviar la petición al server\n");
 		return -1;
 	}
+	/* OJO!!!! Quizas nos convega siempre enviar
+	   desde el server la respuesta. Si llegamos a
+		querer enviar una respueta desde el server
+		pero en el cliente no se espera la misma, el
+		server queda colgado tratando de realizar el
+		envío. Lo mismo para el server. Nos ha pasado
+		que el server ha quedado esperando un body
+		que nunca fue enviado */
+	if(handle_res == NULL)
+		return 0;
+	
 	/* Recibimos la respuesta */
-	if(handle_res != NULL){
-		bytes = recv(cs->sockfd,buffer,MAX_BUFFER,0);
+	printf("Esperando recibir un encabezado\n");
+	bytes = recv(cs->sockfd,buffer,RES_HEADER_SIZE,0);
+	printf("bytes recibidos: %i\n",bytes);
+	memcpy(&size,&(buffer[2]),2);
+	size = ntohs(size);
+	printf("Recibimos el body (%i bytes esperados)\n",size);
+	if(size > 0){
+		bytes = recv(cs->sockfd,&(buffer[RES_HEADER_SIZE]),size,0);
 		printf("bytes recibidos: %i\n",bytes);
-		eaeapp_char2res(&res,buffer);
-		printf("Paso el eaeapp\n");
-		handle_res(&res);
 	}
-	printf("----------------------------\n\n");
+
+	eaeapp_char2res(&res,buffer);
+	handle_res(&res);
 	return 0;
 }
 

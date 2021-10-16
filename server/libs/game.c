@@ -203,6 +203,7 @@ void static game_playing_level(game_t *g){
 	printf("game_playing_level(): Arrancamos el bucle\n");
 
 	while(g->state == G_PLAYING){
+		continue;
 
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
@@ -210,15 +211,20 @@ void static game_playing_level(game_t *g){
 		/* Gestionamos enemigos */
 		printf("game_playing_level(): Gestionamos enemigos\n");
 		lista_first(g->enemies);
+		i = 0;
 		while(!lista_eol(g->enemies)){
+			printf("	Nave enemiga\n");
+			printf("		Movemos\n");
 			/* movemos la nave del enemigo */
 			ship_move(lista_get(g->enemies));
 	
 			/* Calculamos colision con jugador */
+			printf("		Colisiones con jugador\n");
 			ship_colision_ship(lista_get(g->enemies),g->player);
 	
 			/* Calculamos colision con disparos jugador */
 			lista_first(g->shoot_player);
+			printf("		Colisiones con disparos\n");
 			while(!lista_eol(g->shoot_player)){
 				ship_colision_shoot(	lista_get(g->enemies),
 											lista_get(g->shoot_player));
@@ -226,8 +232,9 @@ void static game_playing_level(game_t *g){
 			}
 	
 			/* render info para cliente */
-			ship_render(lista_get(g->enemies),&(g->buffer[i]));
+			//ship_render(lista_get(g->enemies),&(g->buffer[i]));
 			i++;
+
 			/* Disparamos */
 			//ship_shoot(g->player,g->shoot_enemies);
 	
@@ -237,11 +244,14 @@ void static game_playing_level(game_t *g){
 		printf("game_playing_level(): Gestionamos disparos jugador\n");
 		lista_first(g->shoot_player);
 		while(!lista_eol(g->shoot_player)){
+			printf("	Disparo jugador\n");
+			printf("		Movemos\n");
 			shoot_move(lista_get(g->shoot_player));
 			/* Calculamos colision con enemigos */
 			/* Esto quizas pueda eliminarse ya que se
 		      realiza cuando se gestionan los enemigos */
 	
+			printf("		Colisiones con disparos\n");
 			lista_first(g->shoot_player);
 			while(!lista_eol(g->shoot_player)){
 				ship_colision_shoot(	lista_get(g->enemies),
@@ -259,8 +269,11 @@ void static game_playing_level(game_t *g){
 		printf("game_playing_level(): Gestionamos disparos enemigos\n");
 		lista_first(g->shoot_enemies);
 		while(!lista_eol(g->shoot_enemies)){
+			printf("	Disparo enemigo\n");
+			printf("		Movemos\n");
 			shoot_move(lista_get(g->shoot_enemies));
 			/* Calculamos colision con jugador */
+			printf("		colision\n");
 			ship_colision_shoot(g->player,lista_get(g->shoot_enemies));
 			shoot_render(lista_get(g->shoot_player),&(g->buffer[i]));
 			i++;
@@ -282,12 +295,14 @@ void static game_playing_level(game_t *g){
 		printf("game_playing_level(): buscamos cambios de estados level\n");
 		switch(level_get_state(g->level)){
 			case L_INGRESS:
+				printf("	L_INGRESS\n");
 				/* Si level esta en L_INGRESS, lo pasamos a L_PLAYING
 					cuando hayan pasado 4 segundos de juego */
 				if(clockgame_time(g->clock) >= 4)
 					level_set_state(g->level,L_PLAYING);
 				break;
 			case L_PLAYING:
+				printf("	L_PLAYING\n");
 				/* Si llegamos al final de la lista de ataques, no hay
 					naves enemigas en pantalla o disparos enemigos,
 					hemos terminado el nivel. La nave del jugador
@@ -298,6 +313,7 @@ void static game_playing_level(game_t *g){
 				}
 				break;
 			case L_EGRESS:
+				printf("	L_EGRESS\n");
 				/* Cuando la nave sale de la pantalla hemos terminado
 					el nivel */
 				if(point_get_x(ship_get_position(g->player)) >= 900){
@@ -308,7 +324,7 @@ void static game_playing_level(game_t *g){
 					g->request_status = 1;
 				}
 		}
-		printf("game_playing_level(): Enviamos udps\n");
+		//printf("game_playing_level(): Enviamos udps\n");
 		//game_send_udp(g);
 
 		nanosleep(&ts, &ts);

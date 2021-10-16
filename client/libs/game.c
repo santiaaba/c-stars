@@ -39,6 +39,12 @@ int game_check_connect(){
 	   se encuentre activa */
 }
 
+void static game_set_status(game_t *g, int status){
+	sem_wait(&(g->sem_status));
+		g->status = status;
+	sem_post(&(g->sem_status));
+}
+
 void *game_run(game_t *g){
 	printf("Arrancamos GAME\n");
 	while(g->status != END){
@@ -123,22 +129,30 @@ void game_play(game_t *g){
 	data_t *data;
 	req_t req;
 
+	req_init(&req);
+	req_fill(&req,C_KEY_PRESS,4);
 	req.body = (req_kp_t*)malloc(sizeof(req_kp_t));
 	g->screen_frame = 0;
 	while(g->status == PLAYING){
 		/* Capturamos los eventos del teclado y los colocamos en el
 			buffer compartido con el hilo del cliente de comandos TCP */
+		printf("Capturamos y enviamos eventos\n");
 		while(SDL_PollEvent(&event)){
+			if(event.type == SDL_KEYUP &&
+				event.key.keysym.sym == SDLK_ESCAPE){
+					game_set_status(g,MAINMENU);
+					break;
+			}
 			if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) &&
 				(event.key.keysym.sym == SDLK_LEFT ||
 				 event.key.keysym.sym == SDLK_RIGHT ||
 			 	 event.key.keysym.sym == SDLK_UP ||
 				 event.key.keysym.sym == SDLK_DOWN ||
-				 event.key.keysym.sym == SDLK_BACKSPACE ||
-				 event.key.keysym.sym == SDLK_ESCAPE)){
+				 event.key.keysym.sym == SDLK_BACKSPACE )){
 
 				((req_kp_t*)(req.body))->key = event.key.keysym.sym;
 				((req_kp_t*)(req.body))->action = event.type;
+				printf("Enviamos evento-->\n");
 				tcp_client_send(g->command_cli,&req,NULL);
 			}
 		}
@@ -146,18 +160,22 @@ void game_play(game_t *g){
 		/* Dibutajos la pantalla si es que tenemos informacion
 			en el buffer de datos UDP */
 
+		printf("Dibujamos\n");
+/*
 		sem_wait(g->sem_render);
 		for(i=0;i<g->buffer_render_size;i++){
 			data = &(g->buffer_render[i]);
 
 			/* Si la data corresponde a un frame nuevo entonces
 				dibujamos la pantalla. */
+/*
 			if(data->header.frame != g->screen_frame && g->screen_frame != 0){
 				g->screen_frame = data->header.frame;
 				SDL_RenderPresent(g->renderer);
 				SDL_RenderClear(g->renderer);
 			}
 			/* armamos el dato */
+/*
 			for(j=0;j<data->header.size;j++){
 				position.x = data->body[j].pos_x;
 				position.y = data->body[j].pos_y;
@@ -177,15 +195,9 @@ void game_play(game_t *g){
 		}
 		g->buffer_render_size = 0;
 		sem_post(g->sem_render);
-
+*/
 		SDL_Delay(SCREEN_REFRESH);
 	}
-}
-
-void static game_set_status(game_t *g, int status){
-	sem_wait(&(g->sem_status));
-		g->status = status;
-	sem_post(&(g->sem_status));
 }
 
 void game_connect(game_t *g){
@@ -216,9 +228,6 @@ void game_connect(game_t *g){
 			printf("Manejando la respuesta del server\n");
 			if(res->header.resp == RES_OK){
 				game_set_status(gg,MAINMENU);
-				/* Enviando confirmacion en paquete req que no espera
-				   respuesta */
-				req.body = NULL;
 				req_fill(&req,C_CONNECT_2,0);
 				tcp_client_send(gg->command_cli,&req,NULL);
 			} else {
@@ -254,13 +263,14 @@ void game_connect(game_t *g){
 		}
 		printf("Enviando udp y version\n");
 		req_init(&req);
-		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
 		req_fill(&req,C_CONNECT_1,sizeof(req_connect_t));
+		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
 
 		((req_connect_t*)(req.body))->udp = gg->udp;
 		((req_connect_t*)(req.body))->version = EAEAPP_VERSION;
 
 		tcp_client_send(gg->command_cli,&req,&server_response_handle);
+		req_destroy(&req);
 		return NULL;
 	}
 
@@ -352,6 +362,7 @@ void game_main_menu(game_t *g){
 		printf("Enviamos desconectarnos\n");
 		tcp_client_send(gg->command_cli,&req,&server_response_handle);
 		printf("Enviamos desconectarnos. Recibimos respuesta\n");
+		req_destroy(&req);
 	}
 
 	void *pre_start_game(void *g){
@@ -374,6 +385,7 @@ void game_main_menu(game_t *g){
 		req_init(&req);
 		req_fill(&req,C_GAME_START,0);
 		tcp_client_send(gg->command_cli,&req,&server_response_handle);
+		req_destroy(&req);
 	}
 
 	button_init(&(buttons[0]),100,50,400,50,1,g->renderer);

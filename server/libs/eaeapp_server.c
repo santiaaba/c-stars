@@ -2,12 +2,16 @@
 
 void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 	/* Conecta el cliente con el server. Paso 1 */
+	/* Recibir este mensaje implica detener el juego
+	   y regresar a foja 0 */
+	game_set_state(g,G_WAIT_CONNECT);
 	res_fill(res,req->header.cod,0,0);
+/*
 	if(game_get_state(g) != G_WAIT_CONNECT){
 		res->header.resp = RES_INCORRECT;
 		return;
 	} 
-
+*/
 	// Verificamos version
 	if(((req_connect_t*)(req->body))->version < VERSION){
 		res->header.resp = RES_ERROR_VERSION;		/* version no aceptada */
