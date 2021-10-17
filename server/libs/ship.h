@@ -20,6 +20,11 @@ Los 0 y 10 son tipos de disparos. Ver shoot.h */
 #define ENEMIE3		23
 #define ENEMIE4		24
 
+/* Estados de la nave */
+#define	SHIP_LIVE		0	/* La nave vive */
+#define	SHIP_DESTROY	1	/* La nave se esta destruyendo */
+#define	SHIP_END			2	/* La nave deja de existir */
+
 typedef struct t_ia_mov{
 	vector_t vector;
 	uint16_t instant;
@@ -35,6 +40,7 @@ typedef struct t_ia{
 typedef struct t_ship{
 	uint32_t power;
 	point_t *position;
+	uint8_t state;
 	border_t *border;
 	vector_t *vector;
 	animation_t animation;
@@ -42,8 +48,6 @@ typedef struct t_ship{
 	uint8_t type;		// ID tipo nave
 	ia_t *ia;
 	uint8_t ia_activated;
-	uint8_t sprite;
-	uint8_t frame;
 } ship_t;
 
 /* Inicializa una nave */
@@ -68,6 +72,10 @@ void ship_move(ship_t *ship);
 	a este punto.
  */
 void ship_border_add(ship_t *ship, int32_t x, int32_t y, uint32_t heigh, uint32_t width);
+
+/* Para el manejo de los estados */
+void ship_set_state(ship_t *ship, uint8_t state);
+uint8_t ship_get_state(ship_t *ship);
 
 /* Setea el vector de la nave */
 void ship_set_vector(ship_t *ship, vector_t *vector);

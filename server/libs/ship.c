@@ -27,6 +27,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 
 	ship->type = type;
 	ship->ia_activated = 0;
+	ship->state = SHIP_LIVE;
 
 	/* Asignamos los bordes y las animaciones de inicio */
 	switch(type){
@@ -56,8 +57,14 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			animation_init(&(ship->animation),0,1,false);
 			break;
 	}
-	ship->sprite = 0;
-	ship->frame = 0;
+}
+
+void ship_set_state(ship_t *ship, uint8_t state){
+	ship->state = state;
+}
+
+uint8_t ship_get_state(ship_t *ship){
+	return ship->state;
 }
 
 void ship_set_speed(ship_t *ship, float speed){
@@ -87,9 +94,8 @@ void ship_move(ship_t *ship){
 	//sleep(3);
 	/* Actualizamos la posicion de los bordes */
 	border_add_vector(ship->border,ship->vector);
-	/* Actualizamos la animaciob */
+	/* Actualizamos la animacion */
 	animation_next(&(ship->animation));
-
 }
 
 void ship_set_vector(ship_t *ship, vector_t *vector){
@@ -163,16 +169,14 @@ void ship_data(ship_t *ship, data_render_t *data){
 	data->entity_class = ship->type;
 	data->pos_x = point_get_x(ship->position);
 	data->pos_y = point_get_y(ship->position);
-	data->sprite = ship->sprite;
-	data->frame = ship->frame;
+	animation_get(&(ship->animation),&(data->sprite),&(data->frame));
 }
 
 void ship_render(ship_t *ship, data_render_t *data){
 	data->entity_class = ship->type;
 	data->pos_x = point_get_x(ship->position);
 	data->pos_y = point_get_y(ship->position);
-	data->sprite = ship->sprite;
-	data->frame = ship->frame;
+	animation_get(&(ship->animation),&(data->sprite),&(data->frame));
 }
 
 /***************************************
@@ -186,6 +190,7 @@ void ia_init(ia_t *ia, clockgame_t *clock){
 }
 
 void ia_start(ia_t *ia){
+	printf("ia_start()\n");
 	lista_first(ia->path);
 	ia -> time_start = clockgame_time(ia->clock);
 }
@@ -204,11 +209,20 @@ void ia_add_path( ia_t *ia, uint16_t instant,
 
 void ia_drive_ship(ia_t *ia, ship_t *ship){
 	if(!lista_eol(ia->path)){
+		printf("ia_drive_ship(): Existen aun rutas\n");
 		if(((ia_mov_t*)lista_get(ia->path))->instant + ia->time_start
 			<= clockgame_time(ia->clock)){
+			printf("ia_drive_ship(): Ruta aplicada\n");
 			ship_set_vector(ship,&(((ia_mov_t*)(lista_get(ia->path)))->vector));
 			lista_next(ia->path);
 		}
+	} else {
+		printf("ia_drive_ship(): NO hay mas rutas. Eliminamos nave\n");
+		/* Si no hay mas elementos en la lista entonces seteamos
+			el estado de la nave para que sea destruida. Ésto
+			implica que todo path de las naves debe tener al
+			menos una última instrucción inservible */
+		ship_set_state(ship,SHIP_DESTROY);
 	}
 }
 
