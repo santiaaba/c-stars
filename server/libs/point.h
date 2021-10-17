@@ -2,6 +2,7 @@
 #define POINT_H
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 #include "vector.h"
 

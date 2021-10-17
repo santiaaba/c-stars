@@ -11,8 +11,11 @@ void point_set(point_t *point, int32_t x, int32_t y){
 }
 
 void point_add_vector(point_t *point, vector_t *vector){
+//	printf("point_add_vector(): ANTES: (x,y) = (%i,%i)\n",point->x,point->y);
+//	printf("point_add_vector(): 	Vector: (x,y) = (%i,%i)\n",vector_x(vector),vector_y(vector));
 	point->x += vector_x(vector);
 	point->y += vector_y(vector);
+//	printf("point_add_vector(): AHORA: (x,y) = (%i,%i)\n",point->x,point->y);
 }
 
 int32_t point_get_x(point_t *point){

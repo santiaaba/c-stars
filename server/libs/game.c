@@ -13,12 +13,12 @@ void game_init(game_t *g, sem_t *sem_event){
 	g->sem_event = sem_event;	// Debe venir ya inicializado
 	sem_init(&(g->sem_state),0,1);
 
-	g->level=(level_t*)malloc(sizeof(level_t));
-	level_init(g->level,g->clock);
-
    g->player = (ship_t *)malloc(sizeof(ship_t));
 	g->clock = (clockgame_t *)malloc(sizeof(clockgame_t));
 	g->request_status = 0;
+
+	g->level=(level_t*)malloc(sizeof(level_t));
+	level_init(g->level,g->clock);
 
 	g->enemies = (lista_t*)malloc(sizeof(lista_t));
 	g->shoot_enemies = (lista_t*)malloc(sizeof(lista_t));
@@ -196,6 +196,7 @@ void static game_playing_level(game_t *g){
 	struct timespec req;
 	struct timespec rem;
 	int cantfotograms;
+	ship_t *aux_ship;
 
 	req.tv_sec = (1000/FXS) / 1000;
 	req.tv_nsec = ((1000/FXS) % 1000) * 1000000;
@@ -210,37 +211,45 @@ void static game_playing_level(game_t *g){
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
 
-		printf("RELOJ: %lu\n",clockgame_time(g->clock));
+		printf("game_playing_level(): RELOJ: %u\n",clockgame_time(g->clock));
 		/* Gestionamos enemigos */
 		printf("game_playing_level(): Gestionamos enemigos\n");
 		lista_first(g->enemies);
 		i = 0;
 		while(!lista_eol(g->enemies)){
-			printf("	Nave enemiga\n");
-			printf("		Movemos\n");
+			printf("game_playing_level(): Nave enemiga\n");
+			printf(" Movemos\n");
 			/* movemos la nave del enemigo */
 			ship_move(lista_get(g->enemies));
 	
 			/* Calculamos colision con jugador */
-			printf("		Colisiones con jugador\n");
-			ship_colision_ship(lista_get(g->enemies),g->player);
-	
-			/* Calculamos colision con disparos jugador */
-			lista_first(g->shoot_player);
-			printf("		Colisiones con disparos\n");
-			while(!lista_eol(g->shoot_player)){
-				ship_colision_shoot(	lista_get(g->enemies),
-											lista_get(g->shoot_player));
-				lista_next(g->shoot_player);
+			printf("	Colisiones con jugador\n");
+			if(ship_colision_ship(lista_get(g->enemies),g->player)){
+				/* Decrementamos energia jugador */
+				ship_set_power(g->player,(ship_get_power(g->player) -
+					ship_get_power(lista_get(g->enemies)));
+				/* Comenzamos eliminacion nave enemiga */
+				ACA ME QUEDE. HAY QUE PROGRAMAR QUE LA NAVE SEA ELIMINADA
+				DE LA LISTA UNA VEZ QUE LA ANIMACIÓN DE DESTRUCCION LLEGA A SU FIN
+
+				FALTA PROGRAMAR LA ELIMINACION DE LA NAVE DE LA LISTA CUANDO SALE DE LA PANTALLA
+				U OTRA CONDICION SIMILAR
+				ship_set_animation(ship,1,15,false);
+			} else {
+				/* Calculamos colision con disparos jugador */
+				lista_first(g->shoot_player);
+				printf("	Colisiones con disparos\n");
+				while(!lista_eol(g->shoot_player)){
+					ship_colision_shoot(	lista_get(g->enemies),
+												lista_get(g->shoot_player));
+					lista_next(g->shoot_player);
+				}
 			}
-	
 			/* render info para cliente */
 			//ship_render(lista_get(g->enemies),&(g->buffer[i]));
 			i++;
-
 			/* Disparamos */
 			//ship_shoot(g->player,g->shoot_enemies);
-	
 			lista_next(g->enemies);
 		}
 		/* Gestionamos disparos jugador */
@@ -248,13 +257,13 @@ void static game_playing_level(game_t *g){
 		lista_first(g->shoot_player);
 		while(!lista_eol(g->shoot_player)){
 			printf("	Disparo jugador\n");
-			printf("		Movemos\n");
+			printf("	Movemos\n");
 			shoot_move(lista_get(g->shoot_player));
 			/* Calculamos colision con enemigos */
 			/* Esto quizas pueda eliminarse ya que se
 		      realiza cuando se gestionan los enemigos */
 	
-			printf("		Colisiones con disparos\n");
+			printf("	Colisiones con disparos\n");
 			lista_first(g->shoot_player);
 			while(!lista_eol(g->shoot_player)){
 				ship_colision_shoot(	lista_get(g->enemies),
@@ -273,10 +282,10 @@ void static game_playing_level(game_t *g){
 		lista_first(g->shoot_enemies);
 		while(!lista_eol(g->shoot_enemies)){
 			printf("	Disparo enemigo\n");
-			printf("		Movemos\n");
+			printf("	Movemos\n");
 			shoot_move(lista_get(g->shoot_enemies));
 			/* Calculamos colision con jugador */
-			printf("		colision\n");
+			printf("	colision\n");
 			ship_colision_shoot(g->player,lista_get(g->shoot_enemies));
 			shoot_render(lista_get(g->shoot_player),&(g->buffer[i]));
 			i++;
@@ -291,9 +300,6 @@ void static game_playing_level(game_t *g){
 		i++;
 		g->buffer_cant = i;
 	
-		/* Lanzamos nuevos enemigos si corresponde */
-		printf("game_playing_level(): lanzamos enemigos\n");
-		level_run(g->level,g->enemies);
 
 		printf("game_playing_level(): buscamos cambios de estados level\n");
 		switch(level_get_state(g->level)){
@@ -306,6 +312,9 @@ void static game_playing_level(game_t *g){
 				break;
 			case L_PLAYING:
 				printf("	L_PLAYING\n");
+				/* Lanzamos nuevos enemigos si corresponde */
+				printf("game_playing_level(): lanzamos enemigos\n");
+				level_run(g->level,g->enemies);
 				/* Si llegamos al final de la lista de ataques, no hay
 					naves enemigas en pantalla o disparos enemigos,
 					hemos terminado el nivel. La nave del jugador

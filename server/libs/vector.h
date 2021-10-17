@@ -22,7 +22,7 @@ typedef enum {
 
 typedef struct t_vector{
 	float modulo;
-	uint32_t direccion;  // Expresados en grados
+	uint16_t direccion;  // Expresados en grados
 } vector_t;
 
 /* Inicializa el vector de movimiento */

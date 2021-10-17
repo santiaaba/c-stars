@@ -28,7 +28,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 	ship->type = type;
 	ship->ia_activated = 0;
 
-	/* Asignamos los bordes */
+	/* Asignamos los bordes y las animaciones de inicio */
 	switch(type){
 		case PLAYER:
 			rect = create_rect(21,4,21,80);
@@ -37,12 +37,14 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			border_add_rect(ship->border,rect);
 			rect = create_rect(4,33,17,23);
 			border_add_rect(ship->border,rect);
+			animation_init(&(ship->animation),0,1,false);
 			break;
 		case ENEMIE1:
 			rect = create_rect(20,40,30,61);
 			border_add_rect(ship->border,rect);
 			rect = create_rect(50,10,56,120);
 			border_add_rect(ship->border,rect);
+			animation_init(&(ship->animation),0,1,false);
 			break;
 		case ENEMIE2:
 			rect = create_rect(8,19,126,23);
@@ -51,6 +53,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			border_add_rect(ship->border,rect);
 			rect = create_rect(30,37,114,47);
 			border_add_rect(ship->border,rect);
+			animation_init(&(ship->animation),0,1,false);
 			break;
 	}
 	ship->sprite = 0;
@@ -76,10 +79,16 @@ void ship_move(ship_t *ship){
 		ia_drive_ship(ship->ia, ship);
 	}
 	/* Actualizamos su posicion */
+	printf("ship_move() - (%i,%i)",ship->position->x,ship->position->y);
+	printf(" ----> (M:%f,D:%i)=(%i,%i) ----> ",ship->vector->modulo,
+		ship->vector->direccion,vector_x(ship->vector),vector_y(ship->vector));
 	point_add_vector(ship->position,ship->vector);
-	printf("ship_move() -> (%i,%i)\n",ship->position->x,ship->position->y);
+	printf("(%i,%i)\n",ship->position->x,ship->position->y);
+	//sleep(3);
 	/* Actualizamos la posicion de los bordes */
 	border_add_vector(ship->border,ship->vector);
+	/* Actualizamos la animaciob */
+	animation_next(&(ship->animation));
 
 }
 
@@ -130,6 +139,7 @@ ia_t *ship_get_ia(ship_t *ship){
 
 void ship_ia_activate(ship_t *ship){
 	ship -> ia_activated = 1;
+	ia_start(ship -> ia);
 }
 
 void ship_destroy(ship_t *ship){
@@ -142,6 +152,11 @@ void ship_destroy(ship_t *ship){
 	free(ship->border);
 	free(ship->vector);
 	free(ship->ia);
+}
+
+void ship_set_animation(ship_t *ship, uint8_t sprite,
+	uint8_t frame_size, bool loop){
+	animation_init(&(ship->animation),sprite,frame_size, loop);
 }
 
 void ship_data(ship_t *ship, data_render_t *data){
@@ -175,7 +190,7 @@ void ia_start(ia_t *ia){
 	ia -> time_start = clockgame_time(ia->clock);
 }
 
-void ia_add_path( ia_t *ia, uint32_t instant,
+void ia_add_path( ia_t *ia, uint16_t instant,
 					 uint32_t direction, uint32_t speed){
 	printf("ia_add_path(): Cargando vector\n");
 	ia_mov_t *mov;
@@ -190,7 +205,7 @@ void ia_add_path( ia_t *ia, uint32_t instant,
 void ia_drive_ship(ia_t *ia, ship_t *ship){
 	if(!lista_eol(ia->path)){
 		if(((ia_mov_t*)lista_get(ia->path))->instant + ia->time_start
-			>= clockgame_time(ia->clock)){
+			<= clockgame_time(ia->clock)){
 			ship_set_vector(ship,&(((ia_mov_t*)(lista_get(ia->path)))->vector));
 			lista_next(ia->path);
 		}

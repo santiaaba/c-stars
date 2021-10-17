@@ -2,6 +2,7 @@
 #define SHIP_H
 
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include "vector.h"
 #include "../../libs/eaeapp.h"
@@ -9,6 +10,7 @@
 #include "rect.h"
 #include "shoot.h"
 #include "clockgame.h"
+#include "animation.h"
 
 /* Los 20 y 30 son tipos de naves.
 Los 0 y 10 son tipos de disparos. Ver shoot.h */
@@ -20,12 +22,12 @@ Los 0 y 10 son tipos de disparos. Ver shoot.h */
 
 typedef struct t_ia_mov{
 	vector_t vector;
-	uint32_t instant;
+	uint16_t instant;
 } ia_mov_t;
 
 typedef struct t_ia{
 	lista_t *path;
-	uint32_t time_start;	/* Instante de tiempo en que
+	uint16_t time_start;	/* Instante de tiempo en que
 									se inicio el IA */
 	clockgame_t *clock;
 } ia_t;
@@ -35,6 +37,7 @@ typedef struct t_ship{
 	point_t *position;
 	border_t *border;
 	vector_t *vector;
+	animation_t animation;
 	float speed;
 	uint8_t type;		// ID tipo nave
 	ia_t *ia;
@@ -86,6 +89,9 @@ border_t *ship_border(ship_t *ship);
 /* Obtiene la energia de la nave */
 uint32_t ship_get_power(ship_t *ship);
 
+/* Setea una animacion */
+void ship_set_animation(ship_t *ship, uint8_t sprite, uint8_t frame_size, bool loop);
+
 /* Setea la energia de la nave */
 void ship_set_power(ship_t *ship, uint32_t power);
 
@@ -118,7 +124,7 @@ void ia_start(ia_t *ia);
 	si correspondiese */
 void ia_drive_ship(ia_t *ia, ship_t *ship);
 
-void ia_add_path(ia_t *ia, uint32_t instant,uint32_t direction, uint32_t speed);
+void ia_add_path(ia_t *ia, uint16_t instant,uint32_t direction, uint32_t speed);
 
 void ia_destroy(ia_t *ia);
 
