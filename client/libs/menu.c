@@ -98,4 +98,6 @@ void menu_destroy(menu_t *menu){
 		button_destroy(menu->options[i]);
 		free(menu->options[i]);
 	}
+	menu->size=0;
+	menu->index=0;
 }

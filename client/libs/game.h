@@ -23,12 +23,12 @@
 #define SCREEN_REFRESH	60
 
 /* EStados del cliente */
-#define HELLO			0		// Pantalla de presentacion
-#define CONNECT		1		// Pantalla de conexion
-#define MAINMENU		2		// Pantalla de menu una vez conectado
-#define PLAYING		3		// Pantalla de partida
-#define PAUSE			4		// Pantalla de pausa
-#define END				5		// Finaliza el cliente
+#define HELLO				0		// Pantalla de presentacion
+#define DISCONNECTED		1		// Pantalla de conexion
+#define CONNECTED			2		// Conectado listo para iniciar
+#define PLAYING			3		// Pantalla de partida donde se juega
+#define PAUSE				4		// Pausado
+#define END					5		// Finaliza el cliente
 
 typedef struct{
 	SDL_Texture *texture;

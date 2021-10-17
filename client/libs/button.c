@@ -101,9 +101,9 @@ void button_border_color(button_t *button,
 }
 
 void button_draw(button_t *button){
+	uint8_t r,g,b,a;
+	SDL_GetRenderDrawColor(button->renderer,&r,&g,&b,&a);
 
-	
-	//printf("Dibujando el fondo\n");
 	if(button->focus)
 		SDL_SetRenderDrawColor(button->renderer,
                    button->bg_color_focus.r,
@@ -117,8 +117,6 @@ void button_draw(button_t *button){
                    button->bg_color.b,
                    255);
 	SDL_RenderFillRect(button->renderer,&(button->dest));
-
-	//printf("Dibujamos el borde\n");
 	if(button->focus)
 		SDL_SetRenderDrawColor(button->renderer,
                    button->border_color_focus.r,
@@ -131,11 +129,10 @@ void button_draw(button_t *button){
                    button->border_color.g,
                    button->border_color.b,
                    255);
-
 	SDL_RenderDrawRect(button->renderer,&(button->dest));
-
-	//printf("Dibujamos el texto\n");
 	SDL_RenderCopy(button->renderer,button->texture,NULL,&(button->texture_dest));
+	//Restauramos color
+	SDL_SetRenderDrawColor(button->renderer,r,g,b,255);
 }
 
 void button_focus(button_t *button){

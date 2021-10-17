@@ -193,21 +193,24 @@ void static game_playing_level(game_t *g){
 		GENERA un FRAME del juego  */
 
 	int i = 0;
-	struct timespec ts;
+	struct timespec req;
+	struct timespec rem;
+	int cantfotograms;
 
-	ts.tv_sec = GAME_SLEEP / 1000;
-	ts.tv_nsec = (GAME_SLEEP % 1000) * 1000000;
+	req.tv_sec = (1000/FXS) / 1000;
+	req.tv_nsec = ((1000/FXS) % 1000) * 1000000;
 
 	/* Leemos de un listado de acciones */
 
 	printf("game_playing_level(): Arrancamos el bucle\n");
 
 	while(g->state == G_PLAYING){
-		continue;
+	//	continue;
 
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
 
+		printf("RELOJ: %lu\n",clockgame_time(g->clock));
 		/* Gestionamos enemigos */
 		printf("game_playing_level(): Gestionamos enemigos\n");
 		lista_first(g->enemies);
@@ -327,7 +330,12 @@ void static game_playing_level(game_t *g){
 		//printf("game_playing_level(): Enviamos udps\n");
 		//game_send_udp(g);
 
-		nanosleep(&ts, &ts);
+		cantfotograms++;
+		if(cantfotograms == FXS){
+			clockgame_add(g->clock,1);
+			cantfotograms=0;
+		}
+		nanosleep(&req,&rem);
 	}
 	printf("game_playing_level(): Salimos del bucle\n");
 }

@@ -48,6 +48,7 @@ void level_load(level_t *l, uint8_t id){
 			printf("			modulo:%i, direccion:%i, tiempo:%i\n",
 				speed,direction,time);
 			ia_add_path(ia,time,direction,speed);
+			printf("Paso IA\n");
 			k++;
 		}
 		i++;

@@ -29,9 +29,7 @@ int game_init(game_t *g){
 	if(sem_init(&(g->sem_status),0,1) == -1){
 		fprintf(stderr, "game_init() failed: %s\n", strerror(errno));
 	}
-	printf("Paso\n");
 	g->command_cli = (tcp_client_t *)malloc(sizeof(tcp_client_t));
-	printf("Paso2\n");
 }
 
 int game_check_connect(){
@@ -55,10 +53,8 @@ void *game_run(game_t *g){
 			case PLAYING:
 				game_play(g);
 				break;
-			case CONNECT:
-				game_connect(g);
-				break;
-			case MAINMENU:
+			case DISCONNECTED:
+			case CONNECTED:
 				game_main_menu(g);
 				break;
 			case PAUSE:
@@ -96,7 +92,7 @@ void game_hello(game_t *g){
 		/* Si presionamos cualquier tecla, pasamos la pantalla */
 		while(SDL_PollEvent(&event)){
 			if(event.type == SDL_KEYDOWN)
-				g->status = CONNECT;
+				g->status = DISCONNECTED;
 		}
 		/* Borramos la pantalla */
 		SDL_RenderClear(g->renderer);
@@ -120,6 +116,7 @@ void game_play(game_t *g){
 		Se deben capturar los eventos del teclado y enviar los mismos
 		al servidor del juego. */
 
+	text_t debug;
 	SDL_Event event;
 	SDL_Rect frame;
 	SDL_Rect position;
@@ -139,6 +136,9 @@ void game_play(game_t *g){
 		game_set_status(g,PAUSE);
 		req_destroy(&req);
 	}
+
+	text_init(&debug,300,300,25,g->renderer);
+	text_set(&debug,"Jugando");
 
 	req_init(&req);
 	req_fill(&req,C_KEY_PRESS,4);
@@ -172,6 +172,9 @@ void game_play(game_t *g){
 			en el buffer de datos UDP */
 
 		printf("Dibujamos\n");
+		SDL_RenderClear(g->renderer);
+		text_draw(&debug);
+		SDL_RenderPresent(g->renderer);
 /*
 		sem_wait(g->sem_render);
 		for(i=0;i<g->buffer_render_size;i++){
@@ -209,6 +212,7 @@ void game_play(game_t *g){
 */
 		SDL_Delay(SCREEN_REFRESH);
 	}
+	text_destroy(&debug);
 }
 
 void game_connect(game_t *g){
@@ -219,7 +223,7 @@ void game_connect(game_t *g){
 	   se regresa a la pantalla hello */
 
 	input_t ip_server;
-	text_t error;
+	text_t error,salir;
 	pthread_t th;		// Para indicarle al server iniciar el juego
 	int key = 0;
 	SDL_Event event;
@@ -228,6 +232,7 @@ void game_connect(game_t *g){
 	char *srv_ip;
 	char message[200];
 	char borrar[1000];
+	bool end = false;
 
 	void *try_to_connect(void *g){
 		game_t *gg = (game_t*)g;
@@ -238,7 +243,8 @@ void game_connect(game_t *g){
 		void server_response_handle(res_t *res){
 			printf("Manejando la respuesta del server\n");
 			if(res->header.resp == RES_OK){
-				game_set_status(gg,MAINMENU);
+				game_set_status(gg,CONNECTED);
+				end = true;
 				req_fill(&req,C_CONNECT_2,0);
 				tcp_client_send(gg->command_cli,&req,NULL);
 			} else {
@@ -285,10 +291,12 @@ void game_connect(game_t *g){
 		return NULL;
 	}
 
-	input_init(&ip_server,100,100,1,g->renderer);
-	text_init(&error,200,200,25,g->renderer);
+	input_init(&ip_server,250,200,1,g->renderer);
+	text_init(&error,300,300,25,g->renderer);
+	text_init(&salir,300,500,25,g->renderer);
+	text_set(&salir,"Presionar Esc para regresar");
 
-	while(g->status == CONNECT){
+	while(!end){
 		/* Borramos la pantalla */
 		SDL_RenderClear(g->renderer);
 		if(!wait){
@@ -305,14 +313,13 @@ void game_connect(game_t *g){
 						printf("backspace\n");
 					}
 					if (key == SDLK_ESCAPE)
-						g->status = HELLO;
+						end = true;
 					if (key == SDLK_RETURN){
 						wait = true;
 						srv_ip = input_get_value(&ip_server);
 						printf("Creando el hilo\n");
 						text_set(&error,"Tratando de conectar");
 						pthread_create(&th,NULL,&try_to_connect,g);
-						/* CONECTAR */
 					}
 				} else {
 					if(event.type == SDL_KEYUP)
@@ -322,6 +329,7 @@ void game_connect(game_t *g){
 			/* render del input */
 			input_draw(&ip_server);
 			text_draw(&error);
+			text_draw(&salir);
 		} else {
 			/* Estamos aguardando respuesta del server */
 			/* Dibujar algo que represente la espera */
@@ -343,13 +351,12 @@ void game_main_menu(game_t *g){
 	SDL_Event event;
 	bool pusshed;
 	pthread_t th;
-	text_t message;
 
 	void close_connection(void *g){
 		game_t *gg = (game_t*)g;
 		req_t req;
 		void server_response_handle(res_t *res){
-			game_set_status(gg,HELLO);
+			game_set_status(gg,DISCONNECTED);
 			printf("Cerramos la conexión\n");
 			tcp_client_disconnect(gg->command_cli);
 		}
@@ -372,7 +379,7 @@ void game_main_menu(game_t *g){
 				printf("Comenzo el juego\n");
 				game_set_status(gg,PLAYING);
 			} else {
-				text_set(&message,"Error");
+				//text_set(&message,"Error");
 				menu_unlooked(&menu);
 				menu_show(&menu);
 			}
@@ -385,15 +392,32 @@ void game_main_menu(game_t *g){
 		req_destroy(&req);
 	}
 
-	printf("--- MAIN-MENU ---\n");
-	menu_init(&menu,100,100,g->renderer);
-	menu_add(&menu,"Jugar");
-	menu_add(&menu,"Creditos");
-	menu_add(&menu,"Desconectar");
+	void make_mainMenu(menu_t *menu, int status){
+		/* Encargado de armar el menu a mostrar
+			en pantalla */
+		printf("Reamando el menu");
+		menu_destroy(menu);
+		switch(status){
+			case DISCONNECTED:
+				menu_add(menu,"Conectar");
+				menu_add(menu,"Creditos");
+				menu_add(menu,"Salir");
+				break;
+			case CONNECTED:
+				menu_add(menu,"Jugar");
+				menu_add(menu,"Desconectar");
+				menu_add(menu,"Creditos");
+				menu_add(menu,"Salir");
+				break;
+		}
+	}
 
+	printf("--- MAIN-MENU ---\n");
+	menu_init(&menu,300,100,g->renderer);
+	make_mainMenu(&menu,g->status);
 	pusshed = false;
-	text_init(&message,200,200,25,g->renderer);
-	while(g->status == MAINMENU){
+	//text_init(&message,200,200,25,g->renderer);
+	while(g->status == DISCONNECTED || g->status == CONNECTED){
 		while(SDL_PollEvent(&event)){
 			if(menu_is_looked(&menu))
 				break;
@@ -409,32 +433,57 @@ void game_main_menu(game_t *g){
 						menu_up(&menu);
 						break;
 					case SDLK_RETURN:
-						switch(menu_get_index(&menu)){
-							case 0:
-								/* Impedimos los eventos */
-								menu_looked(&menu);
-								text_set(&message,"Iniciando Juego");
-								pthread_create(&th,NULL,&pre_start_game,g);
+						switch(g->status){
+							case DISCONNECTED:
+								switch(menu_get_index(&menu)){
+									case 0:
+										/* CONECTAR */
+										game_connect(g);
+										if(g->status == CONNECTED)
+											make_mainMenu(&menu,g->status);
+										break;
+									case 1:
+										/* CREDITOS */
+										printf("Implementar creditos");
+										break;
+									case 2:
+										/* SALIR */
+										game_set_status(g,END);
+								}
 								break;
-							case 1:
-								break;
-							case 2:
-								/* FALTA CERRAR EL SERVIDOR UDP */
-								close_connection(g);
-						}
-				}
+							case CONNECTED:
+								switch(menu_get_index(&menu)){
+									case 0:
+										/* JUGAR */
+										pre_start_game(g);
+										break;
+									case 1:
+										/* DESCONECTAR */
+										close_connection(g);
+										if(g->status == DISCONNECTED)
+											make_mainMenu(&menu,g->status);
+										break;
+									case 2:
+										/* CREDITOS */
+										printf("Implementar creditos");
+										break;
+									case 3:
+										/* SALIR */
+										close_connection(g);
+										game_set_status(g,END);
+								}
+							}
+					}
 			}
 			if(pusshed && event.type == SDL_KEYUP)
 				pusshed=false;
-		}
+		}	// while SDL_PoolEvents
 		SDL_RenderClear(g->renderer);
 		menu_draw(&menu);
-		text_draw(&message);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
-	}
-	menu_destroy;
-	text_destroy;
+	} // while g_satus
+	menu_destroy(&menu);
 }
 
 void game_pause(game_t *g){
@@ -446,26 +495,24 @@ void game_pause(game_t *g){
    bool pusshed;
 
 	/* Continuar juego */
-	void resume_game(void *g){
-		game_t *gg = (game_t*)g;
+	void resume_game(game_t *g){
 		req_t req;
 		req_init(&req);
 		req_fill(&req,C_GAME_RESUME,0);
 		printf("Enviamos continuar\n");
-		tcp_client_send(gg->command_cli,&req,NULL);
-		game_set_status(gg,PLAYING);
+		tcp_client_send(g->command_cli,&req,NULL);
+		game_set_status(g,PLAYING);
 		req_destroy(&req);
 	}
 
 	/* Terminar juego */
-	void end_game(void *g){
-		game_t *gg = (game_t*)g;
+	void end_game(game_t *g){
 		req_t req;
 		req_init(&req);
 		req_fill(&req,C_GAME_STOP,0);
 		printf("Enviamos terminar\n");
-		tcp_client_send(gg->command_cli,&req,NULL);
-		game_set_status(gg,END);
+		tcp_client_send(g->command_cli,&req,NULL);
+		game_set_status(g,CONNECTED);
 		req_destroy(&req);
 	}
 

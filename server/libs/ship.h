@@ -19,14 +19,14 @@ Los 0 y 10 son tipos de disparos. Ver shoot.h */
 #define ENEMIE4		24
 
 typedef struct t_ia_mov{
-	vector_t *vector;
-	uint32_t duration;	/* Duracion en segundos de este movimiento */
+	vector_t vector;
+	uint32_t instant;
 } ia_mov_t;
 
 typedef struct t_ia{
 	lista_t *path;
-	uint32_t time_last_mov;	/* Instante de tiempo en que
-										se inicio el ultimo movimiento */
+	uint32_t time_start;	/* Instante de tiempo en que
+									se inicio el IA */
 	clockgame_t *clock;
 } ia_t;
 

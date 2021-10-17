@@ -3,7 +3,8 @@
 
 #define BUFFER_SIZE			200			/* elementos a renderizar */
 #define MAX_UDP_BUFFER		200			/* Tamano maximo de buffer UDP */
-#define GAME_SLEEP			66
+//#define GAME_SLEEP			66
+#define FXS						15		/*Fotogramas por segundo */
 #define EVENT_LIMIT_SIZE	10
 
 /* Cada dato de render a enviar al cliente tiene el siguiente formato 
