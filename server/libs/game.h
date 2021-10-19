@@ -6,6 +6,8 @@
 //#define GAME_SLEEP			66
 #define FXS						2		/*Fotogramas por segundo */
 #define EVENT_LIMIT_SIZE	10
+#define SCREEN_WIDTH			1024
+#define SCREEN_HEIGHT		600
 
 /* Cada dato de render a enviar al cliente tiene el siguiente formato 
 

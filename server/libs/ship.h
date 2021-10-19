@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "vector.h"
 #include "../../libs/eaeapp.h"
 #include "border.h"
@@ -41,6 +42,8 @@ typedef struct t_ship{
 	uint32_t power;
 	point_t *position;
 	uint8_t state;
+	rect_t limits;
+	bool limited;
 	border_t *border;
 	vector_t *vector;
 	animation_t animation;
@@ -61,6 +64,10 @@ void ship_set_speed(ship_t *ship, float speed);
 
 /* Retorna la velocidad de la nave */
 float ship_get_speed(ship_t *ship);
+
+/* Setea los limites inferior y derecho. El superior
+   y el izquierdo son 0 y 0 respectivamente */
+void ship_set_limits(ship_t *ship,int limit_bottom, int limit_right);
 
 /* Mueve la nave. Ejecuta la instaucción de la ia
 	si esta esta activada */

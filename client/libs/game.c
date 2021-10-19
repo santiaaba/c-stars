@@ -116,7 +116,16 @@ void game_play(game_t *g){
 		Se deben capturar los eventos del teclado y enviar los mismos
 		al servidor del juego. */
 
+	typedef struct {
+		uint16_t up;
+		uint16_t down;
+		uint16_t left;
+		uint16_t right;
+		uint16_t space_bar;
+	} key_last_state_t;
+
 	text_t debug;
+	bool new_event;
 	SDL_Event event;
 	SDL_Rect frame;
 	SDL_Rect position;
@@ -125,6 +134,7 @@ void game_play(game_t *g){
 	int buffer_req_size;
 	data_t *data;
 	req_t req;
+	key_last_state_t key_last_state;
 
 	/* Pausar juego */
 	void pause_game(game_t *g){
@@ -136,6 +146,13 @@ void game_play(game_t *g){
 		game_set_status(g,PAUSE);
 		req_destroy(&req);
 	}
+
+	ACA NOS QUEDAMOS. HAY QUE EVITAR ENVIAR TANTO EVENTO
+	key_last_state.up = SDL_KEYUP;
+	key_last_state.down = SDL_KEYUP;
+	key_last_state.left = SDL_KEYUP;
+	key_last_state.right = SDL_KEYUP;
+	key_last_state.space_bar = SDL_KEYUP;
 
 	text_init(&debug,300,300,25,g->renderer);
 	text_set(&debug,"Jugando");
@@ -160,6 +177,30 @@ void game_play(game_t *g){
 			 	 event.key.keysym.sym == SDLK_UP ||
 				 event.key.keysym.sym == SDLK_DOWN ||
 				 event.key.keysym.sym == SDLK_BACKSPACE )){
+
+				new_event = false;
+				switch(event.key.keysym.sym){
+					case SDLK_LEFT:
+						if(key_last_state.left != event.type){
+							new_event = true;
+							key_last_state.left = event.type;
+						}
+					case SDLK_RIGHT:
+						if(key_last_state.right != event.type){
+							new_event = true;
+							key_last_state.right = event.type;
+						}
+					case SDLK_UP:
+						if(key_last_state.up != event.type){
+							new_event = true;
+							key_last_state.up = event.type;
+						}
+					case SDLK_DOWN:
+						if(key_last_state.down != event.type){
+							new_event = true;
+							key_last_state.down = event.type;
+						}
+				}
 
 				((req_kp_t*)(req.body))->key = event.key.keysym.sym;
 				((req_kp_t*)(req.body))->action = event.type;

@@ -1,11 +1,11 @@
 #include "lista.h"
 
 void lista_init(lista_t *l, int e_size){
-	(*l)->e_size = e_size;
-	(*l)->size = 0;
-	(*l)->first = NULL;
-	(*l)->last = NULL;
-	(*l)->actual = NULL;
+	l->e_size = e_size;
+	l->size = 0;
+	l->first = NULL;
+	l->last = NULL;
+	l->actual = NULL;
 }
 
 void lista_add(lista_t *l, void *e){
@@ -17,21 +17,12 @@ void lista_add(lista_t *l, void *e){
 
 	lista_node *new;
 	lista_node *aux;
-
 	new = (lista_node*)malloc(sizeof(lista_node));
 	new->next = NULL;
-
-	/** MMMMMMMMMM.... me parece que no hay que
-	  * copiar el contenido sino guardar el puntero */
-	/* Copiamos el contenido */
-	//new->data = malloc(l->e_size);
-	//memcpy(new->data,e,l->e_size);
-	/**** MMMMMMMMMMMMMMMMMM  ******/
-
 	new->data = e;
-
+	printf("lista_add(): antes de agregar size:%i\n",l->size);
 	l->size++;
-
+	printf("lista_add(): luego de agregar size:%i\n",l->size);
 	if(l->first == NULL){
 		l->first = new;
 		l->last = new;

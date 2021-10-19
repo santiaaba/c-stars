@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include "./point.h"
 #include "../../libs/eaeapp.h"

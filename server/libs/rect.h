@@ -1,5 +1,7 @@
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "point.h"
 
 #ifndef RECT_H
@@ -31,6 +33,8 @@ uint32_t rect_get_height(rect_t *rect);
 /* Determina si ha habido colicion entre el rectangulo y un segundo
    rectangulo pasado por parametro */
 uint16_t rect_collision(rect_t *rect, rect_t *rect2);
+
+bool rect_into_rect(rect_t *limit, rect_t *rect);
 
 /* No hace nada. Ya que un rect no esta formado por punteros */
 void rect_destroy(rect_t *rect);

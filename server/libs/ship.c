@@ -12,6 +12,10 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 
 	rect_t *rect;
 
+	rect_init(&(ship->limits));
+	rect_set_point(&(ship->limits),0,0);
+	rect_set_dim(&(ship->limits),0,0);
+
 	ship -> power = 0;
 	ship -> speed = 1;
 
@@ -39,6 +43,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			rect = create_rect(4,33,17,23);
 			border_add_rect(ship->border,rect);
 			animation_init(&(ship->animation),0,1,false);
+			ship->limited = true;
 			break;
 		case ENEMIE1:
 			rect = create_rect(20,40,30,61);
@@ -46,6 +51,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			rect = create_rect(50,10,56,120);
 			border_add_rect(ship->border,rect);
 			animation_init(&(ship->animation),0,1,false);
+			ship->limited = false;
 			break;
 		case ENEMIE2:
 			rect = create_rect(8,19,126,23);
@@ -55,8 +61,13 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			rect = create_rect(30,37,114,47);
 			border_add_rect(ship->border,rect);
 			animation_init(&(ship->animation),0,1,false);
+			ship->limited = false;
 			break;
 	}
+}
+
+void ship_set_limits(ship_t *ship,int limit_bottom, int limit_right){
+	rect_set_dim(&(ship->limits),limit_right,limit_bottom);
 }
 
 void ship_set_state(ship_t *ship, uint8_t state){
@@ -82,20 +93,30 @@ void ship_set_position(ship_t *ship, int32_t x, int32_t y){
 void ship_move(ship_t *ship){
 	/* Modificamos el vector de movimiento
 		si la ia lo ordenase */
+	printf("ship_move() - (%i,%i)\n",
+		ship->position->x,ship->position->y);
 	if(ship -> ia_activated){
 		ia_drive_ship(ship->ia, ship);
 	}
+	animation_next(&(ship->animation));
 	/* Actualizamos su posicion */
-	printf("ship_move() - (%i,%i)",ship->position->x,ship->position->y);
-	printf(" ----> (M:%f,D:%i)=(%i,%i) ----> ",ship->vector->modulo,
-		ship->vector->direccion,vector_x(ship->vector),vector_y(ship->vector));
+	if(ship->limited){
+			printf("ship_move(): limited\n");
+		/* Solo permitimos modificar la posición si
+			los bordes que definen la nave estan a 15px
+			del borde */
+		if(!border_into_limits(ship->border,&(ship->limits))){
+			printf("FUERA DE LOS LIMITES\n");
+			return;
+		}
+	}
+
+	printf("ship_move() ----> (M:%f,D:%i)=(%i,%i) ----> ",
+		ship->vector->modulo,ship->vector->direccion,
+		vector_x(ship->vector),vector_y(ship->vector));
 	point_add_vector(ship->position,ship->vector);
 	printf("(%i,%i)\n",ship->position->x,ship->position->y);
-	//sleep(3);
-	/* Actualizamos la posicion de los bordes */
 	border_add_vector(ship->border,ship->vector);
-	/* Actualizamos la animacion */
-	animation_next(&(ship->animation));
 }
 
 void ship_set_vector(ship_t *ship, vector_t *vector){

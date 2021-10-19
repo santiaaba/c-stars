@@ -28,6 +28,23 @@ uint32_t rect_get_height(rect_t *rect){
 	return rect->height;
 }
 
+bool rect_into_rect(rect_t *limit, rect_t *rect){
+	uint32_t l_x = point_get_x(limit->point);
+	uint32_t l_y = point_get_y(limit->point);
+	uint32_t l_h = limit->height;
+	uint32_t l_w = limit->width;
+
+	uint32_t r_x = point_get_x(rect->point);
+	uint32_t r_y = point_get_y(rect->point);
+	uint32_t r_h = rect->height;
+	uint32_t r_w = rect->width;
+
+	printf("rect_into_rect()\n");
+	return (r_y > l_x && r_y + r_h < l_y + l_h &&
+			  r_x > l_x && r_x + r_w < l_x + l_w);
+
+}
+
 uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	
 	uint32_t b_x = point_get_x(rect->point);

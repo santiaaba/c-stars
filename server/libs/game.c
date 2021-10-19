@@ -25,6 +25,8 @@ void game_init(game_t *g, sem_t *sem_event){
 	g->shoot_player = (lista_t*)malloc(sizeof(lista_t));
 
 	ship_init(g->player,PLAYER, g->clock);
+	ship_set_limits(g->player,SCREEN_HEIGHT,SCREEN_WIDTH);
+
 	lista_init(g->enemies,sizeof(ship_t));
 	lista_init(g->shoot_enemies,sizeof(shoot_t));
 	lista_init(g->shoot_player,sizeof(shoot_t));
@@ -83,8 +85,8 @@ void game_event_add(game_t *g, uint8_t key, uint8_t key_type){
 	/* Entramos en seccion critica */
 	sem_wait(g->sem_event);
 	if(g->event_size < EVENT_LIMIT_SIZE){
-		g->event_size++;
 		g->events[g->event_size] = e;
+		g->event_size++;
 	}
 	/* Salimos de seccion critica */
 	sem_post(g->sem_event);
@@ -92,6 +94,8 @@ void game_event_add(game_t *g, uint8_t key, uint8_t key_type){
 
 void static game_handle_events(game_t *g){
 	int i = 0;
+	uint32_t direction = 0;
+	float module = 0;
 	vector_t *vector;
 	/* Entramos en seccion critica */
 	sem_wait(g->sem_event);
@@ -134,6 +138,30 @@ void static game_handle_events(game_t *g){
 						break;
 				}
 		}
+		if(g->direction.left || g->direction.right ||
+		   g->direction.top || g->direction.bottom)
+				module = 10.0;
+		else
+				module = 0;
+
+		if(g->direction.left)
+			direction = 0;
+		if(g->direction.top)
+			direction = 90;
+		if(g->direction.right)
+			direction = 180;
+		if(g->direction.bottom)
+			direction = 270;
+		if(g->direction.left && g->direction.top)
+			direction = 45;
+		if(g->direction.right && g->direction.top)
+			direction = 135;
+		if(g->direction.left && g->direction.bottom)
+			direction = 225;
+		if(g->direction.right && g->direction.bottom)
+			direction = 315;
+		printf("game_handle_events(): (M,D) => (%f,%i)\n",module,direction);
+		vector_set(vector,direction,module);
 		free(g->events[i]);
 	}
 	
@@ -210,7 +238,6 @@ void static game_playing_level(game_t *g){
 
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
-
 		printf("game_playing_level(): RELOJ: %u\n",clockgame_time(g->clock));
 		/* Gestionamos enemigos */
 		printf("game_playing_level(): Gestionamos enemigos (%i)\n",

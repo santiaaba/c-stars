@@ -27,6 +27,25 @@ uint8_t border_collision(border_t *border, border_t *border2){
 	return crash;
 }
 
+/* Determina si todos los rectángulos se encuentran dentro de un
+	rectángulo mas grande */
+bool border_into_limits(border_t *border, rect_t *limit){
+	bool into=true;
+	printf("border_into_limits() - size: %i\n",lista_size(border->lista));
+	lista_first(border->lista);
+	while(!lista_eol(border->lista) && into){
+		into = rect_into_rect(limit,lista_get(border->lista));
+		printf("border_into_limits(x,y,w,h):(%i,%i,%i,%i) into (%i,%i,%i,%i) = %i\n",
+				 ((rect_t*)lista_get(border->lista))->point->x,
+				 ((rect_t*)lista_get(border->lista))->point->y,
+				 ((rect_t*)lista_get(border->lista))->width,
+				 ((rect_t*)lista_get(border->lista))->height,
+				 limit->point->x,limit->point->y,limit->width,limit->height,into);
+		lista_next(border->lista);
+	}
+	return into;
+}
+
 void border_add_vector(border_t* border, vector_t *vector){
 	lista_first(border->lista);
 	while(!lista_eol(border->lista)){
