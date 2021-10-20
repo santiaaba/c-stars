@@ -121,7 +121,7 @@ void game_play(game_t *g){
 		uint16_t down;
 		uint16_t left;
 		uint16_t right;
-		uint16_t space_bar;
+		uint16_t space;
 	} key_last_state_t;
 
 	text_t debug;
@@ -147,12 +147,11 @@ void game_play(game_t *g){
 		req_destroy(&req);
 	}
 
-	ACA NOS QUEDAMOS. HAY QUE EVITAR ENVIAR TANTO EVENTO
 	key_last_state.up = SDL_KEYUP;
 	key_last_state.down = SDL_KEYUP;
 	key_last_state.left = SDL_KEYUP;
 	key_last_state.right = SDL_KEYUP;
-	key_last_state.space_bar = SDL_KEYUP;
+	key_last_state.space = SDL_KEYUP;
 
 	text_init(&debug,300,300,25,g->renderer);
 	text_set(&debug,"Jugando");
@@ -164,7 +163,7 @@ void game_play(game_t *g){
 	while(g->status == PLAYING){
 		/* Capturamos los eventos del teclado y los colocamos en el
 			buffer compartido con el hilo del cliente de comandos TCP */
-		printf("Capturamos y enviamos eventos\n");
+		//printf("Capturamos y enviamos eventos\n");
 		while(SDL_PollEvent(&event)){
 			if(event.type == SDL_KEYUP &&
 				event.key.keysym.sym == SDLK_ESCAPE){
@@ -176,7 +175,7 @@ void game_play(game_t *g){
 				 event.key.keysym.sym == SDLK_RIGHT ||
 			 	 event.key.keysym.sym == SDLK_UP ||
 				 event.key.keysym.sym == SDLK_DOWN ||
-				 event.key.keysym.sym == SDLK_BACKSPACE )){
+				 event.key.keysym.sym == SDLK_SPACE )){
 
 				new_event = false;
 				switch(event.key.keysym.sym){
@@ -185,34 +184,45 @@ void game_play(game_t *g){
 							new_event = true;
 							key_last_state.left = event.type;
 						}
+						break;
 					case SDLK_RIGHT:
 						if(key_last_state.right != event.type){
 							new_event = true;
 							key_last_state.right = event.type;
 						}
+						break;
 					case SDLK_UP:
 						if(key_last_state.up != event.type){
 							new_event = true;
 							key_last_state.up = event.type;
 						}
+						break;
 					case SDLK_DOWN:
 						if(key_last_state.down != event.type){
 							new_event = true;
 							key_last_state.down = event.type;
 						}
+						break;
+					case SDLK_SPACE:
+						if(key_last_state.space != event.type){
+							new_event = true;
+							key_last_state.space = event.type;
+						}
 				}
 
-				((req_kp_t*)(req.body))->key = event.key.keysym.sym;
-				((req_kp_t*)(req.body))->action = event.type;
-				printf("Enviamos evento-->\n");
-				tcp_client_send(g->command_cli,&req,NULL);
+				if(new_event){
+					((req_kp_t*)(req.body))->key = event.key.keysym.sym;
+					((req_kp_t*)(req.body))->action = event.type;
+					printf("Enviamos evento-->\n");
+					tcp_client_send(g->command_cli,&req,NULL);
+				}
 			}
 		}
 
 		/* Dibutajos la pantalla si es que tenemos informacion
 			en el buffer de datos UDP */
 
-		printf("Dibujamos\n");
+		//printf("Dibujamos\n");
 		SDL_RenderClear(g->renderer);
 		text_draw(&debug);
 		SDL_RenderPresent(g->renderer);
