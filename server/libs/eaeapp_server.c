@@ -18,7 +18,8 @@ void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 
 	// Verificamos que el udp sea aceptado
 	// IMPLEMENTAR
-
+	game_init_udp(g,IP,
+		((req_connect_t*)(req->body))->udp);
 	game_set_state(g,G_CONNECT_STEP_ONE);
 	res->header.resp = RES_OK;
 }
