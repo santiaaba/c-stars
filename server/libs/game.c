@@ -32,9 +32,9 @@ void game_init(game_t *g, sem_t *sem_event){
 	lista_init(g->shoot_player,sizeof(shoot_t));
 
 	clockgame_init(g->clock);
-	
-	/* Inicializamos los semaforos */
-	//sem_post(g->sem_event);
+
+	g->data.header.size = 0;
+	g->buffer = (char*)malloc(sizeof(char)*8);
 }
 
 void game_level_start(game_t *g, int idLevel){
@@ -171,32 +171,26 @@ void static game_handle_events(game_t *g){
 	sem_post(g->sem_event);
 }
 
-void static game_send_udp(game_t *g){
-	/* Arma el buffer UDP y envia los datos */
-	char *buffer;
-	int i, j, body_size = 0;
-	int buffer_size;
-	data_t data;
+void static game_send_data(game_t *g, data_render_t *data, bool at_once){
+	/* Va armando el listado de datos a ser enviados por udp */
+	/* Si at_once es true se envian inmediatamente. Sino se almacenan
+		para ser enviados luego. Si no queda espacio de almacenamiento
+		entonces los envia inmediatamente. */
 
-	data.header.frame = g->frame;
-	data.header.type = D_VIDEO;
-	data.header.aux = 0 || g->request_status;
-	data.header.size = sizeof(data_render_t) * g->buffer_cant;
-	/* Enviamos todos los elementos de video */
-	while(i < g->buffer_cant){
-		/* Armamos el body hasta su capasidad maxima */
-		j = 0;
-		while((body_size + DATA_ENTITY_SIZE) < MAX_UDP_BUFFER){
-			data_entity_copy(&(data.body[j]),g->buffer[i]);
-			i++;
-			j++;
-		}
-		/* Luego de armados los datos, los convertimos a buffer char */
-		data_to_buffer(&data,&buffer,&buffer_size);
-		/* Luego los enviamos */
-		sendto(g->sockfd, &buffer, buffer_size,
-			0, (const struct sockaddr *) &(g->servaddr), 
-			sizeof(g->servaddr));
+	if(data != NULL){
+		data_entity_copy(&(g->data.body[g->data.header.size]),data);
+		g->data.header.size ++;
+	}
+
+	if(at_once || g->data.header.size == MAX_DATA_BODY){
+		g->data.header.frame = g->frame;
+		g->data.header.type = D_VIDEO;
+		g->data.header.aux = 0 || g->request_status;
+
+		data_to_buffer(&(g->data),&(g->buffer),&(g->buffer_size));
+		sendto(g->sockfd, &(g->buffer), g->buffer_size, 0,
+			(const struct sockaddr *) &(g->servaddr),sizeof(g->servaddr));
+		g->data.header.size = 0;
 	}
 }
 
@@ -220,11 +214,11 @@ void static game_playing_level(game_t *g){
 	/* Bucle que posee la logica del juego.
 		GENERA un FRAME del juego  */
 
-	int i = 0;
 	struct timespec req;
 	struct timespec rem;
 	int cantfotograms;
 	ship_t *ship;
+	data_render_t data;
 
 	req.tv_sec = (1000/FXS) / 1000;
 	req.tv_nsec = ((1000/FXS) % 1000) * 1000000;
@@ -243,7 +237,6 @@ void static game_playing_level(game_t *g){
 		printf("game_playing_level(): Gestionamos enemigos (%i)\n",
 			lista_size(g->enemies));
 		lista_first(g->enemies);
-		i = 0;
 		while(!lista_eol(g->enemies)){
 			printf("game_playing_level(): Nave enemiga\n");
 			ship = lista_get(g->enemies);
@@ -253,10 +246,10 @@ void static game_playing_level(game_t *g){
 					ship_move(ship);
 					/* Calculamos colision con jugador */
 					printf("	Colisiones con jugador\n");
-					if(ship_colision_ship(lista_get(g->enemies),g->player)){
+					if(ship_colision_ship(ship,g->player)){
 						/* Decrementamos energia jugador */
 						ship_set_power(g->player,(ship_get_power(g->player) -
-							ship_get_power(lista_get(g->enemies))));
+							ship_get_power(ship)));
 						if(ship_get_power(g->player) <= 0){
 							ship_set_state(g->player,SHIP_DESTROY);
 						}
@@ -268,12 +261,13 @@ void static game_playing_level(game_t *g){
 						lista_first(g->shoot_player);
 						printf("	Colisiones con disparos\n");
 						while(!lista_eol(g->shoot_player)){
-							ship_colision_shoot(	lista_get(g->enemies),
-														lista_get(g->shoot_player));
+							ship_colision_shoot(ship,lista_get(g->shoot_player));
 							lista_next(g->shoot_player);
 						}
 					}
 					//ship_shoot(g->player,g->shoot_enemies);
+					//ship_render(ship,data);
+					//game_send_data(g,data,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_DESTROY:
@@ -282,6 +276,8 @@ void static game_playing_level(game_t *g){
 						ship_set_state(ship,SHIP_END);
 					else
 						animation_next(&(ship->animation));
+					//ship_render(ship,data);
+					//game_send_data(g,data,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_END:
@@ -311,8 +307,6 @@ void static game_playing_level(game_t *g){
 			}
 	
 			/* render info para cliente */
-			shoot_render(lista_get(g->shoot_player),&(g->buffer[i]));
-			i++;
 			lista_next(g->shoot_player);
 		}
 	
@@ -326,8 +320,6 @@ void static game_playing_level(game_t *g){
 			/* Calculamos colision con jugador */
 			printf("	colision\n");
 			ship_colision_shoot(g->player,lista_get(g->shoot_enemies));
-			shoot_render(lista_get(g->shoot_player),&(g->buffer[i]));
-			i++;
 			lista_next(g->shoot_enemies);
 		}
 	
@@ -335,9 +327,8 @@ void static game_playing_level(game_t *g){
 		printf("game_playing_level(): Movemos jugador\n");
 		ship_move(g->player);
 		printf("game_playing_level(): render jugador\n");
-		ship_render(g->player,&(g->buffer[i]));
-		i++;
-		g->buffer_cant = i;
+		ship_render(g->player,&data);
+		game_send_data(g,&data,false);
 	
 
 		printf("game_playing_level(): buscamos cambios de estados level\n");
@@ -375,8 +366,9 @@ void static game_playing_level(game_t *g){
 					g->request_status = 1;
 				}
 		}
-		//printf("game_playing_level(): Enviamos udps\n");
-		//game_send_udp(g);
+		/* Enviamos los datos sobrantes en este loop */
+		game_send_data(g,NULL,true);
+		g->frame++;
 
 		cantfotograms++;
 		if(cantfotograms == FXS){

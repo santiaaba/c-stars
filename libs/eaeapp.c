@@ -198,56 +198,70 @@ void eaeapp_char2res(res_t *res, char *buffer){
  *							Para UDP									*
  ******************************************************/
 void data_to_buffer(data_t *data, char **buffer, int *size){
-	/* Convierte la estructura data en buffer. Evitamos
-		tener que andar redimencionando continuamente el
-	   buffer. Asi que size debe ser un reflejo fiel del
-		tamaño del buffer */
-	int j=0;
+	/* size es el tamaño resultado del buffer. Es la cantidad
+		de bytes a enviar.  */
+	uint32_t aux32;
+	uint16_t aux16;
 
-	/* Encabezado */
+	/* Header */
 	if(*size < DATA_HEAD_SIZE + (data->header.size * 8)){
 		*size = DATA_HEAD_SIZE + (data->header.size * 8);
 		*buffer = (char *)realloc(*buffer,*size);
 	}
-	*buffer[0] = htonl(data->header.frame);
-	*buffer[4] = data->header.type;
-	*buffer[5] = htons(data->header.size);
-	*buffer[7] = (char)0;
-	/* Body */
+	aux32 = htonl(data->header.frame);
+	memcpy(buffer[0], &aux32, 4);
+	(*buffer)[4] = data->header.type;
+	aux16 = htons(data->header.size);
+	memcpy(buffer[5], &aux16, 2);
+	(*buffer)[7] = data->header.aux;
 
-	for(j;j<data->header.size;j++){
-		*buffer[8 * (j+1)] = htons(data->body[j].entity_class);
-		*buffer[8 * (j+1) + 2] = htons(data->body[j].pos_x);
-		*buffer[8 * (j+1) + 2] = htons(data->body[j].pos_y);
-		*buffer[8 * (j+1) + 1] = data->body[j].sprite;
-		*buffer[8 * (j+1) + 1] = data->body[j].frame;
+	/* Body */
+	int k = 8;
+	for(int j=0;j<data->header.size;j++){
+		aux16 = htons(data->body[0].entity_class);
+		memcpy(buffer[k], &aux16, 2);
+		aux16 = htons(data->body[0].pos_x);
+		memcpy(buffer[k+2], &aux16, 2);
+		aux16 = htons(data->body[0].pos_y);
+		memcpy(buffer[k+4], &aux16, 2);
+		(*buffer)[k+6] = data->body[0].sprite;
+		(*buffer)[k+7] = data->body[0].frame;
+		k += 8;
 	}
 }
 
-void buffer_to_data(data_t *data, char *buffer, int size){
-	/* Convierte la estructura buffer en data */
-	int j=0;
+void buffer_to_data(data_t *data, char *buffer){
+	/* Convierte la estructura buffer en data.*/
+	uint16_t aux16;
+	uint32_t aux32;
 
-	/* Encabezado */
-	data->header.frame = ntohl(buffer[0]);
+	/* Header */
+	memcpy(&aux32, &(buffer[0]), 4);
+	data->header.frame = htonl(aux32);
 	data->header.type = buffer[4];
-	data->header.size = ntohs(buffer[5]);
-	data->header.aux = 0;
+	memcpy(&aux16, &(buffer[5]), 2);
+	data->header.size = htons(aux16);
+	data->header.aux = buffer[7];
 
 	/* body */
-	for(j;j<data->header.size;j++){
-		data->body[j].entity_class = ntohs(buffer[8 * (j+1)]);
-		data->body[j].pos_x = (int)ntohs(buffer[8 * (j+1) + 2]);
-		data->body[j].pos_y = (int)ntohs(buffer[8 * (j+1) + 2]);
-		data->body[j].sprite = (uint8_t)buffer[8 * (j+1) + 1];
-		data->body[j].frame = (uint8_t)buffer[8 * (j+1) + 1];
+	int k = 8;
+	for(int j=0;j<data->header.size;j++){
+		memcpy(&aux16, &(buffer[k]), 2);
+		data->body[j].entity_class = htons(aux16);
+		memcpy(&aux16, &(buffer[k + 2]), 2);
+		data->body[j].pos_x = htons(aux16);
+		memcpy(&aux16, &(buffer[k + 4]), 2);
+		data->body[j].pos_y = htons(aux16);
+		data->body[j].sprite = buffer[k + 6];
+		data->body[j].frame = buffer[k + 7];
+		k += 8;
 	}
 }
 
-void data_entity_copy(data_render_t *dest, data_render_t orig){
-	dest->entity_class = orig.entity_class;
-   dest->pos_x = orig.pos_x;
-   dest->pos_y = orig.pos_y;
-   dest->sprite = orig.sprite;
-   dest->frame =  orig.frame;
+void data_entity_copy(data_render_t *dest, data_render_t *orig){
+	dest->entity_class = orig->entity_class;
+   dest->pos_x = orig->pos_x;
+   dest->pos_y = orig->pos_y;
+   dest->sprite = orig->sprite;
+   dest->frame = orig->frame;
 }

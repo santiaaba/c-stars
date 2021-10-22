@@ -74,6 +74,8 @@ typedef struct req_connect {
 	uint16_t version;
 } req_connect_t;
 
+ACA ME QUEDE. FALTA LA IP PARA EL UDP
+
 typedef struct req_key_press {
 	uint16_t key;		// Codigo ASSCI tecla presionada
 	uint16_t action;		// Presionada o soltada
@@ -135,8 +137,8 @@ void eaeapp_char2res(res_t *res, char *buffer);
 
 /* Para el protocolo UDP de datos */
 void data_to_buffer(data_t *data, char **buffer, int *size);
-void buffer_to_data(data_t *data, char *buffer, int size);
+void buffer_to_data(data_t *data, char *buffer);
 
 /* Otras funciones auxiliares */
-void data_entity_copy(data_render_t *dest, data_render_t orig);
+void data_entity_copy(data_render_t *dest, data_render_t *orig);
 #endif
