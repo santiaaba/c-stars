@@ -176,20 +176,33 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 	/* Si at_once es true se envian inmediatamente. Sino se almacenan
 		para ser enviados luego. Si no queda espacio de almacenamiento
 		entonces los envia inmediatamente. */
+	/* Data puede ser NULL si se desea enviar los datos ya almacenados
+		y no se está sumando un dato nuevo (data == NULL)*/
+
+	int n;
+
+	printf("game_send_data(): Enviamos los datos\n");
 
 	if(data != NULL){
+		printf("game_send_data(): data es distinto de  NULL\n");
 		data_entity_copy(&(g->data.body[g->data.header.size]),data);
 		g->data.header.size ++;
 	}
 
 	if(at_once || g->data.header.size == MAX_DATA_BODY){
+		printf("game_send_data(): Paso 1\n");
 		g->data.header.frame = g->frame;
+		printf("game_send_data(): Paso 2\n");
 		g->data.header.type = D_VIDEO;
+		printf("game_send_data(): Paso 3\n");
 		g->data.header.aux = 0 || g->request_status;
+		printf("game_send_data(): Paso 4\n");
 
 		data_to_buffer(&(g->data),&(g->buffer),&(g->buffer_size));
-		sendto(g->sockfd, &(g->buffer), g->buffer_size, 0,
+		printf("game_send_data(): Bytes a enviar: %i\n",g->buffer_size);
+		n = sendto(g->sockfd, &(g->buffer), g->buffer_size, 0,
 			(const struct sockaddr *) &(g->servaddr),sizeof(g->servaddr));
+		printf("game_send_data(): Bytes enviados: %i\n",n);
 		g->data.header.size = 0;
 	}
 }
@@ -201,10 +214,12 @@ int game_init_udp(game_t *g, char *ip, int port){
 		return 0;
 	}
   
+	printf("game_init_udp(): puerto = %i\n",port);
 	memset(&(g->servaddr), 0, sizeof(g->servaddr));
 	g->servaddr.sin_family = AF_INET;
 	g->servaddr.sin_port = htons(port);
-	g->servaddr.sin_addr.s_addr = inet_addr(ip);
+	inet_aton(ip, &(g->servaddr.sin_addr));
+	//g->servaddr.sin_addr.s_addr = ip;
 
 	g->state = G_READY;
 	return 1;

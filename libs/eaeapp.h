@@ -15,11 +15,14 @@
 #define D_VIDEO	0
 #define D_SOUND	1
 
-#define REQ_HEADER_SIZE		8				// En Bytes
-#define RES_HEADER_SIZE		8				// En Bytes
+#define REQ_HEADER_SIZE		8		// En Bytes
+#define RES_HEADER_SIZE		8		// En Bytes
+
 #define DATA_HEAD_SIZE		8
-#define MAX_DATA_BODY		200			// En bytes
-#define DATA_ENTITY_SIZE	8				// cantidad de bytes de un entity
+#define MAX_DATA_BODY		4		// Cantidad de elementos
+#define MAX_DATA				40		// bytes
+
+#define DATA_ENTITY_SIZE	8		// cantidad de bytes de un entity
 
 /* Los diferentes mensajes que puede recibir el servidor */
 #define C_SIN_RESP		0
@@ -73,8 +76,6 @@ typedef struct req_connect {
 	uint16_t udp;
 	uint16_t version;
 } req_connect_t;
-
-ACA ME QUEDE. FALTA LA IP PARA EL UDP
 
 typedef struct req_key_press {
 	uint16_t key;		// Codigo ASSCI tecla presionada

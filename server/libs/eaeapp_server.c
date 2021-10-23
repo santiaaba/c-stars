@@ -1,6 +1,6 @@
 #include "eaeapp_server.h"
 
-void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
+void static req_connect_step_one(game_t *g, char *ip, req_t *req, res_t *res){
 	/* Conecta el cliente con el server. Paso 1 */
 	/* Recibir este mensaje implica detener el juego
 	   y regresar a foja 0 */
@@ -18,7 +18,7 @@ void static req_connect_step_one(game_t *g, req_t *req, res_t *res){
 
 	// Verificamos que el udp sea aceptado
 	// IMPLEMENTAR
-	game_init_udp(g,IP,
+	game_init_udp(g,ip,
 		((req_connect_t*)(req->body))->udp);
 	game_set_state(g,G_CONNECT_STEP_ONE);
 	res->header.resp = RES_OK;
@@ -121,13 +121,13 @@ void req_error(req_t *req, res_t *res){
 	res->header.resp = RES_INCORRECT;
 }
 
-void server_protocol_handle(game_t *g, req_t *req, res_t *res){
+void server_protocol_handle(game_t *g, char *ip, req_t *req, res_t *res){
 	/* Se encarga de procesar los mensajes del cliente */
 
 	switch(req->header.cod) {
 		case C_CONNECT_1:
 			/* Se conecta el cliente. Paso 1 */
-			req_connect_step_one((game_t *)g,req,res);
+			req_connect_step_one((game_t *)g,ip,req,res);
 			break;
 		case C_CONNECT_2:
 			/* Se conecta el cliente. Paso 2 */

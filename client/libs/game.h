@@ -13,13 +13,18 @@
 #include "input.h"
 #include "menu.h"
 #include "text.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
 #include "../../libs/eaeapp.h"
 #include "./tcp_client.h"
 
 #define SRV_PORT			2525
-#define SCREEN_WIDTH    1024
-#define SCREEN_HEIGHT   600
-#define SCREEN_BPP      24
+#define SCREEN_WIDTH	 1024
+#define SCREEN_HEIGHT	600
+#define SCREEN_BPP		24
 #define SCREEN_REFRESH	60
 
 /* EStados del cliente */
@@ -44,10 +49,14 @@ typedef struct {
 	tcp_client_t *command_cli;
 	entities_t entities[10];
 	sem_t *sem_render;
-	int udp;
 	sem_t sem_status;
-	data_t *buffer_render;			// Buffer render
-	int buffer_render_size;			// Cantidad de elementos en el buffer render
+	pthread_t th_render;
+	int udp;
+	int sockfd;
+	struct sockaddr_in cliaddr;
+	struct sockaddr_in servaddr;
+	data_t *buffer_render;		 // Buffer render
+	int buffer_render_size;
 } game_t;
 
 int game_init(game_t *game);

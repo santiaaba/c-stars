@@ -25,7 +25,7 @@ int game_init(game_t *g){
 
 	g->renderer = SDL_CreateRenderer(g->window, -1, 0);
 	g->status = HELLO;
-	g->udp = 20000;	// Lo fijamos
+	g->udp = 20000;	// Lo fijamos por ahora
 	if(sem_init(&(g->sem_status),0,1) == -1){
 		fprintf(stderr, "game_init() failed: %s\n", strerror(errno));
 	}
@@ -34,13 +34,92 @@ int game_init(game_t *g){
 
 int game_check_connect(){
 	/* Verifica que la conexion al server todavia
-	   se encuentre activa */
+		se encuentre activa */
 }
+
+void static game_render(game_t *g){
+
+	int len, n;
+	data_t data;
+	char *buffer;
+	SDL_Rect position;
+	SDL_Rect frame;
+
+	len = sizeof(g->cliaddr);
+
+	SDL_RenderClear(g->renderer);
+	SDL_RenderPresent(g->renderer);
+	printf("game_render(): Entro render: %u\n",g->status);
+	while(g->status == PLAYING){
+		printf("game_render(): Esperando datos de render\n");
+		n = recvfrom(g->sockfd, (char *)buffer, MAX_DATA, 
+				MSG_WAITALL, ( struct sockaddr *) &(g->cliaddr),
+				&len);
+		printf("game_render(): Datos de render recibidos\n");
+ 
+		buffer_to_data(&data,buffer);
+		/* Si la data corresponde a un frame nuevo entonces
+			dibujamos la pantalla. */
+		if(data.header.frame != g->screen_frame && g->screen_frame != 0){
+			g->screen_frame = data.header.frame;
+			SDL_RenderPresent(g->renderer);
+			SDL_RenderClear(g->renderer);
+		}
+		for(int i=0;i<data.header.size;i++){
+			/* Rectangulo para dibujar en pantalla */
+			position.x = data.body[i].pos_x;
+			position.y = data.body[i].pos_y;
+			position.w = g->entities[data.body[i].entity_class].w;
+			position.h = g->entities[data.body[i].entity_class].h;
+
+			/* Rectangulo para recortar la textura */
+			frame.w = position.w;
+			frame.h = position.h;
+			frame.x = frame.h * data.body[i].sprite;
+			frame.y = frame.w * data.body[i].frame;
+
+			/* Dibujamos */
+			SDL_RenderCopy(
+				g->renderer,
+				g->entities[data.body[i].entity_class].texture,
+				&frame,
+				&position);
+		}
+	}
+	printf("game_render(): Salio render:%u\n",g->status);
+}
+
 
 void static game_set_status(game_t *g, int status){
 	sem_wait(&(g->sem_status));
 		g->status = status;
 	sem_post(&(g->sem_status));
+}
+
+int static game_start_udp_server(game_t *g){
+	/* Inicia en thread que se encarga de recibir los
+		paquetes de UDP con las instrucciones para
+		el dibujado de la pantalla */
+
+	if ( (g->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+		perror("socket creation failed");
+		return 0;
+	}
+
+	memset(&(g->servaddr), 0, sizeof(g->servaddr));
+	memset(&(g->cliaddr), 0, sizeof(g->cliaddr));
+
+	g->servaddr.sin_family	= AF_INET; // IPv4
+	g->servaddr.sin_addr.s_addr = INADDR_ANY;
+	g->servaddr.sin_port = htons(g->udp);
+
+	if ( bind(g->sockfd, (const struct sockaddr *)&(g->servaddr),
+		sizeof(g->servaddr)) < 0 ){
+			perror("bind failed");
+			return 0;
+	}
+	printf("Server UDP iniciado\n");
+	return 1;
 }
 
 void *game_run(game_t *g){
@@ -51,6 +130,7 @@ void *game_run(game_t *g){
 				game_hello(g);
 				break;
 			case PLAYING:
+				pthread_create(&(g->th_render), NULL, (void*)(void*)(&game_render),g);
 				game_play(g);
 				break;
 			case DISCONNECTED:
@@ -223,44 +303,10 @@ void game_play(game_t *g){
 			en el buffer de datos UDP */
 
 		//printf("Dibujamos\n");
-		SDL_RenderClear(g->renderer);
-		text_draw(&debug);
-		SDL_RenderPresent(g->renderer);
-/*
-		sem_wait(g->sem_render);
-		for(i=0;i<g->buffer_render_size;i++){
-			data = &(g->buffer_render[i]);
+//		SDL_RenderClear(g->renderer);
+//		text_draw(&debug);
+//		SDL_RenderPresent(g->renderer);
 
-			/* Si la data corresponde a un frame nuevo entonces
-				dibujamos la pantalla. */
-/*
-			if(data->header.frame != g->screen_frame && g->screen_frame != 0){
-				g->screen_frame = data->header.frame;
-				SDL_RenderPresent(g->renderer);
-				SDL_RenderClear(g->renderer);
-			}
-			/* armamos el dato */
-/*
-			for(j=0;j<data->header.size;j++){
-				position.x = data->body[j].pos_x;
-				position.y = data->body[j].pos_y;
-				position.w = g->entities[data->body[j].entity_class].w;
-				position.h = g->entities[data->body[j].entity_class].h;
-
-				frame.w = position.w;
-				frame.h = position.h;
-				frame.x = frame.h * data->body[j].sprite;
-				frame.y = frame.w * data->body[j].frame;
-				SDL_RenderCopy(
-					g->renderer,
-					g->entities[data->body[j].entity_class].texture,
-					&frame,
-					&position);
-			}
-		}
-		g->buffer_render_size = 0;
-		sem_post(g->sem_render);
-*/
 		SDL_Delay(SCREEN_REFRESH);
 	}
 	text_destroy(&debug);
@@ -271,7 +317,7 @@ void game_connect(game_t *g){
 		para ingresar la ip del servidor e intentar
 		conectar al mismo. No se cambia de estado si
 		no se logra la conexión. Presionando ESC
-	   se regresa a la pantalla hello */
+		se regresa a la pantalla hello */
 
 	input_t ip_server;
 	text_t error,salir;
@@ -294,6 +340,7 @@ void game_connect(game_t *g){
 		void server_response_handle(res_t *res){
 			printf("Manejando la respuesta del server\n");
 			if(res->header.resp == RES_OK){
+				game_start_udp_server(gg);
 				game_set_status(gg,CONNECTED);
 				end = true;
 				req_fill(&req,C_CONNECT_2,0);
@@ -310,7 +357,7 @@ void game_connect(game_t *g){
 						strcat(message,"Error indefinido");
 				}
 				/* Enviando rechazo en paquete req que no espera
-				   respuesta */
+					respuesta */
 			}
 			wait = false;
 		}
@@ -540,10 +587,10 @@ void game_main_menu(game_t *g){
 void game_pause(game_t *g){
 	/* Loop cuando se esta presentando la pausa */
 
-   menu_t menu;
-   int key;
-   SDL_Event event;
-   bool pusshed;
+	menu_t menu;
+	int key;
+	SDL_Event event;
+	bool pusshed;
 
 	/* Continuar juego */
 	void resume_game(game_t *g){

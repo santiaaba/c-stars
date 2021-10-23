@@ -85,7 +85,7 @@ void *tcp_server_start(void *server){
 				eaeapp_char2req(&req,buffer);
 
 				/* Ya tenemos todos los datos. Ejecutamos el protocolo */
-				server_protocol_handle(s->game, &req, &res);
+				server_protocol_handle(s->game, inet_ntoa(s->clientaddr.sin_addr),&req, &res);
 				
 				/* El único mensaje que no retorna respuesta es el que
 					informa la presión de una tecla */

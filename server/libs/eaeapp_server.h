@@ -7,6 +7,6 @@
 
 #define VERSION 1
 
-void server_protocol_handle(game_t *g, req_t *req, res_t *res);
+void server_protocol_handle(game_t *g, char *ip, req_t *req, res_t *res);
 
 #endif

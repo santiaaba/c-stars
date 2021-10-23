@@ -198,8 +198,8 @@ void eaeapp_char2res(res_t *res, char *buffer){
  *							Para UDP									*
  ******************************************************/
 void data_to_buffer(data_t *data, char **buffer, int *size){
-	/* size es el tamaño resultado del buffer. Es la cantidad
-		de bytes a enviar.  */
+	/* size es el tamaño resultado del buffer. luego de
+	   redimencionado */
 	uint32_t aux32;
 	uint16_t aux16;
 
@@ -209,21 +209,21 @@ void data_to_buffer(data_t *data, char **buffer, int *size){
 		*buffer = (char *)realloc(*buffer,*size);
 	}
 	aux32 = htonl(data->header.frame);
-	memcpy(buffer[0], &aux32, 4);
+	memcpy(&(*buffer)[0], &aux32, 4);
 	(*buffer)[4] = data->header.type;
 	aux16 = htons(data->header.size);
-	memcpy(buffer[5], &aux16, 2);
+	memcpy(&(*buffer)[5], &aux16, 2);
 	(*buffer)[7] = data->header.aux;
 
 	/* Body */
 	int k = 8;
 	for(int j=0;j<data->header.size;j++){
 		aux16 = htons(data->body[0].entity_class);
-		memcpy(buffer[k], &aux16, 2);
+		memcpy(&(*buffer)[k], &aux16, 2);
 		aux16 = htons(data->body[0].pos_x);
-		memcpy(buffer[k+2], &aux16, 2);
+		memcpy(&(*buffer)[k+2], &aux16, 2);
 		aux16 = htons(data->body[0].pos_y);
-		memcpy(buffer[k+4], &aux16, 2);
+		memcpy(&(*buffer)[k+4], &aux16, 2);
 		(*buffer)[k+6] = data->body[0].sprite;
 		(*buffer)[k+7] = data->body[0].frame;
 		k += 8;
