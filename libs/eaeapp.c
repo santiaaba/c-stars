@@ -219,14 +219,14 @@ void data_to_buffer(data_t *data, char **buffer, int *size){
 	/* Body */
 	int k = 8;
 	for(int j=0;j<data->header.size;j++){
-		aux16 = htons(data->body[0].entity_class);
+		aux16 = htons(data->body[j].entity_class);
 		memcpy(&(*buffer)[k], &aux16, 2);
-		aux16 = htons(data->body[0].pos_x);
+		aux16 = htons(data->body[j].pos_x);
 		memcpy(&(*buffer)[k+2], &aux16, 2);
-		aux16 = htons(data->body[0].pos_y);
+		aux16 = htons(data->body[j].pos_y);
 		memcpy(&(*buffer)[k+4], &aux16, 2);
-		(*buffer)[k+6] = data->body[0].sprite;
-		(*buffer)[k+7] = data->body[0].frame;
+		(*buffer)[k+6] = data->body[j].sprite;
+		(*buffer)[k+7] = data->body[j].frame;
 		k += 8;
 	}
 }

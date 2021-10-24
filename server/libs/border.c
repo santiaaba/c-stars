@@ -39,11 +39,13 @@ uint8_t border_collision(border_t *border, border_t *border2){
 		while(!lista_eol(l2) && !crash){
 			rect_copy(&rect2,(rect_t *)lista_get(l2));
 			rect_get_point(&rect2,&x,&y);
-			x += border->xx;
-			y += border->yy;
+			x += border2->xx;
+			y += border2->yy;
 			rect_set_point(&rect2,x,y);
 			crash = rect_collision(&rect1,&rect2);
+			lista_next(l2);
 		}
+		lista_next(l1);
 	}
 	return crash;
 }

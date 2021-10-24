@@ -128,7 +128,7 @@ border_t *ship_border(ship_t *ship){
 }
 
 uint8_t ship_colision_ship(ship_t *ship, ship_t *ship2){
-	return border_collision(ship->border,ship_border(ship2));
+	return border_collision(ship->border,ship2->border);
 }
 
 uint8_t ship_colision_shoot(ship_t *ship, shoot_t *shoot){

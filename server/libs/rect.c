@@ -46,23 +46,28 @@ void rect_copy(rect_t *dest, rect_t *origen){
 
 uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	
+	bool crash;
 	int32_t b_x = rect->x;
 	int32_t b_y = rect->y;
 	uint32_t b_h = rect->height;
 	uint32_t b_w = rect->width;
-
 	int32_t o_x = rect2->x;
 	int32_t o_y = rect2->y;
-	uint32_t o_h = rect_get_height(rect2);
-	uint32_t o_w = rect_get_width(rect2);
+	uint32_t o_h = rect2->height;
+	uint32_t o_w = rect2->width;
 
-	return (o_x > b_x && o_x < b_x + b_w &&
+	crash = (o_x > b_x && o_x < b_x + b_w &&
 	((o_y < b_y && o_y > b_y - b_h) ||
 	(o_y + o_h < b_y && o_y + o_h > b_y - b_h))) ||
 
 	(o_x + o_w > b_x && o_x < b_x + b_w &&
 	((o_y + o_w < b_y && o_y + o_w > b_y - b_h) ||
 	(o_y + o_h < b_y && o_y + o_h > b_y - b_h)));
+
+	printf("rect_collision:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i\n",
+			b_x,b_y,b_w,b_h,o_x,o_y,o_w,o_h,crash);
+
+	return crash;
 }
 
 void rect_destroy(rect_t *rect){

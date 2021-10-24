@@ -268,6 +268,7 @@ void static game_playing_level(game_t *g){
 					/* Calculamos colision con jugador */
 					printf("	Colisiones con jugador\n");
 					if(ship_colision_ship(ship,g->player)){
+						printf("Chocan nava enemiga y jugador!!!\n");
 						/* Decrementamos energia jugador */
 						ship_set_power(g->player,(ship_get_power(g->player) -
 							ship_get_power(ship)));
@@ -287,8 +288,8 @@ void static game_playing_level(game_t *g){
 						}
 					}
 					//ship_shoot(g->player,g->shoot_enemies);
-					//ship_render(ship,&data);
-					//game_send_data(g,&data,false);
+					ship_render(ship,&data);
+					game_send_data(g,&data,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_DESTROY:

@@ -51,7 +51,7 @@ int game_init(game_t *g){
 int static game_map_texture(uint16_t idEntity){
 	switch(idEntity){
 		case 20: return 0;	// Player
-		case 21: return -1;	// Enemie 1
+		case 21: return 1;	// Enemie 1
 		case 22: return -1;	// Enemie 2
 		case 23: return -1;	// Enemie 3
 
