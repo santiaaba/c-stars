@@ -9,6 +9,16 @@
 #define SCREEN_WIDTH			1024
 #define SCREEN_HEIGHT		600
 
+//Coordenadas en radianes
+#define G_0		0
+#define G_45	0.785398
+#define G_90	1.5708
+#define G_135	2.26893
+#define G_180	3.14159
+#define G_225	3.92699
+#define G_270	4.71239
+#define G_315	5.49779
+
 /* Cada dato de render a enviar al cliente tiene el siguiente formato 
 
      uint16_t	int16_t		int16_t		uint8_t		uint8_t
@@ -45,14 +55,16 @@ Son en total 8 bytes
 #define	G_STOP						5
 #define	G_LEAVE						6
 
-#define K_TOP					0
-#define K_BOTTOM				1
-#define K_LEFT					2	
-#define K_RIGHT				3
+#define K_TOP					82
+#define K_BOTTOM				81
+#define K_LEFT					80
+#define K_RIGHT				79
 #define K_SPACEBAR			4
 
-#define K_DOWN			0
-#define K_UP			1
+#define K_DOWN			768
+#define K_UP			769
+
+#define PLAYER_MODULE	10.0
 
 typedef struct {
 	bool top;
@@ -90,7 +102,7 @@ typedef struct {
 } game_t;
 
 void game_init(game_t *g, sem_t *sem_event);
-void game_event_add(game_t *g, uint8_t key, uint8_t key_type);
+void game_event_add(game_t *g, uint16_t key, uint16_t key_type);
 void game_start(game_t *g);
 int game_init_udp(game_t *g, char *ip, int port);
 void *game_run(void *g);

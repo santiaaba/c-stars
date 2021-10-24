@@ -1,5 +1,19 @@
 #include "game.h"
 
+void static game_load_textures(game_t *g){
+	/* Carga todas las texturas en el array */
+
+	//Player1
+	g->entities[0].w = 64;
+	g->entities[0].h = 88;
+	g->entities[0].texture = IMG_LoadTexture(g->renderer, "img/player.png");
+
+	// Enemie 1
+	g->entities[1].w = 133;
+	g->entities[1].h = 138;
+	g->entities[1].texture = IMG_LoadTexture(g->renderer, "img/enemigo1.png");
+}
+
 int game_init(game_t *g){
 	
 	if(SDL_Init(SDL_INIT_VIDEO) < 0){
@@ -30,6 +44,22 @@ int game_init(game_t *g){
 		fprintf(stderr, "game_init() failed: %s\n", strerror(errno));
 	}
 	g->command_cli = (tcp_client_t *)malloc(sizeof(tcp_client_t));
+
+	game_load_textures(g);
+}
+
+int static game_map_texture(uint16_t idEntity){
+	switch(idEntity){
+		case 20: return 0;	// Player
+		case 21: return -1;	// Enemie 1
+		case 22: return -1;	// Enemie 2
+		case 23: return -1;	// Enemie 3
+
+		case 0: return -1;		// Shoot 1
+		case 1: return -1;		// Shoot 2
+		case 2: return -1;		// Shoot 3
+		default: return -1;
+	}
 }
 
 int game_check_connect(){
@@ -41,49 +71,60 @@ void static game_render(game_t *g){
 
 	int len, n;
 	data_t data;
-	char *buffer;
+	char buffer[MAX_DATA];
 	SDL_Rect position;
 	SDL_Rect frame;
+	int index_entity;
 
 	len = sizeof(g->cliaddr);
 
 	SDL_RenderClear(g->renderer);
 	SDL_RenderPresent(g->renderer);
 	printf("game_render(): Entro render: %u\n",g->status);
+	g->screen_frame = 0;
 	while(g->status == PLAYING){
 		printf("game_render(): Esperando datos de render\n");
 		n = recvfrom(g->sockfd, (char *)buffer, MAX_DATA, 
 				MSG_WAITALL, ( struct sockaddr *) &(g->cliaddr),
 				&len);
-		printf("game_render(): Datos de render recibidos\n");
+		printf("game_render(): Datos de render recibidos: %i\n",n);
  
 		buffer_to_data(&data,buffer);
 		/* Si la data corresponde a un frame nuevo entonces
 			dibujamos la pantalla. */
-		if(data.header.frame != g->screen_frame && g->screen_frame != 0){
+		if(data.header.frame != g->screen_frame){
 			g->screen_frame = data.header.frame;
 			SDL_RenderPresent(g->renderer);
+			printf("Nuevo frame\n");
 			SDL_RenderClear(g->renderer);
 		}
 		for(int i=0;i<data.header.size;i++){
-			/* Rectangulo para dibujar en pantalla */
-			position.x = data.body[i].pos_x;
-			position.y = data.body[i].pos_y;
-			position.w = g->entities[data.body[i].entity_class].w;
-			position.h = g->entities[data.body[i].entity_class].h;
-
-			/* Rectangulo para recortar la textura */
-			frame.w = position.w;
-			frame.h = position.h;
-			frame.x = frame.h * data.body[i].sprite;
-			frame.y = frame.w * data.body[i].frame;
-
-			/* Dibujamos */
-			SDL_RenderCopy(
-				g->renderer,
-				g->entities[data.body[i].entity_class].texture,
-				&frame,
-				&position);
+			index_entity = game_map_texture(data.body[i].entity_class);
+			printf("Dibujando entidad en index: %i\n",index_entity);
+			if(index_entity != -1){
+				/* Rectangulo para dibujar en pantalla */
+				position.x = data.body[i].pos_x;
+				position.y = data.body[i].pos_y;
+				position.w = g->entities[index_entity].w;
+				position.h = g->entities[index_entity].h;
+				printf("Dibujando entidad: position:(x,y,w,h) = (%i,%i,%i,%i)\n",
+						position.x,position.y,position.w,position.h);
+	
+				/* Rectangulo para recortar la textura */
+				frame.w = position.w;
+				frame.h = position.h;
+				frame.y = frame.h * data.body[i].sprite;
+				frame.x = frame.w * data.body[i].frame;
+				printf("Dibujando entidad: recorte:(x,y,w,h) = (%i,%i,%i,%i)\n",
+						frame.x,frame.y,frame.w,frame.h);
+	
+				/* Dibujamos */
+				SDL_RenderCopy(
+					g->renderer,
+					g->entities[index_entity].texture,
+					&frame,
+					&position);
+			}
 		}
 	}
 	printf("game_render(): Salio render:%u\n",g->status);

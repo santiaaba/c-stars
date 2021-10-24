@@ -26,6 +26,7 @@
 #define SCREEN_HEIGHT	600
 #define SCREEN_BPP		24
 #define SCREEN_REFRESH	60
+#define CANT_TEXTURES	5
 
 /* EStados del cliente */
 #define HELLO				0		// Pantalla de presentacion
@@ -37,17 +38,17 @@
 
 typedef struct{
 	SDL_Texture *texture;
-	int w;
-	int h;
+	int w;	/* ancho del tile */
+	int h;	/* alto del tile */
 } entities_t;
 
 typedef struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	uint16_t screen_frame;				// En estado PLAYING, determina el frame actual
+	entities_t entities[CANT_TEXTURES];		// Texturas
+	uint16_t screen_frame;						// Frame actual
 	int status;
 	tcp_client_t *command_cli;
-	entities_t entities[10];
 	sem_t *sem_render;
 	sem_t sem_status;
 	pthread_t th_render;

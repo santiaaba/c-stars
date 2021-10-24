@@ -19,7 +19,6 @@ Los 0 y 10 son tipos de disparos. Ver shoot.h */
 #define ENEMIE1		21
 #define ENEMIE2		22
 #define ENEMIE3		23
-#define ENEMIE4		24
 
 /* Estados de la nave */
 #define	SHIP_LIVE		0	/* La nave vive */

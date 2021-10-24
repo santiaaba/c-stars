@@ -1,18 +1,20 @@
 #include "rect.h"
 
 void rect_init(rect_t *rect){
-	rect->point = (point_t*)malloc(sizeof(point_t));
-	point_init(rect->point);
+	rect->x = 0;
+	rect->y = 0;
 	rect->width = 0;
 	rect->height = 0;
 }
 
-point_t *rect_get_point(rect_t *rect){
-	return rect->point;
+void rect_get_point(rect_t *rect, int32_t *x, int32_t *y){
+	*x = rect->x;
+	*y = rect->y;
 }
 
 void rect_set_point(rect_t *rect, int32_t x, int32_t y){
-	point_set(rect->point,x,y);
+	rect->x = x;
+	rect->y = y;
 }
 
 void rect_set_dim(rect_t *rect, uint32_t width, uint32_t height){
@@ -29,31 +31,28 @@ uint32_t rect_get_height(rect_t *rect){
 }
 
 bool rect_into_rect(rect_t *limit, rect_t *rect){
-	uint32_t l_x = point_get_x(limit->point);
-	uint32_t l_y = point_get_y(limit->point);
-	uint32_t l_h = limit->height;
-	uint32_t l_w = limit->width;
+	return (	rect->y > limit->y &&
+				rect->y + rect->height < limit->y + limit->height &&
+			 	rect->x > limit->x &&
+				rect->x + rect->width < limit->x + limit->width);
+}
 
-	uint32_t r_x = point_get_x(rect->point);
-	uint32_t r_y = point_get_y(rect->point);
-	uint32_t r_h = rect->height;
-	uint32_t r_w = rect->width;
-
-	printf("rect_into_rect()\n");
-	return (r_y > l_x && r_y + r_h < l_y + l_h &&
-			  r_x > l_x && r_x + r_w < l_x + l_w);
-
+void rect_copy(rect_t *dest, rect_t *origen){
+	dest->x = origen->x;
+	dest->y = origen->y;
+	dest->height = origen->height;
+	dest->width = origen->width;
 }
 
 uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	
-	uint32_t b_x = point_get_x(rect->point);
-	uint32_t b_y = point_get_y(rect->point);
+	int32_t b_x = rect->x;
+	int32_t b_y = rect->y;
 	uint32_t b_h = rect->height;
 	uint32_t b_w = rect->width;
 
-	uint32_t o_x = point_get_x(rect_get_point(rect2));
-	uint32_t o_y = point_get_y(rect_get_point(rect2));
+	int32_t o_x = rect2->x;
+	int32_t o_y = rect2->y;
 	uint32_t o_h = rect_get_height(rect2);
 	uint32_t o_w = rect_get_width(rect2);
 
@@ -67,5 +66,4 @@ uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 }
 
 void rect_destroy(rect_t *rect){
-	free(rect->point);
 }

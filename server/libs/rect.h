@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "point.h"
 
 #ifndef RECT_H
 #define RECT_H
 
 typedef struct rect{
-	point_t *point;
+	int32_t x;
+	int32_t y;
 	uint32_t width;
 	uint32_t height;
 } rect_t;
@@ -19,7 +19,7 @@ void rect_init(rect_t *rect);
 /* Setea el punto del rectangulo */
 void rect_set_point(rect_t *rect, int32_t x, int32_t y);
 
-point_t *rect_get_point(rect_t *rect);
+void rect_get_point(rect_t *rect, int32_t *x, int32_t *y);
 
 /* Setea las dimenciones del rectangulo */
 void rect_set_dim(rect_t *rect, uint32_t width, uint32_t height);
@@ -35,6 +35,9 @@ uint32_t rect_get_height(rect_t *rect);
 uint16_t rect_collision(rect_t *rect, rect_t *rect2);
 
 bool rect_into_rect(rect_t *limit, rect_t *rect);
+
+/* Copia los datos del rec origen en destino */
+void rect_copy(rect_t *dest, rect_t *origen);
 
 /* No hace nada. Ya que un rect no esta formado por punteros */
 void rect_destroy(rect_t *rect);

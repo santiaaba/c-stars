@@ -4,14 +4,15 @@ void shoot_init(shoot_t *shoot, int type){
 	shoot->type = type;
 	shoot->damage = 0;
 	point_set(shoot->position,0,0);
-	border_init(shoot->border);
+	border_init(shoot->border,0,0);
 	vector_init(shoot->vector);
 	shoot->sprite = 0;
 	shoot->frame = 0;
 }
 
-void shoot_set_position(shoot_t *shoot, point_t position){
-	point_copy(shoot->position,&position);
+void shoot_set_position(shoot_t *shoot, int32_t x, int32_t y){
+	point_set(shoot->position,x,y);
+	border_set_point(shoot->border,x,y);
 }
 
 point_t *shoot_get_position(shoot_t *shoot){
@@ -20,6 +21,8 @@ point_t *shoot_get_position(shoot_t *shoot){
 
 void shoot_move(shoot_t *shoot){
 	point_add_vector(shoot->position,shoot->vector);
+	border_set_point(shoot->border,shoot->position->x,
+		shoot->position->y);
 }
 
 void shoot_set_damage(shoot_t *shoot, uint32_t damage){

@@ -76,7 +76,7 @@ void game_resume(game_t *g){
 		game_set_state(g,G_PLAYING);
 }
 
-void game_event_add(game_t *g, uint8_t key, uint8_t key_type){
+void game_event_add(game_t *g, uint16_t key, uint16_t key_type){
 	game_event_t *e;
 
 	e = (game_event_t*)malloc(sizeof(game_event_t));
@@ -94,73 +94,86 @@ void game_event_add(game_t *g, uint8_t key, uint8_t key_type){
 
 void static game_handle_events(game_t *g){
 	int i = 0;
-	uint32_t direction = 0;
+	float direction = 0;
 	float module = 0;
 	vector_t *vector;
 	/* Entramos en seccion critica */
 	sem_wait(g->sem_event);
 	for(i=0;i < g->event_size;i++){
+		printf("game_handle_events(): KEY: %i - EVENT: %i\n",g->events[i]->key,g->events[i]->key_type);
 		vector = ship_get_vector(g->player);
 		switch(g->events[i]->key_type){
 			case K_DOWN:
+				printf("game_handle_events(): KEY_DOWN\n");
 				switch(g->events[i]->key){
 					case K_TOP:
+						printf("game_handle_events(): KEY_DOWN K_TOP\n");
 						g->direction.top = true;
 						break;
 					case K_BOTTOM:
+						printf("game_handle_events(): KEY_DOWN K_BOTTOM\n");
 						g->direction.bottom = true;
 						break;
 					case K_LEFT:
+						printf("game_handle_events(): KEY_DOWN K_LEFT\n");
 						g->direction.left = true;
 						break;
 					case K_RIGHT:
+						printf("game_handle_events(): KEY_DOWN K_RIGHT\n");
 						g->direction.right = true;
 						break;
 					case K_SPACEBAR:
+						printf("game_handle_events(): KEY_DOWN SPACE\n");
 						break;
 				}
 				break;
 			case K_UP:
+				printf("game_handle_events(): KEY_UP\n");
 				switch(g->events[i]->key){
 					case K_TOP:
+						printf("game_handle_events(): KEY_UP K_TOP\n");
 						g->direction.top = false;
 						break;
 					case K_BOTTOM:
+						printf("game_handle_events(): KEY_UP K_BOTTOM\n");
 						g->direction.bottom = false;
 						break;
 					case K_LEFT:
+						printf("game_handle_events(): KEY_UP K_LEFT\n");
 						g->direction.left = false;
 						break;
 					case K_RIGHT:
+						printf("game_handle_events(): KEY_UP K_RIGHT\n");
 						g->direction.right = false;
 						break;
 					case K_SPACEBAR:
+						printf("game_handle_events(): KEY_UP SPACE\n");
 						break;
 				}
 		}
 		if(g->direction.left || g->direction.right ||
 		   g->direction.top || g->direction.bottom)
-				module = 10.0;
+				module = PLAYER_MODULE;
 		else
 				module = 0;
 
 		if(g->direction.left)
-			direction = 0;
+			direction = G_180;	//180°
 		if(g->direction.top)
-			direction = 90;
+			direction = G_90;	//90°
 		if(g->direction.right)
-			direction = 180;
+			direction = G_0;		//0°
 		if(g->direction.bottom)
-			direction = 270;
+			direction = G_270;	//270°
 		if(g->direction.left && g->direction.top)
-			direction = 45;
+			direction = G_135;	//135°
 		if(g->direction.right && g->direction.top)
-			direction = 135;
+			direction = G_45;		//45°
 		if(g->direction.left && g->direction.bottom)
-			direction = 225;
+			direction = G_225;	//225°
 		if(g->direction.right && g->direction.bottom)
-			direction = 315;
-		printf("game_handle_events(): (M,D) => (%f,%i)\n",module,direction);
+			direction = G_315;	//315°
+		printf("game_handle_events(): (M,D) => (%f,%f)\n",module,direction);
 		vector_set(vector,direction,module);
 		free(g->events[i]);
 	}
@@ -181,26 +194,19 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 
 	int n;
 
-	printf("game_send_data(): Enviamos los datos\n");
-
 	if(data != NULL){
-		printf("game_send_data(): data es distinto de  NULL\n");
 		data_entity_copy(&(g->data.body[g->data.header.size]),data);
 		g->data.header.size ++;
 	}
 
 	if(at_once || g->data.header.size == MAX_DATA_BODY){
-		printf("game_send_data(): Paso 1\n");
 		g->data.header.frame = g->frame;
-		printf("game_send_data(): Paso 2\n");
 		g->data.header.type = D_VIDEO;
-		printf("game_send_data(): Paso 3\n");
 		g->data.header.aux = 0 || g->request_status;
-		printf("game_send_data(): Paso 4\n");
 
 		data_to_buffer(&(g->data),&(g->buffer),&(g->buffer_size));
 		printf("game_send_data(): Bytes a enviar: %i\n",g->buffer_size);
-		n = sendto(g->sockfd, &(g->buffer), g->buffer_size, 0,
+		n = sendto(g->sockfd, g->buffer, g->buffer_size, 0,
 			(const struct sockaddr *) &(g->servaddr),sizeof(g->servaddr));
 		printf("game_send_data(): Bytes enviados: %i\n",n);
 		g->data.header.size = 0;
@@ -281,8 +287,8 @@ void static game_playing_level(game_t *g){
 						}
 					}
 					//ship_shoot(g->player,g->shoot_enemies);
-					//ship_render(ship,data);
-					//game_send_data(g,data,false);
+					//ship_render(ship,&data);
+					//game_send_data(g,&data,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_DESTROY:

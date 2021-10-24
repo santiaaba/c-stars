@@ -12,8 +12,6 @@ Los 0 y 10 son tipos de disparos. */
 #define SHOOT_1	0
 #define SHOOT_2	1
 #define SHOOT_3	2
-#define SHOOT_4	3
-#define SHOOT_5	4
 
 typedef struct t_shoot{
 	int type;
@@ -29,7 +27,7 @@ typedef struct t_shoot{
 void shoot_init(shoot_t *shoot, int type);
 
 /* Coloca el disparo en una coordenada específica */
-void shoot_set_position(shoot_t *shoot, point_t position);
+void shoot_set_position(shoot_t *shoot, int32_t x, int32_t y);
 
 /* Retorna las coordenadas del disparo */
 point_t *shoot_get_position(shoot_t *shoot);

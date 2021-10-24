@@ -208,6 +208,7 @@ void data_to_buffer(data_t *data, char **buffer, int *size){
 		*size = DATA_HEAD_SIZE + (data->header.size * 8);
 		*buffer = (char *)realloc(*buffer,*size);
 	}
+	printf("data_to_buffer(): frame = %"PRIu32"\n",data->header.frame);
 	aux32 = htonl(data->header.frame);
 	memcpy(&(*buffer)[0], &aux32, 4);
 	(*buffer)[4] = data->header.type;
@@ -237,24 +238,30 @@ void buffer_to_data(data_t *data, char *buffer){
 
 	/* Header */
 	memcpy(&aux32, &(buffer[0]), 4);
-	data->header.frame = htonl(aux32);
+	data->header.frame = ntohl(aux32);
 	data->header.type = buffer[4];
 	memcpy(&aux16, &(buffer[5]), 2);
-	data->header.size = htons(aux16);
+	data->header.size = ntohs(aux16);
 	data->header.aux = buffer[7];
-
+	printf("buffer_to_data(): FRAME:%"PRIu32" | TYPE:%u | SIZE:%u | AUX: %u\n",
+		data->header.frame, data->header.type, data->header.size, data->header.aux);
 	/* body */
+
 	int k = 8;
 	for(int j=0;j<data->header.size;j++){
 		memcpy(&aux16, &(buffer[k]), 2);
-		data->body[j].entity_class = htons(aux16);
+		data->body[j].entity_class = ntohs(aux16);
 		memcpy(&aux16, &(buffer[k + 2]), 2);
-		data->body[j].pos_x = htons(aux16);
+		data->body[j].pos_x = ntohs(aux16);
 		memcpy(&aux16, &(buffer[k + 4]), 2);
-		data->body[j].pos_y = htons(aux16);
+		data->body[j].pos_y = ntohs(aux16);
 		data->body[j].sprite = buffer[k + 6];
 		data->body[j].frame = buffer[k + 7];
 		k += 8;
+		printf("buffer_to_data():CLASS: %u | (X,Y):(%u,%u) | SPRITE: %u| FRAME: %u\n",
+				data->body[j].entity_class,
+				data->body[j].pos_x, data->body[j].pos_y,
+				data->body[j].sprite,data->body[j].frame);
 	}
 }
 

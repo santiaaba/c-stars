@@ -5,7 +5,7 @@ void vector_init(vector_t *vector){
 	vector->modulo = 0;
 }
 
-void vector_set(vector_t *vector, uint32_t d, float m){
+void vector_set(vector_t *vector, float d, float m){
 	vector->direccion = d;
 	vector->modulo = m;
 }
@@ -23,6 +23,10 @@ int32_t vector_y(vector_t *vector){
 void vector_copy(vector_t *vector, vector_t *origen){
 	vector->direccion = origen->direccion;
 	vector->modulo = origen->modulo;
+}
+
+float vector_grad_to_rad(int grad){
+	return grad * (3.141592/180);
 }
 
 void vector_del(vector_t *vector1, vector_t *vector2){
