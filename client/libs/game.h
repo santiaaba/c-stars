@@ -47,11 +47,21 @@ typedef struct {
 	SDL_Renderer *renderer;
 	entities_t entities[CANT_TEXTURES];		// Texturas
 	uint16_t screen_frame;						// Frame actual
-	int status;
+	int status;							// Estado del cliente
+	bool status_in_progress;
+
+	/* Los siguientes 4 atributos son obtenidos
+		mediante el mensaje game_status al servidor */
+
+	uint16_t playing_state;			// Estado segun el server
+	uint8_t level;						// Nivel actual
+	uint8_t level_state;			// Estado del nivel
+	uint32_t score;					// Puntaje
+
 	tcp_client_t *command_cli;
-	sem_t *sem_render;
 	sem_t sem_status;
 	pthread_t th_render;
+	pthread_t th_status;
 	int udp;
 	int sockfd;
 	struct sockaddr_in cliaddr;

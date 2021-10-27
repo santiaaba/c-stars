@@ -37,6 +37,7 @@ int game_init(game_t *g){
 		return 1;
 	}
 
+	g->status_in_progress = false;
 	g->renderer = SDL_CreateRenderer(g->window, -1, 0);
 	g->status = HELLO;
 	g->udp = 20000;	// Lo fijamos por ahora
@@ -67,6 +68,26 @@ int game_check_connect(){
 		se encuentre activa */
 }
 
+void static game_status(game_t *g){
+	/* Solicita al servidor el estado del juego */
+	req_t req;
+	res_t res;
+
+	void server_response_handle(res_t *res){
+		sem_wait(&(g->sem_status));
+			g->playing_state = ((res_info_t*)res->body)->state;
+			g->score = ((res_info_t*)res->body)->score;
+			g->level = ((res_info_t*)res->body)->level;
+			g->level_state = ((res_info_t*)res->body)->level_state;
+			g->status_in_progress = false;
+		sem_post(&(g->sem_status));
+	}
+
+	req_init(&req);
+	req_fill(&req,C_GAME_STATUS,0);
+	tcp_client_send(g->command_cli,&req,&server_response_handle);
+}
+
 void static game_render(game_t *g){
 
 	int len, n;
@@ -90,6 +111,15 @@ void static game_render(game_t *g){
 		printf("game_render(): Datos de render recibidos: %i\n",n);
  
 		buffer_to_data(&data,buffer);
+
+		if(data.header.aux && AUX_FORCESTATUS && g->status_in_progress == false){
+			sem_wait(&(g->sem_status));
+				g->status_in_progress = true;
+			sem_post(&(g->sem_status));
+			/* El server nos solicita consultar por el estado */
+			pthread_create(&(g->th_status), NULL, (void*)(void*)(&game_status),g);
+		}
+
 		/* Si la data corresponde a un frame nuevo entonces
 			dibujamos la pantalla. */
 		if(data.header.frame != g->screen_frame){

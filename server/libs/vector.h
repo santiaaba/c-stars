@@ -31,6 +31,14 @@ void vector_init(vector_t *vector);
 /* Setea el vector de movimiento */
 void vector_set(vector_t *vector, float d, float m);
 
+void vector_set_module(vector_t *vector, float m);
+
+void vector_set_direction(vector_t *vector, float d);
+
+float vector_get_module(vector_t *vector);
+
+float vector_get_direction(vector_t *vector);
+
 /* Retorna el valor de x */
 int32_t vector_x(vector_t *vector);
 

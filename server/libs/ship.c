@@ -18,7 +18,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 	rect_set_dim(&(ship->limits),0,0);
 
 	ship -> power = 0;
-	ship -> speed = 1;
+//	ship -> speed = 1;
 
 	ship->position=(point_t*)malloc(sizeof(point_t));
 	ship->border=(border_t*)malloc(sizeof(border_t));
@@ -63,6 +63,10 @@ void ship_set_limits(ship_t *ship,int limit_bottom, int limit_right){
 	rect_set_dim(&(ship->limits),limit_right,limit_bottom);
 }
 
+void ship_remove_limits(ship_t *ship){
+	ship->limited = false;
+}
+
 void ship_set_state(ship_t *ship, uint8_t state){
 	ship->state = state;
 }
@@ -72,12 +76,21 @@ uint8_t ship_get_state(ship_t *ship){
 }
 
 void ship_set_speed(ship_t *ship, float speed){
-	ship->speed = speed;
+	vector_set_module(ship->vector,speed);
 }
 
 float ship_get_speed(ship_t *ship){
-	return ship->speed;
+	return vector_get_module(ship->vector);
 }
+
+void ship_set_direction(ship_t *ship, float direction){
+	vector_set_direction(ship->vector,direction);
+}
+
+float ship_get_direction(ship_t *ship){
+	return vector_get_direction(ship->vector);
+}
+
 
 void ship_set_position(ship_t *ship, int32_t x, int32_t y){
 	point_set(ship->position,x,y);
@@ -166,14 +179,22 @@ void ship_ia_activate(ship_t *ship){
 }
 
 void ship_destroy(ship_t *ship){
+	printf("ship_destroy():position\n");
 	point_destroy(ship->position);
+	printf("ship_destroy():border\n");
 	border_destroy(ship->border);
+	printf("ship_destroy():vector\n");
 	vector_destroy(ship->vector);
+	printf("ship_destroy():ia\n");
 	ia_destroy(ship->ia);
 
+	printf("ship_destroy():free position\n");
 	free(ship->position);
+	printf("ship_destroy():free border\n");
 	free(ship->border);
+	printf("ship_destroy():free vector\n");
 	free(ship->vector);
+	printf("ship_destroy():free ia\n");
 	free(ship->ia);
 }
 
@@ -243,12 +264,14 @@ void ia_drive_ship(ia_t *ia, ship_t *ship){
 	}
 }
 
-void ia_mov_destroy(void **ia_mov){
-	free((ia_mov_t*)(*ia_mov));
+void ia_mov_destroy(ia_mov_t **ia_mov){
+	//free((ia_mov_t*)(*ia_mov));
+	free(*ia_mov);
 }
 
 void ia_destroy(ia_t *ia){
 	/* OJO... no eliminar el clock. Ya que es utilizado
 	   por otras estructuras */
 	lista_clean(ia->path,(void*)(void**)&ia_mov_destroy);
+	free(ia->path);
 }

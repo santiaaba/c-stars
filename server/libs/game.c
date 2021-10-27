@@ -16,6 +16,7 @@ void game_init(game_t *g, sem_t *sem_event){
    g->player = (ship_t *)malloc(sizeof(ship_t));
 	g->clock = (clockgame_t *)malloc(sizeof(clockgame_t));
 	g->request_status = 0;
+	g->statusForced = false;
 
 	g->level=(level_t*)malloc(sizeof(level_t));
 	level_init(g->level,g->clock);
@@ -202,7 +203,13 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 	if(at_once || g->data.header.size == MAX_DATA_BODY){
 		g->data.header.frame = g->frame;
 		g->data.header.type = D_VIDEO;
-		g->data.header.aux = 0 || g->request_status;
+		if(g->request_status)
+			g->data.header.aux = AUX_FORCESTATUS;
+		else
+			g->data.header.aux = 0;
+		printf("REQUEST: %i\n",g->data.header.aux);
+		//g->data.header.aux = 0;
+		//printf("REQUEST: %i\n",g->data.header.aux);
 
 		data_to_buffer(&(g->data),&(g->buffer),&(g->buffer_size));
 		printf("game_send_data(): Bytes a enviar: %i\n",g->buffer_size);
@@ -248,6 +255,7 @@ void static game_playing_level(game_t *g){
 
 	printf("game_playing_level(): Arrancamos el bucle\n");
 
+	data.header.size = 0;
 	while(g->state == G_PLAYING){
 	//	continue;
 
@@ -298,13 +306,14 @@ void static game_playing_level(game_t *g){
 						ship_set_state(ship,SHIP_END);
 					else
 						animation_next(&(ship->animation));
-					//ship_render(ship,data);
-					//game_send_data(g,data,false);
+					ship_render(ship,&data);
+					game_send_data(g,&data,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_END:
-					printf(" Eliminamos\n");
+					printf(" Eliminamos: removemos de la lista\n");
 					ship = lista_remove(g->enemies);
+					printf(" Eliminamos: eliminamos nave\n");
 					ship_destroy(ship);
 					free(ship);
 			}
@@ -373,6 +382,9 @@ void static game_playing_level(game_t *g){
 					sale de pantalla */
 				if(level_eol(g->level) && lista_size(g->enemies) == 0 &&
 					lista_size(g->shoot_enemies) == 0){
+						ship_remove_limits(g->player);
+						ship_set_speed(g->player,10.0);
+						ship_set_direction(g->player,0.0);
 						level_set_state(g->level,L_EGRESS);
 				}
 				break;
@@ -380,13 +392,19 @@ void static game_playing_level(game_t *g){
 				printf("	L_EGRESS\n");
 				/* Cuando la nave sale de la pantalla hemos terminado
 					el nivel */
-				if(point_get_x(ship_get_position(g->player)) >= 900){
+				if(point_get_x(ship_get_position(g->player)) >= SCREEN_WIDTH &&
+					g->request_status == 0){
 					level_set_state(g->level,L_END);
 					/* colocamos en 1 request_status para que viaje
 						el próximo udp con el bit encendido que avisa
 						al cliente que requiere realizar un game_status */
 					g->request_status = 1;
 				}
+				break;
+			case L_END:
+				printf("L_END\n");
+				g->data.header.aux |= AUX_FORCESTATUS;
+				
 		}
 		/* Enviamos los datos sobrantes en este loop */
 		game_send_data(g,NULL,true);
@@ -402,13 +420,6 @@ void static game_playing_level(game_t *g){
 	printf("game_playing_level(): Salimos del bucle\n");
 }
 
-void game_status(game_t *g){
-	/* Retorna información del estado del juego.
-		Se coloca el parametro que lo fuerza en 0 */
-	g->request_status = 0;
-	
-}
-
 int game_get_state(game_t *g){
 	return g->state;
 }
@@ -421,6 +432,7 @@ void game_set_state(game_t *g, int state){
 }
 
 void game_info(game_t *g, game_info_t *info){
+	g->request_status = 0;
 	info->score = g->score;
 	info->state = g->state;
 	info->level = level_get_id(g->level);

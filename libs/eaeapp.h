@@ -42,6 +42,8 @@
 #define RES_ERROR_VERSION		41
 #define RES_INCORRECT			50
 
+#define AUX_FORCESTATUS		0b00000001
+
 /*********************************************/
 /* Estructuas para el envio de datos por UDP */
 /*********************************************/

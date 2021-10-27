@@ -10,6 +10,22 @@ void vector_set(vector_t *vector, float d, float m){
 	vector->modulo = m;
 }
 
+void vector_set_module(vector_t *vector, float m){
+	vector->modulo = m;
+}
+
+void vector_set_direction(vector_t *vector, float d){
+	vector->direccion = d;
+}
+
+float vector_get_module(vector_t *vector){
+	return vector->modulo;
+}
+
+float vector_get_direction(vector_t *vector){
+	return vector->direccion;
+}
+
 int32_t vector_x(vector_t *vector){
 	return (int32_t)(vector->modulo * cos(vector->direccion));
 }

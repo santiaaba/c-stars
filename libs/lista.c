@@ -157,13 +157,17 @@ void lista_clean(lista_t *l,void(*clean)(void**)){
 	lista_node *aux;
 	void *element;
 
-	while(l->first != NULL){
-		aux = l->first;
-		l->first = l->first->next;
-		l->size--;
+	l->actual = l->first;
+	while(l->actual != NULL){
+		aux = l->actual;
+		l->actual = l->actual->next;
 		(*clean)(&(aux->data));
-		free(aux->data);
+		free(aux);
 	}
+	l->size = 0;
+	l->first = NULL;
+	l->last = NULL;
+	l->actual = NULL;
 }
 
 void lista_destroy(lista_t **l,void(*clean)(void**)){

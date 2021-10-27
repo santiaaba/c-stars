@@ -46,7 +46,7 @@ typedef struct t_ship{
 	border_t *border;
 	vector_t *vector;
 	animation_t animation;
-	float speed;
+//	float speed;
 	uint8_t type;		// ID tipo nave
 	ia_t *ia;
 	uint8_t ia_activated;
@@ -64,9 +64,18 @@ void ship_set_speed(ship_t *ship, float speed);
 /* Retorna la velocidad de la nave */
 float ship_get_speed(ship_t *ship);
 
+/* Setea la direccion de la nave */
+void ship_set_direction(ship_t *ship, float direction);
+
+/* Retorna la direccion de la nave */
+float ship_get_direction(ship_t *ship);
+
 /* Setea los limites inferior y derecho. El superior
    y el izquierdo son 0 y 0 respectivamente */
 void ship_set_limits(ship_t *ship,int limit_bottom, int limit_right);
+
+/* Remueve los limites de la nave en sus movimientos */
+void ship_remove_limits(ship_t *ship);
 
 /* Mueve la nave. Ejecuta la instaucción de la ia
 	si esta esta activada */

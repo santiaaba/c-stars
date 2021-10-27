@@ -4,7 +4,7 @@
 #define BUFFER_SIZE			200			/* elementos a renderizar */
 #define MAX_UDP_BUFFER		200			/* Tamano maximo de buffer UDP */
 //#define GAME_SLEEP			66
-#define FXS						2		/*Fotogramas por segundo */
+#define FXS						10		/*Fotogramas por segundo */
 #define EVENT_LIMIT_SIZE	10
 #define SCREEN_WIDTH			1024
 #define SCREEN_HEIGHT		600
@@ -84,6 +84,7 @@ typedef struct {
 	int state;
 	uint32_t frame;
 	uint32_t score;
+	bool statusForced;
 	sem_t *sem_event;					/* Semaphore para la zona critica de eventos */
 	sem_t sem_state;					/* Semaphore para la zona critica de state */
 	data_t data;						/* Datos a enviar por udp */
@@ -91,7 +92,7 @@ typedef struct {
 	int buffer_size;
 	key_direction_t direction;
 	ship_t *player;
-	int request_status;				/* 1 si requiere que el cliente solicite el estado */
+	bool request_status;				/* 1 si requiere que el cliente solicite el estado */
 	lista_t *enemies;
 	lista_t *shoot_enemies;
 	lista_t *shoot_player;

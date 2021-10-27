@@ -84,6 +84,7 @@ void static req_game_stop(game_t *g, req_t *req, res_t *res){
 }
 
 void static req_game_pause(game_t *g, req_t *req, res_t *res){
+	/* Pausa el juego en el nivel en el que se encuentra */
 	res_fill(res,req->header.cod,0,0);
 	if(game_get_state(g) != G_PLAYING){
 		res->header.resp = RES_INCORRECT;
@@ -94,7 +95,7 @@ void static req_game_pause(game_t *g, req_t *req, res_t *res){
 }
 
 void static req_game_resume(game_t *g, req_t *req, res_t *res){
-
+	/* Continua el juego en el nivel en que se encuentra */
 	res_fill(res,req->header.cod,0,0);
 
 	if(game_get_state(g) != G_PAUSE){
@@ -106,7 +107,7 @@ void static req_game_resume(game_t *g, req_t *req, res_t *res){
 }
 
 void static req_game_status(game_t *g, req_t *req, res_t *res){
-
+	/* Retorna el estado del nivel actual */
 	res_fill(res,req->header.cod,0,0);
 
 	res->body = (game_info_t*)malloc(sizeof(game_info_t));
