@@ -21,6 +21,7 @@ void print_header_res(res_t *res){
  *							Para TCP									*
  ******************************************************/
 void req_init(req_t *req){
+	srand(time(NULL));
 	req->header.cod = 0;
 	req->header.qid = 0;
 	req->header.aux = 0;
@@ -44,6 +45,7 @@ void req_destroy(req_t *req){
 }
 
 void req_fill(req_t *req, uint8_t cod, uint16_t size){
+	req->header.qid = rand();
 	req->header.cod = cod;
 	req->header.size = size;
 	req_destroy(req);
@@ -56,9 +58,10 @@ void res_destroy(res_t *res){
 	}
 }
 
-void res_fill(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
+void res_fill(res_t *res, uint8_t cod, uint8_t resp, uint16_t size, uint32_t qid){
 	res->header.cod = cod;
 	res->header.resp = resp;
+	res->header.qid = qid;
 	res->header.size = size;
 	res_destroy(res);
 }
@@ -66,13 +69,18 @@ void res_fill(res_t *res, uint8_t cod, uint8_t resp, uint16_t size){
 
 void eaeapp_req2char(req_t *req, char *buffer, int *size){
 	uint16_t aux16;
+	uint32_t aux32;
 	buffer[0] = req->header.cod;
 	buffer[1] = req->header.aux;
 	aux16 = htons(req->header.size);
 	memcpy(&(buffer[2]),&aux16,2);
-	aux16 = htons(req->header.qid);
-	memcpy(&(buffer[4]),&aux16,2);
+	aux32 = htonl(req->header.qid);
+	memcpy(&(buffer[4]),&aux32,4);
+
+
 	*size = REQ_HEADER_SIZE + req->header.size;
+	printf("Enviando header\n");
+	print_header_req(req);
 	switch(req->header.cod){
 		case C_CONNECT_1:
 			aux16 = htons(((req_connect_t*)(req->body))->udp);
@@ -96,8 +104,11 @@ void eaeapp_res2char(res_t *res, char *buffer, int *size){
 	buffer[1] = res->header.resp;
 	aux16 = htons(res->header.size);
 	memcpy(&(buffer[2]),&aux16,2);
-	aux16 = htons(res->header.qid);
-	memcpy(&(buffer[4]),&aux16,2);
+	aux32 = htonl(res->header.qid);
+	memcpy(&(buffer[4]),&aux32,4);
+
+	printf("Enviando respuesta\n");
+	print_header_res(res);
 
 	*size = RES_HEADER_SIZE + res->header.size;
 	switch(res->header.cod){
@@ -124,6 +135,7 @@ void eaeapp_char2req(req_t *req, char *buffer){
 	memcpy(&aux32,&(buffer[4]),4);
 	req->header.qid = ntohl(aux32);
 
+	printf("Recibiendo header\n");
 	print_header_req(req);
 
 	if(req->body != NULL){
@@ -166,12 +178,14 @@ void eaeapp_char2res(res_t *res, char *buffer){
 	memcpy(&aux32,&(buffer[4]),4);
 	res->header.qid = ntohl(aux32);
 
+	printf("Respuesta recibida\n");
 	print_header_res(res);
 
 	if(res->body != NULL){
 		free(res->body);
 		res->body = NULL;
 	}
+	printf("eaeapp_char2res: %u\n", res->header.cod);
 	switch(res->header.cod){
 		case C_CONNECT_1:
 			res->body = (char*)malloc(res->header.size);
@@ -204,11 +218,11 @@ void data_to_buffer(data_t *data, char **buffer, int *size){
 	uint16_t aux16;
 
 	/* Header */
-	if(*size < DATA_HEAD_SIZE + (data->header.size * 8)){
+//	if(*size < DATA_HEAD_SIZE + (data->header.size * 8)){
 		*size = DATA_HEAD_SIZE + (data->header.size * 8);
 		*buffer = (char *)realloc(*buffer,*size);
-	}
-	printf("data_to_buffer(): frame = %"PRIu32"\n",data->header.frame);
+//	}
+//	printf("data_to_buffer(): frame = %"PRIu32"\n",data->header.frame);
 	aux32 = htonl(data->header.frame);
 	memcpy(&(*buffer)[0], &aux32, 4);
 	(*buffer)[4] = data->header.type;
@@ -243,8 +257,8 @@ void buffer_to_data(data_t *data, char *buffer){
 	memcpy(&aux16, &(buffer[5]), 2);
 	data->header.size = ntohs(aux16);
 	data->header.aux = buffer[7];
-	printf("buffer_to_data(): FRAME:%"PRIu32" | TYPE:%u | SIZE:%u | AUX: %u\n",
-		data->header.frame, data->header.type, data->header.size, data->header.aux);
+//	printf("buffer_to_data(): FRAME:%"PRIu32" | TYPE:%u | SIZE:%u | AUX: %u\n",
+//		data->header.frame, data->header.type, data->header.size, data->header.aux);
 	/* body */
 
 	int k = 8;
@@ -258,10 +272,10 @@ void buffer_to_data(data_t *data, char *buffer){
 		data->body[j].sprite = buffer[k + 6];
 		data->body[j].frame = buffer[k + 7];
 		k += 8;
-		printf("buffer_to_data():CLASS: %u | (X,Y):(%u,%u) | SPRITE: %u| FRAME: %u\n",
-				data->body[j].entity_class,
-				data->body[j].pos_x, data->body[j].pos_y,
-				data->body[j].sprite,data->body[j].frame);
+//		printf("buffer_to_data():CLASS: %u | (X,Y):(%u,%u) | SPRITE: %u| FRAME: %u\n",
+//				data->body[j].entity_class,
+//				data->body[j].pos_x, data->body[j].pos_y,
+//				data->body[j].sprite,data->body[j].frame);
 	}
 }
 

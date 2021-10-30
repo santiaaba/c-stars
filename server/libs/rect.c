@@ -64,8 +64,8 @@ uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	((o_y + o_w < b_y && o_y + o_w > b_y - b_h) ||
 	(o_y + o_h < b_y && o_y + o_h > b_y - b_h)));
 
-	printf("rect_collision:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i\n",
-			b_x,b_y,b_w,b_h,o_x,o_y,o_w,o_h,crash);
+//	printf("rect_collision:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i\n",
+//			b_x,b_y,b_w,b_h,o_x,o_y,o_w,o_h,crash);
 
 	return crash;
 }

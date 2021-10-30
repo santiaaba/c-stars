@@ -1,27 +1,43 @@
 #include "game.h"
 
-void static game_load_textures(game_t *g){
+int static game_load_textures(game_t *g){
 	/* Carga todas las texturas en el array */
 
 	//Player1
 	g->entities[0].w = 64;
 	g->entities[0].h = 88;
+	printf("game_load_texture(): paso\n");
 	g->entities[0].texture = IMG_LoadTexture(g->renderer, "img/player.png");
+	printf("game_load_texture(): paso\n");
+	if(g->entities[0].texture == NULL){
+		printf("Error al cargar la textura player.png\n");
+		return 0;
+	}
 
 	// Enemie 1
 	g->entities[1].w = 133;
 	g->entities[1].h = 138;
+	printf("game_load_texture(): paso\n");
 	g->entities[1].texture = IMG_LoadTexture(g->renderer, "img/enemigo1.png");
+	printf("game_load_texture(): paso\n");
+	if(g->entities[0].texture == NULL){
+		printf("Error al cargar la textura enemigo1.png\n");
+		return 0;
+	}
+	printf("Texturas cargadas\n");
+	return 1;
 }
 
 int game_init(game_t *g){
 	
+	printf("Iniciando librería SDL\n");
 	if(SDL_Init(SDL_INIT_VIDEO) < 0){
 		printf("No fue posible iniciar el video.\n");
 		printf("Error SDL: %s\n", SDL_GetError());
 		return 1;
 	}
 
+	printf("Generando Ventana\n");
 	g->window = SDL_CreateWindow(
 		"C-Start", 20, 20, SCREEN_WIDTH,
 		SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
@@ -32,6 +48,7 @@ int game_init(game_t *g){
 		return 1;
 	}
 
+	printf("Levantando libreria de fuentes\n");
 	if(TTF_Init() == -1){
 		printf("Error al inicializar la librería TTF\n");
 		return 1;
@@ -41,11 +58,16 @@ int game_init(game_t *g){
 	g->renderer = SDL_CreateRenderer(g->window, -1, 0);
 	g->status = HELLO;
 	g->udp = 20000;	// Lo fijamos por ahora
+
+	printf("Iniciando semáforo sem_status\n");
 	if(sem_init(&(g->sem_status),0,1) == -1){
 		fprintf(stderr, "game_init() failed: %s\n", strerror(errno));
 	}
+
+	printf("Creando cliente de comandos\n");
 	g->command_cli = (tcp_client_t *)malloc(sizeof(tcp_client_t));
 
+	printf("Cargando texturas\n");
 	game_load_textures(g);
 }
 
@@ -75,17 +97,25 @@ void static game_status(game_t *g){
 
 	void server_response_handle(res_t *res){
 		sem_wait(&(g->sem_status));
-			g->playing_state = ((res_info_t*)res->body)->state;
-			g->score = ((res_info_t*)res->body)->score;
-			g->level = ((res_info_t*)res->body)->level;
-			g->level_state = ((res_info_t*)res->body)->level_state;
+			g->playing_state = ((res_info_t*)(res->body))->state;
+			printf("game_status(): responsa handle\n");
+			g->score = ((res_info_t*)(res->body))->score;
+			printf("game_status(): responsa handle\n");
+			g->level = ((res_info_t*)(res->body))->level;
+			printf("game_status(): responsa handle\n");
+			g->level_state = ((res_info_t*)(res->body))->level_state;
+			printf("game_status(): responsa handle\n");
+			g->status_in_progress = false;
+			printf("game_status(): responsa handle\n");
 			g->status_in_progress = false;
 		sem_post(&(g->sem_status));
 	}
 
 	req_init(&req);
-	req_fill(&req,C_GAME_STATUS,0);
+	req_fill(&req,C_GAME_STATUS,BODY_REQ_0);
+	printf("Enviando C_GAME_STATUS\n");
 	tcp_client_send(g->command_cli,&req,&server_response_handle);
+	printf("Enviando C_GAME_STATUS END\n");
 }
 
 void static game_render(game_t *g){
@@ -101,14 +131,14 @@ void static game_render(game_t *g){
 
 	SDL_RenderClear(g->renderer);
 	SDL_RenderPresent(g->renderer);
-	printf("game_render(): Entro render: %u\n",g->status);
+//	printf("game_render(): Entro render: %u\n",g->status);
 	g->screen_frame = 0;
 	while(g->status == PLAYING){
-		printf("game_render(): Esperando datos de render\n");
+//		printf("game_render(): Esperando datos de render\n");
 		n = recvfrom(g->sockfd, (char *)buffer, MAX_DATA, 
 				MSG_WAITALL, ( struct sockaddr *) &(g->cliaddr),
 				&len);
-		printf("game_render(): Datos de render recibidos: %i\n",n);
+//		printf("game_render(): Datos de render recibidos: %i\n",n);
  
 		buffer_to_data(&data,buffer);
 
@@ -125,28 +155,28 @@ void static game_render(game_t *g){
 		if(data.header.frame != g->screen_frame){
 			g->screen_frame = data.header.frame;
 			SDL_RenderPresent(g->renderer);
-			printf("Nuevo frame\n");
+//			printf("Nuevo frame\n");
 			SDL_RenderClear(g->renderer);
 		}
 		for(int i=0;i<data.header.size;i++){
 			index_entity = game_map_texture(data.body[i].entity_class);
-			printf("Dibujando entidad en index: %i\n",index_entity);
+//			printf("Dibujando entidad en index: %i\n",index_entity);
 			if(index_entity != -1){
 				/* Rectangulo para dibujar en pantalla */
 				position.x = data.body[i].pos_x;
 				position.y = data.body[i].pos_y;
 				position.w = g->entities[index_entity].w;
 				position.h = g->entities[index_entity].h;
-				printf("Dibujando entidad: position:(x,y,w,h) = (%i,%i,%i,%i)\n",
-						position.x,position.y,position.w,position.h);
+//				printf("Dibujando entidad: position:(x,y,w,h) = (%i,%i,%i,%i)\n",
+//						position.x,position.y,position.w,position.h);
 	
 				/* Rectangulo para recortar la textura */
 				frame.w = position.w;
 				frame.h = position.h;
 				frame.y = frame.h * data.body[i].sprite;
 				frame.x = frame.w * data.body[i].frame;
-				printf("Dibujando entidad: recorte:(x,y,w,h) = (%i,%i,%i,%i)\n",
-						frame.x,frame.y,frame.w,frame.h);
+//				printf("Dibujando entidad: recorte:(x,y,w,h) = (%i,%i,%i,%i)\n",
+//						frame.x,frame.y,frame.w,frame.h);
 	
 				/* Dibujamos */
 				SDL_RenderCopy(
@@ -157,7 +187,7 @@ void static game_render(game_t *g){
 			}
 		}
 	}
-	printf("game_render(): Salio render:%u\n",g->status);
+//	printf("game_render(): Salio render:%u\n",g->status);
 }
 
 
@@ -291,8 +321,8 @@ void game_play(game_t *g){
 	void pause_game(game_t *g){
 		req_t req;
 		req_init(&req);
-		req_fill(&req,C_GAME_PAUSE,0);
-		printf("Enviamos pausar\n");
+		req_fill(&req,C_GAME_PAUSE,BODY_REQ_0);
+	//	printf("Enviamos pausar\n");
 		tcp_client_send(g->command_cli,&req,NULL);
 		game_set_status(g,PAUSE);
 		req_destroy(&req);
@@ -308,7 +338,7 @@ void game_play(game_t *g){
 	text_set(&debug,"Jugando");
 
 	req_init(&req);
-	req_fill(&req,C_KEY_PRESS,4);
+	req_fill(&req,C_KEY_PRESS,BODY_REQ_KP); //4
 	req.body = (req_kp_t*)malloc(sizeof(req_kp_t));
 	g->screen_frame = 0;
 	while(g->status == PLAYING){
@@ -414,7 +444,7 @@ void game_connect(game_t *g){
 				game_start_udp_server(gg);
 				game_set_status(gg,CONNECTED);
 				end = true;
-				req_fill(&req,C_CONNECT_2,0);
+				req_fill(&req,C_CONNECT_2,BODY_REQ_0);
 				tcp_client_send(gg->command_cli,&req,NULL);
 			} else {
 				switch(res->header.resp){
@@ -449,7 +479,7 @@ void game_connect(game_t *g){
 		}
 		printf("Enviando udp y version\n");
 		req_init(&req);
-		req_fill(&req,C_CONNECT_1,sizeof(req_connect_t));
+		req_fill(&req,C_CONNECT_1,BODY_REQ_CONNECT); //sizeof(req_connect_t)
 		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
 
 		((req_connect_t*)(req.body))->udp = gg->udp;
@@ -530,7 +560,7 @@ void game_main_menu(game_t *g){
 			tcp_client_disconnect(gg->command_cli);
 		}
 		req_init(&req);
-		req_fill(&req,C_DISCONNECT,0);
+		req_fill(&req,C_DISCONNECT,BODY_REQ_0);
 		printf("Enviamos desconectarnos\n");
 		tcp_client_send(gg->command_cli,&req,&server_response_handle);
 		printf("Enviamos desconectarnos. Recibimos respuesta\n");
@@ -556,7 +586,7 @@ void game_main_menu(game_t *g){
 
 		/* Enviar mensaje para iniciar el juego */
 		req_init(&req);
-		req_fill(&req,C_GAME_START,0);
+		req_fill(&req,C_GAME_START,BODY_REQ_0);
 		tcp_client_send(gg->command_cli,&req,&server_response_handle);
 		req_destroy(&req);
 	}
@@ -666,22 +696,27 @@ void game_pause(game_t *g){
 	/* Continuar juego */
 	void resume_game(game_t *g){
 		req_t req;
+		void server_response_handle(res_t *res){
+			game_set_status(g,PLAYING);
+		}
+
 		req_init(&req);
-		req_fill(&req,C_GAME_RESUME,0);
+		req_fill(&req,C_GAME_RESUME,BODY_REQ_0);
 		printf("Enviamos continuar\n");
-		tcp_client_send(g->command_cli,&req,NULL);
-		game_set_status(g,PLAYING);
+		tcp_client_send(g->command_cli,&req,&server_response_handle);
 		req_destroy(&req);
 	}
 
 	/* Terminar juego */
 	void end_game(game_t *g){
 		req_t req;
+		void server_response_handle(res_t *res){
+			game_set_status(g,CONNECTED);
+		}
 		req_init(&req);
-		req_fill(&req,C_GAME_STOP,0);
+		req_fill(&req,C_GAME_STOP,BODY_REQ_0);
 		printf("Enviamos terminar\n");
-		tcp_client_send(g->command_cli,&req,NULL);
-		game_set_status(g,CONNECTED);
+		tcp_client_send(g->command_cli,&req,&server_response_handle);
 		req_destroy(&req);
 	}
 

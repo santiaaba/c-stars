@@ -44,7 +44,6 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 
 	/* Enviamos el mensaje */
 	printf("----------------------------\n");
-	printf("Enviamos el mensaje\n");
 	bytes = send(cs->sockfd,&buffer,size,0);
 	printf("Bytes enviados: %i\n",bytes);
 	if(bytes < 0){
@@ -54,7 +53,7 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	/* Recibimos la respuesta */
 	if(handle_res != NULL){
 		bytes = recv(cs->sockfd,buffer,MAX_BUFFER,0);
-		printf("bytes recibidos: %i\n",bytes);
+		printf("bytes recibidos(MAX_BUFFER=%i): %i\n",MAX_BUFFER,bytes);
 		eaeapp_char2res(&res,buffer);
 		printf("Paso el eaeapp\n");
 		handle_res(&res);

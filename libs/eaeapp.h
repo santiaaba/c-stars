@@ -1,6 +1,7 @@
 #ifndef EAEAPP_H
 #define EAEAPP_H
 
+#include <time.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,6 +38,16 @@
 #define C_GAME_RESUME	9
 #define C_GAME_STATUS	10
 
+/* Tamaño de los body de las preguntas y respuestas */
+#define BODY_RES_0				0
+#define BODY_RES_VERSION		1
+#define BODY_RES_STATUS			8
+
+#define BODY_REQ_0				0
+#define BODY_REQ_CONNECT		4
+#define BODY_REQ_KP				4
+
+/* Las diferentes respuestas */
 #define RES_OK						20
 #define RES_ERROR_PORT			40
 #define RES_ERROR_VERSION		41
@@ -128,7 +139,7 @@ void res_init(res_t *res);
 void req_destroy(req_t *req);
 void res_destroy(res_t *res);
 void req_fill(req_t *req, uint8_t cod, uint16_t size);
-void res_fill(res_t *res, uint8_t cod, uint8_t resp, uint16_t size);
+void res_fill(res_t *res, uint8_t cod, uint8_t resp, uint16_t size, uint32_t qid);
 
 void printb(char *buffer, int size);
 

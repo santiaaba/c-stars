@@ -61,16 +61,16 @@ bool border_into_limits(border_t *border, rect_t *limit, int32_t add_x, int32_t 
 	bool into=true;
 	uint32_t x,y;
 	rect_t rect;
-	printf("border_into_limits() - size: %i\n",lista_size(border->lista));
+//	printf("border_into_limits() - size: %i\n",lista_size(border->lista));
 	lista_first(border->lista);
 	while(!lista_eol(border->lista) && into){
 		rect_copy(&rect,(rect_t*)lista_get(border->lista));
 		rect_get_point(&rect,&x,&y);
 		rect_set_point(&rect,x + border->xx + add_x,y + border->yy + add_y);
 		into = rect_into_rect(limit,&rect);
-		printf("border_into_limits(x,y,w,h):(%i,%i,%i,%i) into (%i,%i,%i,%i) = %i\n",
-				 rect.x, rect.y, rect.width, rect.height,
-				 limit->x,limit->y,limit->width,limit->height,into);
+//		printf("border_into_limits(x,y,w,h):(%i,%i,%i,%i) into (%i,%i,%i,%i) = %i\n",
+//				 rect.x, rect.y, rect.width, rect.height,
+//				 limit->x,limit->y,limit->width,limit->height,into);
 		lista_next(border->lista);
 	}
 	return into;

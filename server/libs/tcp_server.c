@@ -80,29 +80,32 @@ void *tcp_server_start(void *server){
 					fprintf(stderr, "recv() header failed: %s\n",
 						strerror(errno));
 					tcp_server_close(s,&confd);
-				}
-				printf("bytes recibidos: %i\n",bytes);
-				eaeapp_char2req(&req,buffer);
-
-				/* Ya tenemos todos los datos. Ejecutamos el protocolo */
-				server_protocol_handle(s->game, inet_ntoa(s->clientaddr.sin_addr),&req, &res);
-				
-				/* El único mensaje que no retorna respuesta es el que
-					informa la presión de una tecla */
-
-				if(res.header.cod != C_KEY_PRESS){
-					printf("Respuesta COD: %u\n",res.header.cod);
-					/* Respondemos al cliente */
-					eaeapp_res2char(&res,buffer,&size);
-					bytes = send(confd,buffer,size,0);
-					if(bytes < 0){
-						printf("Error al enviar la respuesta\n");
-						fprintf(stderr, "recv() failed: %s\n", strerror(errno));
+				} else {
+					printf("bytes recibidos: %i\n",bytes);
+					eaeapp_char2req(&req,buffer);
+	
+					/* Ya tenemos todos los datos. Ejecutamos el protocolo */
+					server_protocol_handle(s->game, inet_ntoa(s->clientaddr.sin_addr),&req, &res);
+					
+					/* Los dos únicos mensajes provenientes del cliente que no
+						esperan respuesta por parte del servidor. Son:
+						C_KEY_PRESS y C_CONNECT_2 */
+	
+					if(res.header.cod != C_KEY_PRESS && res.header.cod != C_CONNECT_2){
+						printf("Respuesta COD: %u\n",res.header.cod);
+						/* Respondemos al cliente */
+						eaeapp_res2char(&res,buffer,&size);
+						printf("Enviando respuesta size : %i\n",size);
+						bytes = send(confd,buffer,size,0);
+						if(bytes < 0){
+							printf("Error al enviar la respuesta\n");
+							fprintf(stderr, "recv() failed: %s\n", strerror(errno));
+						}
+						printf("Bytes enviados: %i\n", bytes);
+						printf("-------------------------------\n\n");
+						if(req.header.cod == C_DISCONNECT)
+							tcp_server_close(s,&confd);
 					}
-					printf("Bytes enviados: %i\n", bytes);
-					printf("-------------------------------\n\n");
-					if(req.header.cod == C_DISCONNECT)
-						tcp_server_close(s,&confd);
 				}
 			}  //While coneccion establecida
 		}	//If accept

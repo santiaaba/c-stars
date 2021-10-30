@@ -100,30 +100,30 @@ void ship_set_position(ship_t *ship, int32_t x, int32_t y){
 void ship_move(ship_t *ship){
 	/* Modificamos el vector de movimiento
 		si la ia lo ordenase */
-	printf("ship_move() - (%i,%i)\n",
-		ship->position->x,ship->position->y);
+//	printf("ship_move() - (%i,%i)\n",
+//		ship->position->x,ship->position->y);
 	if(ship -> ia_activated){
 		ia_drive_ship(ship->ia, ship);
 	}
 	animation_next(&(ship->animation));
 	/* Actualizamos su posicion */
 	if(ship->limited){
-			printf("ship_move(): limited\n");
+//			printf("ship_move(): limited\n");
 		/* Solo permitimos modificar la posición si
 			los bordes que definen la nave estan a 15px
 			del borde */
 		if(!border_into_limits(ship->border,&(ship->limits),
 				vector_x(ship->vector),vector_y(ship->vector))){
-			printf("FUERA DE LOS LIMITES\n");
+//			printf("FUERA DE LOS LIMITES\n");
 			return;
 		}
 	}
 
-	printf("ship_move() ----> (M:%f,D:%f)=(%i,%i) ----> ",
-		ship->vector->modulo,ship->vector->direccion,
-		vector_x(ship->vector),vector_y(ship->vector));
+//	printf("ship_move() ----> (M:%f,D:%f)=(%i,%i) ----> ",
+//		ship->vector->modulo,ship->vector->direccion,
+//		vector_x(ship->vector),vector_y(ship->vector));
 	point_add_vector(ship->position,ship->vector);
-	printf("(%i,%i)\n",ship->position->x,ship->position->y);
+	//printf("(%i,%i)\n",ship->position->x,ship->position->y);
 
 	border_set_point(ship->border,ship->position->x,ship->position->y);
 }
@@ -179,22 +179,14 @@ void ship_ia_activate(ship_t *ship){
 }
 
 void ship_destroy(ship_t *ship){
-	printf("ship_destroy():position\n");
 	point_destroy(ship->position);
-	printf("ship_destroy():border\n");
 	border_destroy(ship->border);
-	printf("ship_destroy():vector\n");
 	vector_destroy(ship->vector);
-	printf("ship_destroy():ia\n");
 	ia_destroy(ship->ia);
 
-	printf("ship_destroy():free position\n");
 	free(ship->position);
-	printf("ship_destroy():free border\n");
 	free(ship->border);
-	printf("ship_destroy():free vector\n");
 	free(ship->vector);
-	printf("ship_destroy():free ia\n");
 	free(ship->ia);
 }
 
@@ -228,34 +220,28 @@ void ia_init(ia_t *ia, clockgame_t *clock){
 }
 
 void ia_start(ia_t *ia){
-	printf("ia_start()\n");
 	lista_first(ia->path);
 	ia -> time_start = clockgame_time(ia->clock);
 }
 
 void ia_add_path( ia_t *ia, uint16_t instant,
 					 uint32_t direction, uint32_t speed){
-	printf("ia_add_path(): Cargando vector\n");
 	ia_mov_t *mov;
 	mov = (ia_mov_t *)malloc(sizeof(ia_mov_t));
 	vector_set(&(mov->vector),vector_grad_to_rad(direction),speed);
 	mov->instant = instant;
-	printf("ia_add_path(): Agregando vector a la lista\n");
 	lista_add(ia->path,mov);
-	printf("ia_add_path(): Vector agregado\n");
 }
 
 void ia_drive_ship(ia_t *ia, ship_t *ship){
 	if(!lista_eol(ia->path)){
-		printf("ia_drive_ship(): Existen aun rutas\n");
 		if(((ia_mov_t*)lista_get(ia->path))->instant + ia->time_start
 			<= clockgame_time(ia->clock)){
-			printf("ia_drive_ship(): Ruta aplicada\n");
 			ship_set_vector(ship,&(((ia_mov_t*)(lista_get(ia->path)))->vector));
 			lista_next(ia->path);
 		}
 	} else {
-		printf("ia_drive_ship(): NO hay mas rutas. Eliminamos nave\n");
+		//printf("ia_drive_ship(): NO hay mas rutas. Eliminamos nave\n");
 		/* Si no hay mas elementos en la lista entonces seteamos
 			el estado de la nave para que sea destruida. Ésto
 			implica que todo path de las naves debe tener al

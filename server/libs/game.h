@@ -4,7 +4,7 @@
 #define BUFFER_SIZE			200			/* elementos a renderizar */
 #define MAX_UDP_BUFFER		200			/* Tamano maximo de buffer UDP */
 //#define GAME_SLEEP			66
-#define FXS						10		/*Fotogramas por segundo */
+#define FXS						2		/*Fotogramas por segundo */
 #define EVENT_LIMIT_SIZE	10
 #define SCREEN_WIDTH			1024
 #define SCREEN_HEIGHT		600

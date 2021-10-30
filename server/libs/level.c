@@ -89,12 +89,12 @@ void level_run(level_t *l, lista_t *enemies){
 		ordenados por tiempo de lanzamiento asi que podemos
 		recorrer la lista solo hasta encontrar el que tiene
 		tiempo mayor a clockgame */
-	printf("level_run() - tamano lista: %u\n",lista_size(l->attacks));
+//	printf("level_run() - tamano lista: %u\n",lista_size(l->attacks));
 	lista_first(l->attacks);
 	if(!lista_eol(l->attacks)){
-		printf("level_run() - Primer valor time:%u , clock:%u\n",
-			((attack_t*)lista_get(l->attacks))->time,
-			clockgame_time(l->clockgame));
+//		printf("level_run() - Primer valor time:%u , clock:%u\n",
+//			((attack_t*)lista_get(l->attacks))->time,
+//			clockgame_time(l->clockgame));
 	}
 	while(!lista_eol(l->attacks) &&
 			(((attack_t*)lista_get(l->attacks))->time <=
