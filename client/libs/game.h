@@ -18,6 +18,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include "../../libs/eaeapp.h"
+#include "../../libs/types.h"
 #include "../../libs/game_state.h"
 #include "../../libs/level_state.h"
 #include "./tcp_client.h"
@@ -27,7 +28,7 @@
 #define SCREEN_HEIGHT	600
 #define SCREEN_BPP		24
 #define SCREEN_REFRESH	60
-#define CANT_TEXTURES	5
+#define CANT_TEXTURES	3
 
 /* EStados del cliente */
 #define HELLO				0		// Pantalla de presentacion
@@ -43,12 +44,12 @@ typedef struct{
 	SDL_Texture *texture;
 	int w;	/* ancho del tile */
 	int h;	/* alto del tile */
-} entities_t;
+} entitie_t;
 
 typedef struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	entities_t entities[CANT_TEXTURES];		// Texturas
+	entitie_t entities[CANT_TEXTURES];		// Texturas
 	uint16_t screen_frame;						// Frame actual
 	int status;							// Estado del cliente
 	bool status_in_progress;

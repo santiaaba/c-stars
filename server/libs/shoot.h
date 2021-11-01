@@ -10,11 +10,15 @@
 #ifndef SHOOT_H
 #define SHOOT_H
 
-/* Los 20 y 30 son tipos de naves. ver ship.h.
-Los 0 y 10 son tipos de disparos. */
+#define SHOOT_LIVE		1
+#define SHOOT_DESTROY	2
+#define SHOOT_END			3
 
+/* Los 20 y 30 son tipos de naves. ver types.h.
+Los 0 y 10 son tipos de disparos. */
 typedef struct t_shoot{
 	int type;
+	int state;
 	uint32_t damage;
 	point_t *position;
 	animation_t animation;
@@ -36,6 +40,9 @@ void shoot_set_animation(shoot_t *shoot, uint8_t sprite,
 
 /* Retorna las coordenadas del disparo */
 point_t *shoot_get_position(shoot_t *shoot);
+
+uint8_t shoot_get_state(shoot_t *shoot);
+void shoot_set_state(shoot_t *shoot, uint8_t status);
 
 /* Mueve el disparo */
 void shoot_go(shoot_t *shoot);

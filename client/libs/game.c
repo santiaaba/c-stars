@@ -2,30 +2,24 @@
 
 int static game_load_textures(game_t *g){
 	/* Carga todas las texturas en el array */
+	void load_entity(entitie_t *e, int w, int h, char *filename, SDL_Renderer *renderer){
+		e->w = w;
+		e->h = h;
+		e->texture = IMG_LoadTexture(renderer, filename);
+	}
 
 	//Player1
-	g->entities[0].w = 64;
-	g->entities[0].h = 88;
-	printf("game_load_texture(): paso\n");
-	g->entities[0].texture = IMG_LoadTexture(g->renderer, "img/player.png");
-	printf("game_load_texture(): paso\n");
-	if(g->entities[0].texture == NULL){
-		printf("Error al cargar la textura player.png\n");
+	load_entity(&(g->entities[SHIP_PLAYER]),64,88,"img/player.png",g->renderer);
+	if(g->entities[SHIP_PLAYER].texture == NULL)
 		return 0;
-	}
-
 	// Enemie 1
-	g->entities[1].w = 133;
-	g->entities[1].h = 138;
-	printf("game_load_texture(): paso\n");
-	g->entities[1].texture = IMG_LoadTexture(g->renderer, "img/enemigo1.png");
-	printf("game_load_texture(): paso\n");
-	if(g->entities[0].texture == NULL){
-		printf("Error al cargar la textura enemigo1.png\n");
+	load_entity(&(g->entities[SHIP_ENEMIE1]),133,138,"img/enemigo1.png",g->renderer);
+	if(g->entities[SHIP_ENEMIE1].texture == NULL)
 		return 0;
-	}
-	printf("Texturas cargadas\n");
-	return 1;
+	//Shoot 1
+	load_entity(&(g->entities[SHOOT_1]),25,25,"img/shoot1.png",g->renderer);
+	if(g->entities[SHOOT_1].texture == NULL)
+		return 0;
 }
 
 int game_init(game_t *g){
@@ -69,20 +63,6 @@ int game_init(game_t *g){
 
 	printf("Cargando texturas\n");
 	game_load_textures(g);
-}
-
-int static game_map_texture(uint16_t idEntity){
-	switch(idEntity){
-		case 20: return 0;	// Player
-		case 21: return 1;	// Enemie 1
-		case 22: return -1;	// Enemie 2
-		case 23: return -1;	// Enemie 3
-
-		case 0: return -1;		// Shoot 1
-		case 1: return -1;		// Shoot 2
-		case 2: return -1;		// Shoot 3
-		default: return -1;
-	}
 }
 
 int game_check_connect(){
@@ -151,7 +131,7 @@ void static game_render(game_t *g){
 			SDL_RenderClear(g->renderer);
 		}
 		for(int i=0;i<data.header.size;i++){
-			index_entity = game_map_texture(data.body[i].entity_class);
+			index_entity = data.body[i].entity_class;
 //			printf("Dibujando entidad en index: %i\n",index_entity);
 			if(index_entity != -1){
 				/* Rectangulo para dibujar en pantalla */

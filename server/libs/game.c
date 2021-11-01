@@ -130,6 +130,8 @@ void static game_handle_events(game_t *g){
 						printf("game_handle_events(): KEY_DOWN SPACE\n");
 						ship_shooting(g->player,true);
 						break;
+					default:
+						printf("game_handle_events(): KEY_DOWN Cualquier otra tecla\n");
 				}
 				break;
 			case K_UP:
@@ -155,6 +157,8 @@ void static game_handle_events(game_t *g){
 						printf("game_handle_events(): KEY_UP SPACE\n");
 						ship_shooting(g->player,false);
 						break;
+					default:
+						printf("game_handle_events(): KEY_UP Cualquier otra tecla\n");
 				}
 		}
 		if(g->direction.left || g->direction.right ||
@@ -247,6 +251,7 @@ void static game_playing_level(game_t *g){
 	struct timespec rem;
 	int cantfotograms;
 	ship_t *ship;
+	shoot_t *shoot;
 	data_render_t data;
 
 	req.tv_sec = (1000/FXS) / 1000;
@@ -262,11 +267,12 @@ void static game_playing_level(game_t *g){
 
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
-		printf("game_playing_level(): RELOJ: %u\n",clockgame_time(g->clock));
+		//printf("game_playing_level(): RELOJ: %u\n",clockgame_time(g->clock));
 		/* Gestionamos enemigos */
 		lista_first(g->enemies);
 		while(!lista_eol(g->enemies)){
 			ship = lista_get(g->enemies);
+			//printf("ship(x,y):(%i,%i)\n",ship->position->x,ship->position->y);
 			switch(ship_get_state(ship)){
 				case SHIP_LIVE:
 					ship_go(ship);
@@ -311,32 +317,45 @@ void static game_playing_level(game_t *g){
 		/* Gestionamos disparos jugador */
 		lista_first(g->shoot_player);
 		while(!lista_eol(g->shoot_player)){
-			ACA ME QUEDE. HAY QUE HACER LO MISMO QUE CON LAS NAVES
-			VERIFICAR EL ESTADO Y ACCIONAR SEGUN EL MISMO
-
-			shoot_go(lista_get(g->shoot_player));
-			lista_first(g->shoot_player);
-			while(!lista_eol(g->shoot_player)){
-				ship_colision_shoot(	lista_get(g->enemies),
-											lista_get(g->shoot_player));
-				lista_next(g->shoot_player);
+			shoot = lista_get(g->shoot_player);
+			switch(shoot_get_state(shoot)){
+				case SHOOT_LIVE:
+					printf("shoot(x,y):(%i,%i)\n",shoot->position->x,shoot->position->y);
+					shoot_go(shoot);
+					/* Calculamos colición con naves enemigas */
+					lista_first(g->enemies);
+					while(!lista_eol(g->enemies)){
+						ship = lista_get(g->enemies);
+						if(ship_colision_shoot(ship,shoot)){
+							ship_set_power(ship, ship_get_power(ship) -
+								shoot_get_damage(shoot));
+							if(ship_get_power(ship) < 0)
+								ship_set_state(ship,SHIP_DESTROY);
+							shoot_set_state(shoot,SHOOT_DESTROY);
+						}
+						lista_next(g->enemies);
+					}
+					lista_next(g->shoot_player);
+					break;
+				case SHOOT_DESTROY:
+					if(animation_end(&(shoot->animation)))
+						shoot_set_state(shoot,SHOOT_END);
+					else
+						animation_next(&(shoot->animation));
+					shoot_render(shoot,&data);
+					game_send_data(g,&data,false);
+					lista_next(g->shoot_player);
+					break;
+				case SHOOT_END:
+					shoot = lista_remove(g->shoot_player);
+					shoot_destroy(shoot);
+					free(shoot);
 			}
-			lista_next(g->shoot_player);
 		}
-	
-		/* Movemos disparos enemigos */
-		lista_first(g->shoot_enemies);
-		while(!lista_eol(g->shoot_enemies)){
-			shoot_move(lista_get(g->shoot_enemies));
-			/* Calculamos colision con jugador */
-			ship_colision_shoot(g->player,lista_get(g->shoot_enemies));
-			lista_next(g->shoot_enemies);
-		}
-	
+		/* Nave del jugador */
 		ship_go(g->player);
 		ship_render(g->player,&data);
 		game_send_data(g,&data,false);
-	
 		switch(level_get_state(g->level)){
 			case L_INGRESS:
 				/* Si level esta en L_INGRESS, lo pasamos a L_PLAYING

@@ -28,6 +28,7 @@ void weapon_shooting(weapon_t *weapon, bool shooting){
 bool weapon_shoot(weapon_t *weapon){
 	shoot_t *shoot;
 
+	printf("Disparamos?: %i\n",weapon->shooting);
 	if(weapon->shooting){
 		if(clockgame_time(weapon->clockgame) > weapon->last_shoot + weapon->frecuence){
 			shoot = (shoot_t*)malloc(sizeof(shoot_t));

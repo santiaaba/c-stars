@@ -62,6 +62,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 }
 
 void ship_shooting(ship_t *ship, bool on){
+	printf("ship_shooting(): %i\n",on);
 	weapon_shooting(&(ship->weapon),on);
 }
 
@@ -162,6 +163,7 @@ void ship_border_add(ship_t *ship, int32_t x, int32_t y,
 }
 
 uint32_t ship_get_power(ship_t *ship){
+	return ship->power;
 }
 
 void ship_set_power(ship_t *ship, uint32_t power){

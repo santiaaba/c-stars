@@ -79,8 +79,8 @@ void ship_set_limits(ship_t *ship,int limit_bottom, int limit_right);
 void ship_remove_limits(ship_t *ship);
 
 /* Mueve la nave. Ejecuta la instaucción de la ia
-	si esta esta activada */
-void ship_move(ship_t *ship);
+	si esta esta activada. Anima la nave */
+void ship_go(ship_t *ship);
 
 /* Agrega un rectandulo al borde de la nave. Se debe
    realizar luego del init cuando la nave esta en el punto

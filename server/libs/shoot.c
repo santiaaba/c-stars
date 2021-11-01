@@ -23,6 +23,8 @@ void shoot_init(shoot_t *shoot, int type,
 	point_set(shoot->position,x,y);
 	border_set_point(shoot->border,x,y);
 
+	shoot->state = SHOOT_LIVE;
+
 	switch(type){
 		case SHOOT_1:
 			shoot->damage = 10;
@@ -36,6 +38,14 @@ void shoot_init(shoot_t *shoot, int type,
 void shoot_set_animation(shoot_t *shoot, uint8_t sprite,
    uint8_t frame_size, bool loop){
    animation_init(&(shoot->animation),sprite,frame_size, loop);
+}
+
+uint8_t shoot_get_state(shoot_t *shoot){
+	return shoot->state;
+}
+
+void shoot_set_state(shoot_t *shoot, uint8_t state){
+	shoot->state = state;
 }
 
 void shoot_set_position(shoot_t *shoot, int32_t x, int32_t y){
