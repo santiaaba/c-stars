@@ -7,13 +7,8 @@
 	* Secuencia de aparición de las naves enemigas
 */
 
-/* Estado de los estados */
-#define L_INGRESS		0
-#define L_PLAYING		1
-#define L_EGRESS		2
-#define L_END			3
-
 #include <stdint.h>
+#include "../../libs/level_state.h"
 #include "../../libs/lista.h"
 #include "ship.h"
 #include "clockgame.h"
@@ -34,7 +29,7 @@ typedef struct t_level{
 
 /* Inicializa la estructura del nivel */
 void level_init(level_t *l, clockgame_t *clockgame);
-void level_load(level_t *l, uint8_t id);
+void level_load(level_t *l, uint8_t id, lista_t *shoots_enemies);
 /* Corre el nivel */
 void level_run(level_t *l, lista_t *enemies);
 /* Destruye las estructuras internas del level */

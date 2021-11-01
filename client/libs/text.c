@@ -7,12 +7,8 @@ void text_init(text_t *text, int x, int y, int size,
 
 	text->dest.x = x;
 	text->dest.y = y;
-
 	text->renderer = renderer;
-	text->font = TTF_OpenFont(FONT, size);
-	if(!text->font)
-		printf("TTF_OpenFont: %s\n", TTF_GetError());	
-
+	text->size = size;
 	text->color.r = 220;
 	text->color.g = 220;
 	text->color.b = 220;
@@ -26,10 +22,18 @@ void text_draw(text_t *text){
 
 void text_set(text_t *text, char *value){
 	SDL_Surface* surface;
-	surface = TTF_RenderText_Solid(text->font, value, text->color); 
+	TTF_Font *font;
+
+	font = TTF_OpenFont(FONT, text->size);
+	if(!font)
+		printf("TTF_OpenFont: %s\n", TTF_GetError());	
+
+	surface = TTF_RenderText_Solid(font, value, text->color); 
 	text->message = SDL_CreateTextureFromSurface(text->renderer, surface);
 	SDL_FreeSurface(surface);
 	SDL_QueryTexture(text->message, NULL,NULL, &(text->dest.w), &(text->dest.h));
+
+	TTF_CloseFont(font);
 }
 
 void text_destroy(text_t *text){

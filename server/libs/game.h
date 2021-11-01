@@ -3,8 +3,8 @@
 
 #define BUFFER_SIZE			200			/* elementos a renderizar */
 #define MAX_UDP_BUFFER		200			/* Tamano maximo de buffer UDP */
-//#define GAME_SLEEP			66
-#define FXS						2		/*Fotogramas por segundo */
+#define CANT_LEVELS			1
+#define FXS						15		/*Fotogramas por segundo */
 #define EVENT_LIMIT_SIZE	10
 #define SCREEN_WIDTH			1024
 #define SCREEN_HEIGHT		600
@@ -39,21 +39,16 @@ Son en total 8 bytes
 #include "point.h"
 #include "ship.h"
 #include "shoot.h"
+#include "vector.h"
 #include "level.h"
 #include "game.h"
 #include "clockgame.h"
+#include "../../libs/game_state.h"
 #include "../../libs/eaeapp.h"
+#include "../../libs/types.h"
 #include "../../libs/game_info.h"
 
 #define G_MAX_ENTITY		100 //Cantidad maxima de entidades permitidas
-
-#define	G_WAIT_CONNECT				0
-#define	G_CONNECT_STEP_ONE		1
-#define	G_READY						2
-#define	G_PLAYING					3
-#define	G_PAUSE						4
-#define	G_STOP						5
-#define	G_LEAVE						6
 
 #define K_TOP					82
 #define K_BOTTOM				81
@@ -97,6 +92,7 @@ typedef struct {
 	lista_t *shoot_enemies;
 	lista_t *shoot_player;
 	level_t *level;
+	int level_current;				/* Nivel actual */
 	clockgame_t *clock;
 	int sockfd;
 	struct sockaddr_in servaddr;

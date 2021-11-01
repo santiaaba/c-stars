@@ -13,8 +13,8 @@
 
 typedef struct {
 	SDL_Rect dest;
-	TTF_Font *font;
 	SDL_Color color;
+	int size;
 	SDL_Texture *message;
 	SDL_Renderer *renderer;
 } text_t;

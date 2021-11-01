@@ -59,7 +59,7 @@ void static req_key_press(game_t *g, req_t *req, res_t *res){
 }
 
 void static req_game_start(game_t *g, req_t *req, res_t *res){
-	/* Inicia el nivel indicado. */
+	/* Inicia el juego. */
 	printf("GAME STATE: %i\n",game_get_state(g));
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
 	if(game_get_state(g) != G_READY){
@@ -71,7 +71,7 @@ void static req_game_start(game_t *g, req_t *req, res_t *res){
 	game_start(g);
 }
 
-void static req_game_stop(game_t *g, req_t *req, res_t *res){
+void static req_game_over(game_t *g, req_t *req, res_t *res){
 	/* Finaliza el juego. */
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
 	if(game_get_state(g) != G_PAUSE ||
@@ -80,7 +80,7 @@ void static req_game_stop(game_t *g, req_t *req, res_t *res){
 			return;
 	}
 	res->header.resp = RES_OK;
-	game_stop(g);
+	game_over(g);
 }
 
 void static req_game_pause(game_t *g, req_t *req, res_t *res){
@@ -152,7 +152,7 @@ void server_protocol_handle(game_t *g, char *ip, req_t *req, res_t *res){
 			break;
 		case C_GAME_STOP:
 			/* Detiene el juego */
-			req_game_stop((game_t *)g,req,res);
+			req_game_over((game_t *)g,req,res);
 			break;
 		case C_GAME_PAUSE:
 			/* Pausa el juego */

@@ -1,6 +1,6 @@
 #include "ship.h"
 
-void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
+void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 
 	rect_t *create_rect(int32_t x, int32_t y, uint32_t width, uint32_t height){
 		rect_t *newRect;
@@ -36,7 +36,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 
 	/* Asignamos los bordes y las animaciones de inicio */
 	switch(type){
-		case PLAYER:
+		case SHIP_PLAYER:
 			rect = create_rect(21,4,21,80);
 			border_add_rect(ship->border,rect);
 			rect = create_rect(42,17,17,53);
@@ -45,8 +45,9 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			border_add_rect(ship->border,rect);
 			animation_init(&(ship->animation),0,0,false);
 			ship->limited = true;
+			weapon_init(&(ship->weapon),WEAPON_1,10,clock,false,GRAD_0,100,62,43,shoots);
 			break;
-		case ENEMIE1:
+		case SHIP_ENEMIE1:
 			rect = create_rect(27,8,82,45);
 			border_add_rect(ship->border,rect);
 			rect = create_rect(15,56,11,29);
@@ -55,8 +56,13 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock){
 			border_add_rect(ship->border,rect);
 			animation_init(&(ship->animation),0,0,false);
 			ship->limited = false;
+			weapon_init(&(ship->weapon),WEAPON_1,10,clock,true,GRAD_180,100,0,69,shoots);
 			break;
 	}
+}
+
+void ship_shooting(ship_t *ship, bool on){
+	weapon_shooting(&(ship->weapon),on);
 }
 
 void ship_set_limits(ship_t *ship,int limit_bottom, int limit_right){
@@ -97,35 +103,32 @@ void ship_set_position(ship_t *ship, int32_t x, int32_t y){
 	border_set_point(ship->border,x,y);
 }
 
-void ship_move(ship_t *ship){
+void ship_go(ship_t *ship){
 	/* Modificamos el vector de movimiento
 		si la ia lo ordenase */
-//	printf("ship_move() - (%i,%i)\n",
-//		ship->position->x,ship->position->y);
 	if(ship -> ia_activated){
 		ia_drive_ship(ship->ia, ship);
 	}
 	animation_next(&(ship->animation));
 	/* Actualizamos su posicion */
 	if(ship->limited){
-//			printf("ship_move(): limited\n");
 		/* Solo permitimos modificar la posición si
 			los bordes que definen la nave estan a 15px
 			del borde */
 		if(!border_into_limits(ship->border,&(ship->limits),
 				vector_x(ship->vector),vector_y(ship->vector))){
-//			printf("FUERA DE LOS LIMITES\n");
 			return;
 		}
 	}
 
-//	printf("ship_move() ----> (M:%f,D:%f)=(%i,%i) ----> ",
-//		ship->vector->modulo,ship->vector->direccion,
-//		vector_x(ship->vector),vector_y(ship->vector));
+	//	printf("ship_move() ----> (M:%f,D:%f)=(%i,%i) ----> ",
+	//		ship->vector->modulo,ship->vector->direccion,
+	//		vector_x(ship->vector),vector_y(ship->vector));
 	point_add_vector(ship->position,ship->vector);
 	//printf("(%i,%i)\n",ship->position->x,ship->position->y);
-
 	border_set_point(ship->border,ship->position->x,ship->position->y);
+	
+	weapon_shoot(&(ship->weapon));
 }
 
 void ship_set_vector(ship_t *ship, vector_t *vector){
@@ -195,12 +198,14 @@ void ship_set_animation(ship_t *ship, uint8_t sprite,
 	animation_init(&(ship->animation),sprite,frame_size, loop);
 }
 
+/*
 void ship_data(ship_t *ship, data_render_t *data){
 	data->entity_class = ship->type;
 	data->pos_x = point_get_x(ship->position);
 	data->pos_y = point_get_y(ship->position);
 	animation_get(&(ship->animation),&(data->sprite),&(data->frame));
 }
+*/
 
 void ship_render(ship_t *ship, data_render_t *data){
 	data->entity_class = ship->type;

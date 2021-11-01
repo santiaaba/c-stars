@@ -1,6 +1,6 @@
 #include "level.h"
 
-void level_load(level_t *l, uint8_t id){
+void level_load(level_t *l, uint8_t id, lista_t *shoots_enemies){
 	FILE *fdIN;
 	ia_t *ia;
 	int16_t num;
@@ -31,7 +31,7 @@ void level_load(level_t *l, uint8_t id){
 		fread(&x,sizeof(int16_t),1,fdIN);	/* coordenadaX */
 		fread(&y,sizeof(int16_t),1,fdIN);	/* coordenadaY */
 		ship = (ship_t*)malloc(sizeof(ship_t));
-		ship_init(ship,num,l->clockgame);
+		ship_init(ship,num,l->clockgame, shoots_enemies);
 		ship_set_position(ship,x,y);
 		printf("Ataque nave tipo: %i, pos:(%i,%i),", num,x,y);
 		fread(&num,sizeof(int16_t),1,fdIN);	/* tiempo en que se lanza*/

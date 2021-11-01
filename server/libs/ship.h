@@ -7,18 +7,16 @@
 #include <stdbool.h>
 #include "vector.h"
 #include "../../libs/eaeapp.h"
+#include "../../libs/types.h"
 #include "border.h"
 #include "rect.h"
+#include "weapon.h"
 #include "shoot.h"
 #include "clockgame.h"
 #include "animation.h"
 
 /* Los 20 y 30 son tipos de naves.
 Los 0 y 10 son tipos de disparos. Ver shoot.h */
-#define PLAYER			20
-#define ENEMIE1		21
-#define ENEMIE2		22
-#define ENEMIE3		23
 
 /* Estados de la nave */
 #define	SHIP_LIVE		0	/* La nave vive */
@@ -44,6 +42,7 @@ typedef struct t_ship{
 	rect_t limits;
 	bool limited;
 	border_t *border;
+	weapon_t weapon;
 	vector_t *vector;
 	animation_t animation;
 //	float speed;
@@ -53,7 +52,7 @@ typedef struct t_ship{
 } ship_t;
 
 /* Inicializa una nave */
-void ship_init(ship_t *ship, uint8_t type, clockgame_t* clockagame);
+void ship_init(ship_t *ship, uint8_t type, clockgame_t* clockagame, lista_t *shoots);
 
 /* Permite colocar la nave en coordenadas especificas */
 void ship_set_position(ship_t *ship, int32_t x, int32_t y);
@@ -63,6 +62,8 @@ void ship_set_speed(ship_t *ship, float speed);
 
 /* Retorna la velocidad de la nave */
 float ship_get_speed(ship_t *ship);
+
+void ship_shooting(ship_t *ship, bool on);
 
 /* Setea la direccion de la nave */
 void ship_set_direction(ship_t *ship, float direction);

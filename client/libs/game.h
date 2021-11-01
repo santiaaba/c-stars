@@ -17,12 +17,13 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-
 #include "../../libs/eaeapp.h"
+#include "../../libs/game_state.h"
+#include "../../libs/level_state.h"
 #include "./tcp_client.h"
 
 #define SRV_PORT			2525
-#define SCREEN_WIDTH	 1024
+#define SCREEN_WIDTH		1024
 #define SCREEN_HEIGHT	600
 #define SCREEN_BPP		24
 #define SCREEN_REFRESH	60
@@ -35,6 +36,8 @@
 #define PLAYING			3		// Pantalla de partida donde se juega
 #define PAUSE				4		// Pausado
 #define END					5		// Finaliza el cliente
+#define END_LEVEL			6		// Finaliza el nivel
+#define END_GAME			7		// Finaliza el juego
 
 typedef struct{
 	SDL_Texture *texture;

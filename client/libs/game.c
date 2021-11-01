@@ -98,24 +98,16 @@ void static game_status(game_t *g){
 	void server_response_handle(res_t *res){
 		sem_wait(&(g->sem_status));
 			g->playing_state = ((res_info_t*)(res->body))->state;
-			printf("game_status(): responsa handle\n");
 			g->score = ((res_info_t*)(res->body))->score;
-			printf("game_status(): responsa handle\n");
 			g->level = ((res_info_t*)(res->body))->level;
-			printf("game_status(): responsa handle\n");
 			g->level_state = ((res_info_t*)(res->body))->level_state;
-			printf("game_status(): responsa handle\n");
-			g->status_in_progress = false;
-			printf("game_status(): responsa handle\n");
 			g->status_in_progress = false;
 		sem_post(&(g->sem_status));
 	}
 
 	req_init(&req);
 	req_fill(&req,C_GAME_STATUS,BODY_REQ_0);
-	printf("Enviando C_GAME_STATUS\n");
 	tcp_client_send(g->command_cli,&req,&server_response_handle);
-	printf("Enviando C_GAME_STATUS END\n");
 }
 
 void static game_render(game_t *g){
@@ -221,28 +213,6 @@ int static game_start_udp_server(game_t *g){
 	}
 	printf("Server UDP iniciado\n");
 	return 1;
-}
-
-void *game_run(game_t *g){
-	printf("Arrancamos GAME\n");
-	while(g->status != END){
-		switch(g->status){
-			case HELLO:
-				game_hello(g);
-				break;
-			case PLAYING:
-				pthread_create(&(g->th_render), NULL, (void*)(void*)(&game_render),g);
-				game_play(g);
-				break;
-			case DISCONNECTED:
-			case CONNECTED:
-				game_main_menu(g);
-				break;
-			case PAUSE:
-				game_pause(g);
-				break;
-		}
-	}
 }
 
 void game_hello(game_t *g){
@@ -409,6 +379,17 @@ void game_play(game_t *g){
 //		SDL_RenderPresent(g->renderer);
 
 		SDL_Delay(SCREEN_REFRESH);
+
+		/* Controlamos el estado del play y del nivel */
+		if(g->playing_state == G_OVER){
+			printf("Cambiamos de estdo a END_GAME\n");
+			game_set_status(g,END_GAME);
+		} else {
+			if(g->level_state == L_END){
+				printf("Cambiamos de estdo a END_LEVEL\n");
+				game_set_status(g,END_LEVEL);
+			}
+		}
 	}
 	text_destroy(&debug);
 }
@@ -534,6 +515,82 @@ void game_connect(game_t *g){
 			/* Dibujar algo que represente la espera */
 		}
 		/* Render pantalla */
+		SDL_RenderPresent(g->renderer);
+		SDL_Delay(SCREEN_REFRESH);
+	}
+}
+
+void static game_end_level(game_t *g){
+
+	SDL_Event event;
+	int key = 0;
+	text_t text_endGame;
+	text_t text_pressEnter;
+	req_t req;
+
+	void server_response_handle(res_t *res){
+		if(res->header.resp == RES_OK){
+			printf("Comenzo el siguiente nivel\n");
+			game_set_status(g,PLAYING);
+		}
+	}
+
+	text_init(&text_endGame,300,300,25,g->renderer);
+	text_init(&text_pressEnter,300,900,25,g->renderer);
+
+	text_set(&text_endGame,"Nivel Finalizado");
+	text_set(&text_pressEnter,"Presione ENTER para siguiente nievel");
+
+	while(g->status == END_LEVEL){
+		SDL_RenderClear(g->renderer);
+		while(SDL_PollEvent(&event)){
+			/* Esperamos se presione enter */
+			if(event.type == SDL_KEYDOWN){
+				key = event.key.keysym.sym;
+				if (key == SDLK_RETURN){
+					printf("Pasamos al siguiente nivel\n");
+					req_init(&req);
+
+					req_fill(&req,C_GAME_RESUME,BODY_REQ_0);
+					tcp_client_send(g->command_cli,&req,&server_response_handle);
+					req_destroy(&req);
+				}
+			}
+		}
+		text_draw(&text_endGame);
+		text_draw(&text_pressEnter);
+		SDL_RenderPresent(g->renderer);
+		SDL_Delay(SCREEN_REFRESH);
+	}
+}
+
+void static game_end_game(game_t *g){
+
+	SDL_Event event;
+	int key = 0;
+	text_t text_endGame;
+	text_t text_pressEnter;
+
+	text_init(&text_endGame,300,200,50,g->renderer);
+	text_init(&text_pressEnter,300,400,20,g->renderer);
+
+	text_set(&text_endGame,"Juego Finalizado");
+	text_set(&text_pressEnter,"Presione ENTER para continuar");
+
+	while(g->status == END_GAME){
+		SDL_RenderClear(g->renderer);
+		while(SDL_PollEvent(&event)){
+			/* Esperamos se presione enter */
+			if(event.type == SDL_KEYDOWN){
+				key = event.key.keysym.sym;
+				if (key == SDLK_RETURN){
+					printf("Pasamos al menu principal\n");
+					game_set_status(g,CONNECTED);
+				}
+			}
+		}
+		text_draw(&text_endGame);
+		text_draw(&text_pressEnter);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}
@@ -764,6 +821,34 @@ void game_pause(game_t *g){
 		SDL_Delay(SCREEN_REFRESH);
 	}
 	menu_destroy;
+}
+
+void *game_run(game_t *g){
+	printf("Arrancamos GAME\n");
+	while(g->status != END){
+		switch(g->status){
+			case HELLO:
+				game_hello(g);
+				break;
+			case PLAYING:
+				pthread_create(&(g->th_render), NULL, (void*)(void*)(&game_render),g);
+				game_play(g);
+				break;
+			case DISCONNECTED:
+			case CONNECTED:
+				game_main_menu(g);
+				break;
+			case END_LEVEL:
+				game_end_level(g);
+				break;
+			case END_GAME:
+				game_end_game(g);
+				break;
+			case PAUSE:
+				game_pause(g);
+				break;
+		}
+	}
 }
 
 void game_free(game_t *g){

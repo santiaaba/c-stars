@@ -5,6 +5,16 @@
 #include <stdint.h>
 #include <math.h>
 
+#define GRAD_0    0
+#define GRAD_45   0.785398
+#define GRAD_90   1.5708
+#define GRAD_135  2.26893
+#define GRAD_180  3.14159
+#define GRAD_225  3.92699
+#define GRAD_270  4.71239
+#define GRAD_315  5.49779
+
+/*
 typedef enum {
    TOP_PRESS,
    TOP_RELEASE,
@@ -19,6 +29,7 @@ typedef enum {
    PAUSE_PRESS,
    START_PRESS
 } direction_t;
+*/
 
 typedef struct t_vector{
 	float modulo;
