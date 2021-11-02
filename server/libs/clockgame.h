@@ -1,19 +1,34 @@
-/* Es un contador de segundos que utilizaremos
+/* Es un contador que utilizaremos
 	para coordinar los eventos del juego. La
-	unidad es el segundo */
+	unidad es la decima de segundo */
 
 #ifndef CLOCKGAME_H
 #define CLOCKGAME_H
 
-#include <stdint.h>
+#define CLOCK_RUN		0
+#define CLOCK_STOP	1
 
-typedef uint16_t clockgame_t;
+#include <pthread.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+typedef struct{
+	pthread_t th;
+	int state;
+	uint32_t time;		// Decimas de segundo
+} clockgame_t;
 
 /* Inicializa el reloj */
 void clockgame_init(clockgame_t *clockgame);
 /* retorna el tiempo actual */
-uint16_t clockgame_time(clockgame_t *clockgame);
+uint32_t clockgame_time(clockgame_t *clockgame);
 /* Incrementa el reloj en los segundos indicados */
-void clockgame_add(clockgame_t *clockgame, uint16_t seconds);
+void clockgame_restore(clockgame_t *clockgame);
+void clockgame_start(clockgame_t *clockgame);
+void clockgame_stop(clockgame_t *clockgame);
+
+/*
+void clockgame_add(clockgame_t *clockgame, uint32_t seconds);
+*/
 
 #endif

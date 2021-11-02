@@ -14,6 +14,10 @@ void shoot_init(shoot_t *shoot, int type,
 
 	rect_t *rect;
 
+	shoot->position=(point_t*)malloc(sizeof(point_t));
+	shoot->border=(border_t*)malloc(sizeof(border_t));
+   shoot->vector=(vector_t*)malloc(sizeof(vector_t));
+
 	shoot->type = type;
 	point_set(shoot->position,0,0);
 	border_init(shoot->border,0,0);
@@ -32,6 +36,8 @@ void shoot_init(shoot_t *shoot, int type,
 			rect = create_rect(0,0,25,25);
          border_add_rect(shoot->border,rect);
 			shoot_set_animation(shoot,0,1,false);
+		default:
+			printf("ERROR FATAL: no existe el tipo de shoot\n");
 	}
 }
 

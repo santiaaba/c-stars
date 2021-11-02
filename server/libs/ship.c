@@ -33,6 +33,8 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 	ship->type = type;
 	ship->ia_activated = 0;
 	ship->state = SHIP_LIVE;
+	ship->addx = 0;
+	ship->addy = 0;
 
 	/* Asignamos los bordes y las animaciones de inicio */
 	switch(type){
@@ -43,9 +45,10 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			border_add_rect(ship->border,rect);
 			rect = create_rect(4,33,17,23);
 			border_add_rect(ship->border,rect);
-			animation_init(&(ship->animation),0,0,false);
+			animation_init(&(ship->animation),0,1,false);
 			ship->limited = true;
-			weapon_init(&(ship->weapon),WEAPON_1,10,clock,false,GRAD_0,100,62,43,shoots);
+			weapon_init(&(ship->weapon),WEAPON_1,10,clock,false,
+				GRAD_0,100,ship->position,62,43,shoots);
 			break;
 		case SHIP_ENEMIE1:
 			rect = create_rect(27,8,82,45);
@@ -54,9 +57,10 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			border_add_rect(ship->border,rect);
 			rect = create_rect(27,86,82,45);
 			border_add_rect(ship->border,rect);
-			animation_init(&(ship->animation),0,0,false);
+			animation_init(&(ship->animation),0,1,false);
 			ship->limited = false;
-			weapon_init(&(ship->weapon),WEAPON_1,10,clock,true,GRAD_180,100,0,69,shoots);
+			weapon_init(&(ship->weapon),WEAPON_1,10,clock,true,
+				GRAD_180,100,ship->position,0,69,shoots);
 			break;
 	}
 }
@@ -84,6 +88,8 @@ uint8_t ship_get_state(ship_t *ship){
 
 void ship_set_speed(ship_t *ship, float speed){
 	vector_set_module(ship->vector,speed);
+	ship->addx = vector_x(ship->vector);
+	ship->addy = vector_y(ship->vector);
 }
 
 float ship_get_speed(ship_t *ship){
@@ -92,6 +98,8 @@ float ship_get_speed(ship_t *ship){
 
 void ship_set_direction(ship_t *ship, float direction){
 	vector_set_direction(ship->vector,direction);
+	ship->addx = vector_x(ship->vector);
+	ship->addy = vector_y(ship->vector);
 }
 
 float ship_get_direction(ship_t *ship){
@@ -105,8 +113,7 @@ void ship_set_position(ship_t *ship, int32_t x, int32_t y){
 }
 
 void ship_go(ship_t *ship){
-	/* Modificamos el vector de movimiento
-		si la ia lo ordenase */
+
 	if(ship -> ia_activated){
 		ia_drive_ship(ship->ia, ship);
 	}
@@ -122,16 +129,21 @@ void ship_go(ship_t *ship){
 		}
 	}
 
-	//	printf("ship_move() ----> (M:%f,D:%f)=(%i,%i) ----> ",
-	//		ship->vector->modulo,ship->vector->direccion,
-	//		vector_x(ship->vector),vector_y(ship->vector));
-	point_add_vector(ship->position,ship->vector);
+/*	printf("ship_move() ----> (M:%f,D:%f)=(x:%i,y:%i) ----> ",
+			ship->vector->modulo,ship->vector->direccion,
+			ship->addx,ship->addy);
+*/
+	//point_add_vector(ship->position,ship->vector);
+	point_add(ship->position,ship->addx,ship->addy);
+
 	//printf("(%i,%i)\n",ship->position->x,ship->position->y);
 	border_set_point(ship->border,ship->position->x,ship->position->y);
-	
+
+//	point_add(weapon_get_position(&(ship->weapon)),ship->addx,ship->addy);
 	weapon_shoot(&(ship->weapon));
 }
 
+/*
 void ship_set_vector(ship_t *ship, vector_t *vector){
 	vector_copy(ship->vector,vector);
 }
@@ -139,7 +151,7 @@ void ship_set_vector(ship_t *ship, vector_t *vector){
 vector_t *ship_get_vector(ship_t *ship){
 	return ship->vector;
 }
-
+*/
 border_t *ship_border(ship_t *ship){
 	return ship->border;
 }
@@ -241,24 +253,22 @@ void ia_add_path( ia_t *ia, uint16_t instant,
 }
 
 void ia_drive_ship(ia_t *ia, ship_t *ship){
+	vector_t *vector;
+
 	if(!lista_eol(ia->path)){
 		if(((ia_mov_t*)lista_get(ia->path))->instant + ia->time_start
 			<= clockgame_time(ia->clock)){
-			ship_set_vector(ship,&(((ia_mov_t*)(lista_get(ia->path)))->vector));
+			vector = &(((ia_mov_t*)(lista_get(ia->path)))->vector);
+			ship_set_speed(ship,vector_get_module(vector));
+			ship_set_direction(ship,vector_get_direction(vector));
 			lista_next(ia->path);
 		}
 	} else {
-		//printf("ia_drive_ship(): NO hay mas rutas. Eliminamos nave\n");
-		/* Si no hay mas elementos en la lista entonces seteamos
-			el estado de la nave para que sea destruida. Ésto
-			implica que todo path de las naves debe tener al
-			menos una última instrucción inservible */
 		ship_set_state(ship,SHIP_DESTROY);
 	}
 }
 
 void ia_mov_destroy(ia_mov_t **ia_mov){
-	//free((ia_mov_t*)(*ia_mov));
 	free(*ia_mov);
 }
 

@@ -98,6 +98,7 @@ void static game_render(game_t *g){
 	SDL_Rect position;
 	SDL_Rect frame;
 	int index_entity;
+	text_t text_score;
 
 	len = sizeof(g->cliaddr);
 
@@ -105,6 +106,7 @@ void static game_render(game_t *g){
 	SDL_RenderPresent(g->renderer);
 //	printf("game_render(): Entro render: %u\n",g->status);
 	g->screen_frame = 0;
+	text_init(&text_score,800,30,16,g->renderer);
 	while(g->status == PLAYING){
 //		printf("game_render(): Esperando datos de render\n");
 		n = recvfrom(g->sockfd, (char *)buffer, MAX_DATA, 
@@ -126,6 +128,9 @@ void static game_render(game_t *g){
 			dibujamos la pantalla. */
 		if(data.header.frame != g->screen_frame){
 			g->screen_frame = data.header.frame;
+
+			text_set(&text_score,"Puntaje:");
+			text_draw(&text_score);
 			SDL_RenderPresent(g->renderer);
 //			printf("Nuevo frame\n");
 			SDL_RenderClear(g->renderer);

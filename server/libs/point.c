@@ -18,6 +18,11 @@ void point_add_vector(point_t *point, vector_t *vector){
 //	printf("point_add_vector(): AHORA: (x,y) = (%i,%i)\n",point->x,point->y);
 }
 
+void point_add(point_t *point, int x, int y){
+	point->x += x;
+	point->y += y;
+}
+
 int32_t point_get_x(point_t *point){
 	return point->x;
 }

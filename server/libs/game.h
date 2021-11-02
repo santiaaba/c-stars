@@ -4,7 +4,7 @@
 #define BUFFER_SIZE			200			/* elementos a renderizar */
 #define MAX_UDP_BUFFER		200			/* Tamano maximo de buffer UDP */
 #define CANT_LEVELS			1
-#define FXS						2				/*Fotogramas por segundo */
+#define FXS						25				/*Fotogramas por segundo */
 #define EVENT_LIMIT_SIZE	10
 #define SCREEN_WIDTH			1024
 #define SCREEN_HEIGHT		600
@@ -54,7 +54,7 @@ Son en total 8 bytes
 #define K_BOTTOM				81
 #define K_LEFT					80
 #define K_RIGHT				79
-#define K_SPACEBAR			4
+#define K_SPACEBAR			32
 
 #define K_DOWN			768
 #define K_UP			769

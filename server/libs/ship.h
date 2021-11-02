@@ -44,6 +44,8 @@ typedef struct t_ship{
 	border_t *border;
 	weapon_t weapon;
 	vector_t *vector;
+	uint32_t addx;		/* Incremento movimiento */
+	uint32_t addy;		/* Incremento movimiento */
 	animation_t animation;
 //	float speed;
 	uint8_t type;		// ID tipo nave

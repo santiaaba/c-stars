@@ -20,6 +20,8 @@ void point_set(point_t *point, int32_t x, int32_t y);
 /* Cambia las coordenadas del punto sumando un vector */
 void point_add_vector(point_t *point, vector_t *vector);
 
+void point_add(point_t *point, int x, int y);
+
 /* Retorna las coordenadas en x */
 int32_t point_get_x(point_t *point);
 

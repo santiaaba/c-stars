@@ -13,7 +13,7 @@ void animation_get(animation_t *a, uint8_t *sprite, uint8_t *frame){
 }
 
 void animation_next(animation_t *a){
-	if(a->frame < a->frame_size)
+	if(a->frame < a->frame_size - 1)
 		a->frame++;
 	else
 		if(a->loop)

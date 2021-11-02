@@ -50,6 +50,7 @@ void game_level_prepare(game_t *g){
 	ship_set_position(g->player,100,300);
 	g->state = G_READY;
 	g->frame = 0;
+	clockgame_restore(g->clock);
 }
 
 void game_start(game_t *g){
@@ -105,7 +106,7 @@ void static game_handle_events(game_t *g){
 	sem_wait(g->sem_event);
 	for(i=0;i < g->event_size;i++){
 		printf("game_handle_events(): KEY: %i - EVENT: %i\n",g->events[i]->key,g->events[i]->key_type);
-		vector = ship_get_vector(g->player);
+		//vector = ship_get_vector(g->player);
 		switch(g->events[i]->key_type){
 			case K_DOWN:
 				printf("game_handle_events(): KEY_DOWN\n");
@@ -184,7 +185,9 @@ void static game_handle_events(game_t *g){
 		if(g->direction.right && g->direction.bottom)
 			direction = GRAD_315;
 		printf("game_handle_events(): (M,D) => (%f,%f)\n",module,direction);
-		vector_set(vector,direction,module);
+		ship_set_direction(g->player,direction);
+		ship_set_speed(g->player,module);
+		//vector_set(vector,direction,module);
 		free(g->events[i]);
 	}
 	
@@ -262,12 +265,12 @@ void static game_playing_level(game_t *g){
 	printf("game_playing_level(): Arrancamos el bucle\n");
 
 	g->data.header.size = 0;
+	clockgame_start(g->clock);
 	while(g->state == G_PLAYING){
 	//	continue;
-
+		//printf("game_playing_level(): RELOJ: %"PRIu32"\n",clockgame_time(g->clock));
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
-		//printf("game_playing_level(): RELOJ: %u\n",clockgame_time(g->clock));
 		/* Gestionamos enemigos */
 		lista_first(g->enemies);
 		while(!lista_eol(g->enemies)){
@@ -320,7 +323,7 @@ void static game_playing_level(game_t *g){
 			shoot = lista_get(g->shoot_player);
 			switch(shoot_get_state(shoot)){
 				case SHOOT_LIVE:
-					printf("shoot(x,y):(%i,%i)\n",shoot->position->x,shoot->position->y);
+					//printf("shoot(x,y):(%i,%i)\n",shoot->position->x,shoot->position->y);
 					shoot_go(shoot);
 					/* Calculamos colición con naves enemigas */
 					lista_first(g->enemies);
@@ -335,6 +338,8 @@ void static game_playing_level(game_t *g){
 						}
 						lista_next(g->enemies);
 					}
+					shoot_render(shoot,&data);
+					game_send_data(g,&data,false);
 					lista_next(g->shoot_player);
 					break;
 				case SHOOT_DESTROY:
@@ -410,14 +415,11 @@ void static game_playing_level(game_t *g){
 		game_send_data(g,NULL,true);
 		g->frame++;
 
-		cantfotograms++;
-		if(cantfotograms == FXS){
-			clockgame_add(g->clock,1);
-			cantfotograms=0;
-		}
 		nanosleep(&req,&rem);
+
 	}
 	printf("game_playing_level(): Salimos del bucle\n");
+	clockgame_stop(g->clock);
 }
 
 int game_get_state(game_t *g){
