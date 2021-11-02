@@ -96,6 +96,7 @@ void static game_render(game_t *g){
 	data_t data;
 	char buffer[MAX_DATA];
 	SDL_Rect position;
+	char score[100];
 	SDL_Rect frame;
 	int index_entity;
 	text_t text_score;
@@ -129,7 +130,8 @@ void static game_render(game_t *g){
 		if(data.header.frame != g->screen_frame){
 			g->screen_frame = data.header.frame;
 
-			text_set(&text_score,"Puntaje:");
+			sprintf(score,"Puntaje: %i",g->score);
+			text_set(&text_score,score);
 			text_draw(&text_score);
 			SDL_RenderPresent(g->renderer);
 //			printf("Nuevo frame\n");

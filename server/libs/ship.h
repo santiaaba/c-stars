@@ -36,7 +36,7 @@ typedef struct t_ia{
 } ia_t;
 
 typedef struct t_ship{
-	uint32_t power;
+	int power;
 	point_t *position;
 	uint8_t state;
 	rect_t limits;
@@ -61,6 +61,8 @@ void ship_set_position(ship_t *ship, int32_t x, int32_t y);
 
 /* Setea la velocidad de la nave */
 void ship_set_speed(ship_t *ship, float speed);
+
+int ship_get_type(ship_t *ship);
 
 /* Retorna la velocidad de la nave */
 float ship_get_speed(ship_t *ship);
@@ -113,13 +115,13 @@ uint8_t ship_colision_shoot(ship_t *ship, shoot_t *shoot);
 border_t *ship_border(ship_t *ship);
 
 /* Obtiene la energia de la nave */
-uint32_t ship_get_power(ship_t *ship);
+int ship_get_power(ship_t *ship);
 
 /* Setea una animacion */
 void ship_set_animation(ship_t *ship, uint8_t sprite, uint8_t frame_size, bool loop);
 
 /* Setea la energia de la nave */
-void ship_set_power(ship_t *ship, uint32_t power);
+void ship_set_power(ship_t *ship, int power);
 
 /* Retorna las coordenadas de la posicion de la nave */
 point_t *ship_get_position(ship_t *ship);

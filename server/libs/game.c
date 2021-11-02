@@ -246,6 +246,12 @@ int game_init_udp(game_t *g, char *ip, int port){
 	return 1;
 }
 
+int static game_remunerate(int ship_type){
+	switch(ship_type){
+		case SHIP_ENEMIE1: return 20;
+	}
+}
+
 void static game_playing_level(game_t *g){
 	/* Bucle que posee la logica del juego.
 		GENERA un FRAME del juego  */
@@ -290,13 +296,13 @@ void static game_playing_level(game_t *g){
 						/* Comenzamos eliminacion nave enemiga */
 						ship_set_state(ship,SHIP_DESTROY);
 						ship_set_animation(ship,1,15,false);
-					} else {
+/*					} else {
 						/* Calculamos colision con disparos jugador */
-						lista_first(g->shoot_player);
+/*						lista_first(g->shoot_player);
 						while(!lista_eol(g->shoot_player)){
 							ship_colision_shoot(ship,lista_get(g->shoot_player));
 							lista_next(g->shoot_player);
-						}
+						}*/
 					}
 					ship_render(ship,&data);
 					game_send_data(g,&data,false);
@@ -330,10 +336,18 @@ void static game_playing_level(game_t *g){
 					while(!lista_eol(g->enemies)){
 						ship = lista_get(g->enemies);
 						if(ship_colision_shoot(ship,shoot)){
+							//printf("COLISIONO DISPARO - power: %i - damage: %i = ",ship_get_power(ship),shoot_get_damage(shoot));
 							ship_set_power(ship, ship_get_power(ship) -
 								shoot_get_damage(shoot));
-							if(ship_get_power(ship) < 0)
+							//printf("power: %i\n",ship_get_power(ship));
+							if(ship_get_power(ship) < 0){
+								g->score += game_remunerate(ship_get_type(ship));
 								ship_set_state(ship,SHIP_DESTROY);
+								ship_set_animation(ship,1,15,false);
+
+								ACA ME QUEDE. HAY QUE AVISARLE AL CLIENTE PARA
+								QUE SOLICITE UN STATUS Y OBTENGA EL SCORE NUEVO
+							}
 							shoot_set_state(shoot,SHOOT_DESTROY);
 						}
 						lista_next(g->enemies);

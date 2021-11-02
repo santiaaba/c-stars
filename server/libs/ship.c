@@ -17,9 +17,6 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 	rect_set_point(&(ship->limits),0,0);
 	rect_set_dim(&(ship->limits),0,0);
 
-	ship -> power = 0;
-//	ship -> speed = 1;
-
 	ship->position=(point_t*)malloc(sizeof(point_t));
 	ship->border=(border_t*)malloc(sizeof(border_t));
 	ship->vector=(vector_t*)malloc(sizeof(vector_t));
@@ -39,6 +36,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 	/* Asignamos los bordes y las animaciones de inicio */
 	switch(type){
 		case SHIP_PLAYER:
+			ship -> power = 100;
 			rect = create_rect(21,4,21,80);
 			border_add_rect(ship->border,rect);
 			rect = create_rect(42,17,17,53);
@@ -51,6 +49,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 				GRAD_0,100,ship->position,62,43,shoots);
 			break;
 		case SHIP_ENEMIE1:
+			ship -> power = 30;
 			rect = create_rect(27,8,82,45);
 			border_add_rect(ship->border,rect);
 			rect = create_rect(15,56,11,29);
@@ -106,6 +105,9 @@ float ship_get_direction(ship_t *ship){
 	return vector_get_direction(ship->vector);
 }
 
+int ship_get_type(ship_t *ship){
+	return ship->type;
+}
 
 void ship_set_position(ship_t *ship, int32_t x, int32_t y){
 	point_set(ship->position,x,y);
@@ -174,11 +176,11 @@ void ship_border_add(ship_t *ship, int32_t x, int32_t y,
 	border_add_rect(ship->border,rect);
 }
 
-uint32_t ship_get_power(ship_t *ship){
+int ship_get_power(ship_t *ship){
 	return ship->power;
 }
 
-void ship_set_power(ship_t *ship, uint32_t power){
+void ship_set_power(ship_t *ship, int power){
 	ship->power = power;
 }
 
