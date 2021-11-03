@@ -27,6 +27,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 	vector_init(ship->vector);
 	ia_init(ship->ia, clock);
 
+	ship->tangible = true;
 	ship->type = type;
 	ship->ia_activated = 0;
 	ship->state = SHIP_LIVE;
@@ -45,8 +46,8 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			border_add_rect(ship->border,rect);
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = true;
-			weapon_init(&(ship->weapon),WEAPON_1,10,clock,false,
-				GRAD_0,100,ship->position,62,43,shoots);
+			weapon_init(&(ship->weapon),WEAPON_1,10,clock,
+				GRAD_0,false,100,ship->position,62,43,shoots);
 			break;
 		case SHIP_ENEMIE1:
 			ship -> power = 30;
@@ -58,14 +59,33 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			border_add_rect(ship->border,rect);
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = false;
-			weapon_init(&(ship->weapon),WEAPON_1,10,clock,true,
-				GRAD_180,100,ship->position,0,69,shoots);
+			weapon_init(&(ship->weapon),WEAPON_1,20,clock,
+				GRAD_180,true,50,ship->position,0,69,shoots);
 			break;
 	}
 }
 
+void ship_begin_destroy(ship_t *ship){
+	printf("COMIENZA DESTRUCCION\n");
+	ship->state = SHIP_DESTROY;
+	ship->tangible = false;
+	ship_set_animation(ship,1,15,false);
+	weapon_shooting(&(ship->weapon),false);
+}
+
+bool ship_is_shooting(ship_t *ship){
+	return weapon_is_shooting(&(ship->weapon));
+}
+
+void ship_set_tangible(ship_t *ship, bool tangible){
+	ship->tangible = tangible;
+}
+
+bool ship_is_tangible(ship_t *ship){
+	return ship->tangible;
+}
+
 void ship_shooting(ship_t *ship, bool on){
-	printf("ship_shooting(): %i\n",on);
 	weapon_shooting(&(ship->weapon),on);
 }
 
@@ -118,6 +138,8 @@ void ship_go(ship_t *ship){
 
 	if(ship -> ia_activated){
 		ia_drive_ship(ship->ia, ship);
+		//printf("Intentamos disparar\n");
+		//weapon_shoot(&(ship->weapon));
 	}
 	animation_next(&(ship->animation));
 	/* Actualizamos su posicion */
@@ -131,14 +153,12 @@ void ship_go(ship_t *ship){
 		}
 	}
 
-/*	printf("ship_move() ----> (M:%f,D:%f)=(x:%i,y:%i) ----> ",
-			ship->vector->modulo,ship->vector->direccion,
-			ship->addx,ship->addy);
-*/
+//	printf("ship_move() ----> (X:%i,Y:%i) ------->", ship->addx,ship->addy);
+
 	//point_add_vector(ship->position,ship->vector);
 	point_add(ship->position,ship->addx,ship->addy);
 
-	//printf("(%i,%i)\n",ship->position->x,ship->position->y);
+//	printf("(%i,%i)\n",ship->position->x,ship->position->y);
 	border_set_point(ship->border,ship->position->x,ship->position->y);
 
 //	point_add(weapon_get_position(&(ship->weapon)),ship->addx,ship->addy);
@@ -159,11 +179,17 @@ border_t *ship_border(ship_t *ship){
 }
 
 uint8_t ship_colision_ship(ship_t *ship, ship_t *ship2){
-	return border_collision(ship->border,ship2->border);
+	if(ship->tangible && ship2->tangible)
+		return border_collision(ship->border,ship2->border);
+	else
+		return false;
 }
 
 uint8_t ship_colision_shoot(ship_t *ship, shoot_t *shoot){
-	return border_collision(ship->border,shoot_get_border(shoot));
+	if(ship->tangible)
+		return border_collision(ship->border,shoot_get_border(shoot));
+	else
+		return false;
 }
 
 void ship_border_add(ship_t *ship, int32_t x, int32_t y,

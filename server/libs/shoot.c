@@ -33,11 +33,12 @@ void shoot_init(shoot_t *shoot, int type,
 		case SHOOT_1:
 			shoot->damage = 10;
 			vector_set(shoot->vector,direction,15);
-			rect = create_rect(0,0,25,25);
+			rect = create_rect(0,0,10,10);
          border_add_rect(shoot->border,rect);
 			shoot_set_animation(shoot,0,1,false);
+			break;
 		default:
-			printf("ERROR FATAL: no existe el tipo de shoot\n");
+			printf("shoot_init(): ERROR FATAL: no existe el tipo de shoot\n");
 	}
 }
 

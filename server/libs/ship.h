@@ -41,6 +41,7 @@ typedef struct t_ship{
 	uint8_t state;
 	rect_t limits;
 	bool limited;
+	bool tangible;
 	border_t *border;
 	weapon_t weapon;
 	vector_t *vector;
@@ -62,12 +63,20 @@ void ship_set_position(ship_t *ship, int32_t x, int32_t y);
 /* Setea la velocidad de la nave */
 void ship_set_speed(ship_t *ship, float speed);
 
+void ship_set_tangible(ship_t *ship, bool tangible);
+
+bool ship_is_tangible(ship_t *ship);
+
 int ship_get_type(ship_t *ship);
+
+void ship_begin_destroy(ship_t *ship);
 
 /* Retorna la velocidad de la nave */
 float ship_get_speed(ship_t *ship);
 
 void ship_shooting(ship_t *ship, bool on);
+
+bool ship_is_shooting(ship_t *ship);
 
 /* Setea la direccion de la nave */
 void ship_set_direction(ship_t *ship, float direction);
