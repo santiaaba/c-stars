@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include "entity.h"
 #include "button.h"
+#include "powerbar.h"
 #include "input.h"
 #include "menu.h"
 #include "text.h"
@@ -57,9 +58,10 @@ typedef struct {
 	/* Los siguientes 4 atributos son obtenidos
 		mediante el mensaje game_status al servidor */
 
-	uint16_t playing_state;			// Estado segun el server
+	uint8_t playing_state;			// Estado del juego segun el server
+	uint8_t power_ship;				// energia de la nave
 	uint8_t level;						// Nivel actual
-	uint8_t level_state;			// Estado del nivel
+	uint8_t level_state;				// Estado del nivel
 	uint32_t score;					// Puntaje
 
 	tcp_client_t *command_cli;

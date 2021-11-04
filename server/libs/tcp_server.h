@@ -31,8 +31,8 @@ typedef struct{
 	void (*status_body2char)(char*, game_info_t*);
 } tcp_server_t;
 
-uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
-			void (*char2body)(char*, game_info_t*), void (*body2char)(char*, game_info_t*));
+uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game);
+//			void (*char2body)(char*, game_info_t*), void (*body2char)(char*, game_info_t*));
 
 void *tcp_server_start(void *server);
 

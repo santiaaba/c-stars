@@ -129,7 +129,8 @@ typedef struct {
 
 typedef struct{
    uint32_t score;               // Puntaje adquirido
-   uint16_t state;               // Estado del juego
+   uint8_t state;               // Estado del juego
+   uint8_t power;               // Energia de la nave
    uint8_t level;                // nivel actual
    uint8_t level_state;          // estado del nivel
 } res_info_t;

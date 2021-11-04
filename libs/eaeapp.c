@@ -116,13 +116,21 @@ void eaeapp_res2char(res_t *res, char *buffer, int *size){
 			memcpy(&buffer[8],res->body,res->header.size);
 			break;
 		case C_GAME_STATUS:
-			printf("BODY: score= %"PRIu32"| state= %u| level= %i| level_state= %i\n",
-				((res_info_t*)(res->body))->score,((res_info_t*)(res->body))->state,
-				((res_info_t*)(res->body))->level,((res_info_t*)(res->body))->level_state);
+			printf("BODY: score= %"PRIu32"| state= %i| power=%i| level= %i| level_state= %i\n",
+				((res_info_t*)(res->body))->score,
+				((res_info_t*)(res->body))->state,
+				((res_info_t*)(res->body))->power,
+				((res_info_t*)(res->body))->level,
+				((res_info_t*)(res->body))->level_state);
 			aux32 = htonl(((res_info_t*)(res->body))->score);
 			memcpy(&(buffer[8]),&aux32,4);
+
+			buffer[12] = ((res_info_t*)(res->body))->state;
+			buffer[13] = ((res_info_t*)(res->body))->power;
+/*
 			aux16 = htons(((res_info_t*)(res->body))->state);
 			memcpy(&(buffer[12]),&aux16,2);
+*/
 			buffer[14] = ((res_info_t*)(res->body))->level;
 			buffer[15] = ((res_info_t*)(res->body))->level_state;
 	}
@@ -199,13 +207,19 @@ void eaeapp_char2res(res_t *res, char *buffer){
 			res->body = (res_info_t*)malloc(sizeof(res_info_t));
 			memcpy(&aux32,&(buffer[8]),4);
 			((res_info_t*)(res->body))->score = htonl(aux32);
+/*
 			memcpy(&aux16,&(buffer[12]),2);
 			((res_info_t*)(res->body))->state = htons(aux16);
+*/
+			((res_info_t*)(res->body))->state = buffer[12];
+			((res_info_t*)(res->body))->power = buffer[13];
+
 			((res_info_t*)(res->body))->level = buffer[14];
 			((res_info_t*)(res->body))->level_state = buffer[15];
-			printf("SCORE:%"PRIu32" | STATE:%u | LEVEL:%u | LEVEL_STATE: %u",
+			printf("SCORE:%"PRIu32" | STATE:%u | POWER:%u | LEVEL:%u | LEVEL_STATE: %u",
 				((res_info_t*)(res->body))->score,
 				((res_info_t*)(res->body))->state,
+				((res_info_t*)(res->body))->power,
 				((res_info_t*)(res->body))->level,
 				((res_info_t*)(res->body))->level_state);
 	}

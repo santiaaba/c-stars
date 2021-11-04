@@ -100,6 +100,7 @@ void static game_render(game_t *g){
 	SDL_Rect frame;
 	int index_entity;
 	text_t text_score;
+	powerbar_t powerbar;
 
 	len = sizeof(g->cliaddr);
 
@@ -108,6 +109,9 @@ void static game_render(game_t *g){
 //	printf("game_render(): Entro render: %u\n",g->status);
 	g->screen_frame = 0;
 	text_init(&text_score,800,30,16,g->renderer);
+	powerbar_init(&powerbar,g->renderer);
+	powerbar_set_position(&powerbar,50,50);
+	powerbar_set_max(&powerbar,100);
 	while(g->status == PLAYING){
 //		printf("game_render(): Esperando datos de render\n");
 		n = recvfrom(g->sockfd, (char *)buffer, MAX_DATA, 
@@ -133,6 +137,11 @@ void static game_render(game_t *g){
 			sprintf(score,"Puntaje: %i",g->score);
 			text_set(&text_score,score);
 			text_draw(&text_score);
+
+			NO SE ESTA DIBUJANDO LA BARRA
+
+			powerbar_set_power(&powerbar,g->power_ship);
+			powerbar_draw(&powerbar);
 			SDL_RenderPresent(g->renderer);
 //			printf("Nuevo frame\n");
 			SDL_RenderClear(g->renderer);
@@ -166,6 +175,7 @@ void static game_render(game_t *g){
 			}
 		}
 	}
+	powerbar_destroy(&powerbar);
 //	printf("game_render(): Salio render:%u\n",g->status);
 }
 

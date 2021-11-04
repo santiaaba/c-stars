@@ -1,13 +1,14 @@
 #include "tcp_server.h"
 
-uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game,
-	void (*char2body)(char*, game_info_t*), void (*body2char)(char*, game_info_t*)){
+uint8_t tcp_server_init(tcp_server_t *server, uint32_t port, game_t *game){
+//	void (*char2body)(char*, game_info_t*), void (*body2char)(char*, game_info_t*)){
 
 	printf("Iniciamos el server\n");
 	server->status = S_NOTLISTEN;
 	server->game = game;
-	server->status_char2body = char2body;
+/*	server->status_char2body = char2body;
 	server->status_body2char = body2char;
+*/
 
 
 	/* Creamos el socket */

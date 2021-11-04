@@ -18,5 +18,5 @@ cd ..
 rm c-startd
 gcc c-startd.c libs/game.o libs/point.o libs/rect.o libs/border.o libs/clockgame.o \
 	libs/eaeapp_server.o libs/animation.o libs/weapon.o libs/ship.o libs/level.o libs/shoot.o libs/vector.o \
-	./libs/tcp_server.o ../libs/eaeapp.o ../libs/lista.o ../libs/game_info.o \
+	./libs/tcp_server.o ../libs/eaeapp.o ../libs/lista.o \
 	-lm -lpthread -lSDL2_image -lSDL2main -lSDL2 -o c-startd --debug

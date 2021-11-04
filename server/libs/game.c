@@ -484,6 +484,7 @@ void game_info(game_t *g, game_info_t *info){
 	g->request_status = 0;
 	info->score = g->score;
 	info->state = g->state;
+	info->power = ship_get_power(g->player);
 	info->level = level_get_id(g->level);
 	info->level_state = level_get_state(g->level);
 }

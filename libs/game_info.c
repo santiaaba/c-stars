@@ -1,5 +1,5 @@
 #include "game_info.h"
-
+/*
 void game_info2char(char *buffer, game_info_t *g){
 	buffer[0] = htonl(g->score);
 	buffer[4] = htons(g->state);
@@ -13,3 +13,4 @@ void game_char2info(char *buffer, game_info_t *g){
 	g->level = (uint8_t)buffer[6];
 	g->level_state = (uint8_t)buffer[7];
 }
+*/
