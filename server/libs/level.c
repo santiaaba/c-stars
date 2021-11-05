@@ -59,6 +59,7 @@ void level_load(level_t *l, uint8_t id, lista_t *shoots_enemies){
 	fclose(fdIN);
 	printf("Nivel cargado\n");
 	l->state = L_INGRESS;
+	printf("Nivel cargado INGRESS\n");
 }
 
 void level_init(level_t *l, clockgame_t *clockgame){
@@ -70,8 +71,7 @@ void level_init(level_t *l, clockgame_t *clockgame){
 }
 
 void attack_destroy(attack_t *attack){
-	ship_destroy(attack->ship);
-	free(attack->ship);
+	ship_destroy(&(attack->ship));
 }
 
 void level_destroy(level_t *l){

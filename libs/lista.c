@@ -20,9 +20,7 @@ void lista_add(lista_t *l, void *e){
 	new = (lista_node*)malloc(sizeof(lista_node));
 	new->next = NULL;
 	new->data = e;
-	printf("lista_add(): antes de agregar size:%i\n",l->size);
 	l->size++;
-	printf("lista_add(): luego de agregar size:%i\n",l->size);
 	if(l->first == NULL){
 		l->first = new;
 		l->last = new;
@@ -87,13 +85,11 @@ void *lista_exclude(lista_t *l,int (*find_id)(void*), int value){
 	l->actual = l->first;
 	while(!exist && l->actual != NULL){
 		if((*find_id)(l->actual->data) == value){
-			printf("list_remove: Encontramos el el elemento a remover. Lo retornamos\n");
 			return lista_remove(l);
 		} else {
 			l->actual = l->actual->next;
 		}
 	}
-	printf("lista_remove: No encontramos ningun elemento para excluir. Retornamos NULL\n");
 	return NULL;
 }
 
@@ -125,7 +121,6 @@ void *lista_remove(lista_t *l){
 		free(aux);
 		l->size--;
 	}
-	printf("Retornamos el elemento\n");
 	return element;
 }
 

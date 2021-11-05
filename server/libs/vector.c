@@ -48,5 +48,8 @@ float vector_grad_to_rad(int grad){
 void vector_del(vector_t *vector1, vector_t *vector2){
 }
 
-void vector_destroy(vector_t *vector){
+void vector_destroy(vector_t **vector){
+	/* Permite destruir un vector cuando es
+		un puntero */
+	free(*vector);
 }

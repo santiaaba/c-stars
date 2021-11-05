@@ -70,5 +70,7 @@ uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	return crash;
 }
 
-void rect_destroy(rect_t *rect){
+void rect_destroy(rect_t **rect){
+	/* Destruye un rect cuando es un puntero*/
+	free(*rect);
 }

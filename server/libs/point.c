@@ -36,5 +36,7 @@ void point_copy(point_t *point, point_t *other){
 	point->y = other->y;
 }
 
-void point_destroy(point_t *point){
+void point_destroy(point_t **point){
+	/* Permite destruir un punto cuando es un puntero */
+	free(*point);
 }

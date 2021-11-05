@@ -86,12 +86,10 @@ void shoot_render(shoot_t *shoot, data_render_t *data){
 	animation_get(&(shoot->animation),&(data->sprite),&(data->frame));
 }
 
-void shoot_destroy(shoot_t *shoot){
-	point_destroy(shoot->position);
-	border_destroy(shoot->border);
-	vector_destroy(shoot->vector);
+void shoot_destroy(shoot_t **shoot){
+	point_destroy(&((*shoot)->position));
+	border_destroy(&((*shoot)->border));
+	vector_destroy(&((*shoot)->vector));
 
-	free(shoot->position);
-	free(shoot->border);
-	free(shoot->vector);
+	free(*shoot);
 }

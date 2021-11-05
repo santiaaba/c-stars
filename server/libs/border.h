@@ -33,5 +33,5 @@ void border_add_vector(border_t *border, vector_t *vector);
 bool border_into_limits(border_t *border, rect_t *limit, int32_t add_x, int32_t add_y);
 
 /* Destruye las estructuras dinamicas que conforman el borde */
-void border_destroy(border_t *border);
+void border_destroy(border_t **border);
 #endif

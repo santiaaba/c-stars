@@ -105,11 +105,7 @@ int game_init_udp(game_t *g, char *ip, int port);
 void *game_run(void *g);
 void game_level_start(game_t *g, int level);
 void game_info(game_t *g, game_info_t *info);
-void game_pause(game_t *g);
-void game_resume(game_t *g);
-void game_stop(game_t *g);
 int game_udp_negociate(game_t *g, char *ip, int port);
-void game_over(game_t *g);
 int game_get_state(game_t *g);
 void game_set_state(game_t *g, int state);
 

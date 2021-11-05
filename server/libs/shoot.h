@@ -53,7 +53,7 @@ border_t *shoot_get_border(shoot_t *shoot);
 uint32_t shoot_get_damage(shoot_t *shoot);
 
 /* Destruye la estructura del disparo */
-void shoot_destroy(shoot_t *shoot);
+void shoot_destroy(shoot_t **shoot);
 
 /* Genera los datos de la nave en el buffer */
 void shoot_render(shoot_t *shoot, data_render_t *data);

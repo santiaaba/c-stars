@@ -81,7 +81,8 @@ void border_add_vector(border_t* border, vector_t *vector){
 	border->yy += vector_y(vector);
 }
 
-void border_destroy(border_t *border){
-	lista_clean(border->lista,(void*)(void**)&rect_destroy);
-	free(border->lista);
+void border_destroy(border_t **border){
+	lista_clean((*border)->lista,(void*)(void**)&rect_destroy);
+	free((*border)->lista);
+	free(*border);
 }

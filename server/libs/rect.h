@@ -41,6 +41,6 @@ bool rect_into_rect(rect_t *limit, rect_t *rect);
 void rect_copy(rect_t *dest, rect_t *origen);
 
 /* No hace nada. Ya que un rect no esta formado por punteros */
-void rect_destroy(rect_t *rect);
+void rect_destroy(rect_t **rect);
 
 #endif

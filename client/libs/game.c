@@ -79,6 +79,7 @@ void static game_status(game_t *g){
 		sem_wait(&(g->sem_status));
 			g->playing_state = ((res_info_t*)(res->body))->state;
 			g->score = ((res_info_t*)(res->body))->score;
+			g->power_ship = ((res_info_t*)(res->body))->power;
 			g->level = ((res_info_t*)(res->body))->level;
 			g->level_state = ((res_info_t*)(res->body))->level_state;
 			g->status_in_progress = false;
@@ -100,18 +101,22 @@ void static game_render(game_t *g){
 	SDL_Rect frame;
 	int index_entity;
 	text_t text_score;
+	text_t text_energia;
 	powerbar_t powerbar;
 
 	len = sizeof(g->cliaddr);
 
 	SDL_RenderClear(g->renderer);
 	SDL_RenderPresent(g->renderer);
-//	printf("game_render(): Entro render: %u\n",g->status);
+	game_status(g);
 	g->screen_frame = 0;
 	text_init(&text_score,800,30,16,g->renderer);
+	text_init(&text_energia,200,20,16,g->renderer);
+	text_set(&text_energia,"Energia:");
 	powerbar_init(&powerbar,g->renderer);
-	powerbar_set_position(&powerbar,50,50);
+	powerbar_set_position(&powerbar,259,22);
 	powerbar_set_max(&powerbar,100);
+	powerbar_set_power(&powerbar,g->power_ship);
 	while(g->status == PLAYING){
 //		printf("game_render(): Esperando datos de render\n");
 		n = recvfrom(g->sockfd, (char *)buffer, MAX_DATA, 
@@ -137,9 +142,7 @@ void static game_render(game_t *g){
 			sprintf(score,"Puntaje: %i",g->score);
 			text_set(&text_score,score);
 			text_draw(&text_score);
-
-			NO SE ESTA DIBUJANDO LA BARRA
-
+			text_draw(&text_energia);
 			powerbar_set_power(&powerbar,g->power_ship);
 			powerbar_draw(&powerbar);
 			SDL_RenderPresent(g->renderer);
@@ -286,12 +289,17 @@ void game_play(game_t *g){
 
 	/* Pausar juego */
 	void pause_game(game_t *g){
+		void server_response_handle(res_t *res){
+			if(res->header.resp == RES_OK){
+				printf("Comenzo el siguiente nivel\n");
+				game_set_status(g,PAUSE);
+			}
+		}
 		req_t req;
 		req_init(&req);
 		req_fill(&req,C_GAME_PAUSE,BODY_REQ_0);
 	//	printf("Enviamos pausar\n");
-		tcp_client_send(g->command_cli,&req,NULL);
-		game_set_status(g,PAUSE);
+		tcp_client_send(g->command_cli,&req,&server_response_handle);
 		req_destroy(&req);
 	}
 
@@ -753,7 +761,6 @@ void game_pause(game_t *g){
 		void server_response_handle(res_t *res){
 			game_set_status(g,PLAYING);
 		}
-
 		req_init(&req);
 		req_fill(&req,C_GAME_RESUME,BODY_REQ_0);
 		printf("Enviamos continuar\n");

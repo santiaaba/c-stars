@@ -71,16 +71,19 @@ void static req_game_start(game_t *g, req_t *req, res_t *res){
 	game_start(g);
 }
 
-void static req_game_over(game_t *g, req_t *req, res_t *res){
-	/* Finaliza el juego. */
+void static req_game_stop(game_t *g, req_t *req, res_t *res){
+	/* Finaliza el juego por solicitud del cliente. El juego
+		queda preparado para una nueva partida */
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
-	if(game_get_state(g) != G_PAUSE ||
-		game_get_state(g) != G_PLAYING){
+	if(game_get_state(g) != G_PAUSE &&
+		game_get_state(g) != G_PLAYING &&
+		game_get_state(g) != G_OVER){
+			printf("req_game_stop(): ICORRECTO: %i\n",game_get_state(g));
 			res->header.resp = RES_INCORRECT;
 			return;
 	}
 	res->header.resp = RES_OK;
-	game_over(g);
+	game_set_state(g,G_READY);
 }
 
 void static req_game_pause(game_t *g, req_t *req, res_t *res){
@@ -91,11 +94,12 @@ void static req_game_pause(game_t *g, req_t *req, res_t *res){
 		return;
 	}
 	res->header.resp = RES_OK;
-	game_pause(g);
+	game_set_state(g,G_PAUSE);
 }
 
 void static req_game_resume(game_t *g, req_t *req, res_t *res){
-	/* Continua el juego en el nivel en que se encuentra */
+	/* Continua el juego en el nivel en que se encuentra a
+		pedido del cliente */
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
 
 	if(game_get_state(g) != G_PAUSE){
@@ -103,12 +107,12 @@ void static req_game_resume(game_t *g, req_t *req, res_t *res){
 		return;
 	}
 	res->header.resp = RES_OK;
-	game_resume(g);
+	game_set_state(g,G_PLAYING);
 }
 
 void static req_game_status(game_t *g, req_t *req, res_t *res){
 	printf("req_game_status()\n");
-	/* Retorna el estado del nivel actual */
+	/* Retorna el estado del nivel y del juego actual */
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
 
 	res->body = (game_info_t*)malloc(sizeof(game_info_t));
@@ -152,7 +156,7 @@ void server_protocol_handle(game_t *g, char *ip, req_t *req, res_t *res){
 			break;
 		case C_GAME_STOP:
 			/* Detiene el juego */
-			req_game_over((game_t *)g,req,res);
+			req_game_stop((game_t *)g,req,res);
 			break;
 		case C_GAME_PAUSE:
 			/* Pausa el juego */

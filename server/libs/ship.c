@@ -223,16 +223,12 @@ void ship_ia_activate(ship_t *ship){
 	ia_start(ship -> ia);
 }
 
-void ship_destroy(ship_t *ship){
-	point_destroy(ship->position);
-	border_destroy(ship->border);
-	vector_destroy(ship->vector);
-	ia_destroy(ship->ia);
-
-	free(ship->position);
-	free(ship->border);
-	free(ship->vector);
-	free(ship->ia);
+void ship_destroy(ship_t **ship){
+	point_destroy(&((*ship)->position));
+	border_destroy(&((*ship)->border));
+	vector_destroy(&((*ship)->vector));
+	ia_destroy(&((*ship)->ia));
+	free(*ship);
 }
 
 void ship_set_animation(ship_t *ship, uint8_t sprite,
@@ -300,9 +296,8 @@ void ia_mov_destroy(ia_mov_t **ia_mov){
 	free(*ia_mov);
 }
 
-void ia_destroy(ia_t *ia){
-	/* OJO... no eliminar el clock. Ya que es utilizado
-	   por otras estructuras */
-	lista_clean(ia->path,(void*)(void**)&ia_mov_destroy);
-	free(ia->path);
+void ia_destroy(ia_t **ia){
+	lista_clean((*ia)->path,(void*)(void**)&ia_mov_destroy);
+	free((*ia)->path);
+	free(*ia);
 }

@@ -13,6 +13,8 @@ typedef struct {
 	SDL_Renderer *renderer;
 	SDL_Rect cut;
 	SDL_Rect dest;
+	int x;
+	int y;
 	int max;
 	int power;
 	int cant;

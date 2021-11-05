@@ -42,13 +42,11 @@ void game_init(game_t *g, sem_t *sem_event){
 void game_level_prepare(game_t *g){
 	/* Daja preparado el juego para el nivel en cuestion */
 
-	printf("game_level_start(): inicio level %i\n", g->level_current);
 	level_load(g->level,g->level_current, g->shoot_enemies);
 	lista_clean(g->shoot_enemies,(void*)(void**)&shoot_destroy);
 	lista_clean(g->shoot_player,(void*)(void**)&shoot_destroy);
 	lista_clean(g->enemies,(void*)(void**)&ship_destroy);
 	ship_set_position(g->player,100,300);
-	g->state = G_READY;
 	g->frame = 0;
 	clockgame_restore(g->clock);
 }
@@ -57,28 +55,11 @@ void game_start(game_t *g){
 	/* Resetea el juego y lo inicia en el nivel 1 */
 	g->score = 0;
 	g->level_current = 1;
+	ship_set_state(g->player,SHIP_END);
+	ship_set_animation(g->player,0,1,false);
+	ship_set_power(g->player,100);
 	game_level_prepare(g);
 	g->state=G_PLAYING;
-}
-
-void game_over(game_t *g){
-	/* Finaliza el juego.
-		Solo salir del bucle y no ingresar a el
-		nuevamente salvo que se realice un game_start */
-		game_set_state(g,G_OVER);
-}
-
-void game_pause(game_t *g){
-	/* Pausa el juego. No implica mucho.
-	   Solo salir del bucle e ingresar a el
-		nuevamente con un game_resume */
-		game_set_state(g,G_PAUSE);
-}
-
-void game_resume(game_t *g){
-	/* Pausa el juego. No implica mucho.
-	   Solo salir ingresar nuevamente al bucle */
-		game_set_state(g,G_PLAYING);
 }
 
 void game_event_add(game_t *g, uint16_t key, uint16_t key_type){
@@ -271,7 +252,7 @@ void static game_playing_level(game_t *g){
 
 	g->data.header.size = 0;
 	clockgame_start(g->clock);
-	while(g->state == G_PLAYING){
+	while(g->state == G_PLAYING || g->state == G_OVER){
 	//	continue;
 		//printf("game_playing_level(): RELOJ: %"PRIu32"\n",clockgame_time(g->clock));
 		if(level_get_state(g->level) == L_PLAYING)
@@ -306,16 +287,16 @@ void static game_playing_level(game_t *g){
 				case SHIP_DESTROY:
 					if(animation_end(&(ship->animation)))
 						ship_set_state(ship,SHIP_END);
-					else
-						animation_next(&(ship->animation));
+/*					else
+						animation_next(&(ship->animation));*/
 					ship_render(ship,&data);
 					game_send_data(g,&data,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_END:
 					ship = lista_remove(g->enemies);
-					ship_destroy(ship);
-					free(ship);
+					ship_destroy(&ship);
+					//free(ship);
 			}
 		}
 		/* Gestionamos disparos del enemigo */
@@ -332,6 +313,10 @@ void static game_playing_level(game_t *g){
 						//printf("COLISIONO DISPARO - power: %i - damage: %i = ",ship_get_power(ship),shoot_get_damage(shoot));
 						ship_set_power(ship, ship_get_power(ship) -
 							shoot_get_damage(shoot));
+
+						g->request_status = 1;
+		            g->data.header.aux |= AUX_FORCESTATUS;
+						
 						//printf("power: %i\n",ship_get_power(ship));
 						if(ship_get_power(ship) < 0){
 							ship_begin_destroy(ship);
@@ -345,16 +330,16 @@ void static game_playing_level(game_t *g){
 				case SHOOT_DESTROY:
 					if(animation_end(&(shoot->animation)))
 						shoot_set_state(shoot,SHOOT_END);
-					else
-						animation_next(&(shoot->animation));
+/*					else
+						animation_next(&(shoot->animation));*/
 					shoot_render(shoot,&data);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_enemies);
 					break;
 				case SHOOT_END:
 					shoot = lista_remove(g->shoot_enemies);
-					shoot_destroy(shoot);
-					free(shoot);
+					shoot_destroy(&shoot);
+					//free(shoot);
 			}
 		}
 
@@ -400,14 +385,33 @@ void static game_playing_level(game_t *g){
 					break;
 				case SHOOT_END:
 					shoot = lista_remove(g->shoot_player);
-					shoot_destroy(shoot);
-					free(shoot);
+					shoot_destroy(&shoot);
+					//free(shoot);
 			}
 		}
+
 		/* Nave del jugador */
-		ship_go(g->player);
-		ship_render(g->player,&data);
+		ship = g->player;
+		switch(ship_get_state(ship)){
+			case SHIP_LIVE:
+				ship_go(ship);
+				ship_render(ship,&data);
+				break;
+			case SHIP_DESTROY:
+				if(animation_end(&(ship->animation)))
+					ship_set_state(ship,SHIP_END);
+				ship_render(ship,&data);
+				break;
+			case SHIP_END:
+				/* JUEGO FINALIZADO */
+				game_set_state(g,G_OVER);
+				g->request_status = 1;
+				g->data.header.aux |= AUX_FORCESTATUS;
+		}
+
 		game_send_data(g,&data,false);
+
+		/* Estado del nivel que se esta jugando */
 		switch(level_get_state(g->level)){
 			case L_INGRESS:
 				/* Si level esta en L_INGRESS, lo pasamos a L_PLAYING
