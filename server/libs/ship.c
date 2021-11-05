@@ -136,7 +136,7 @@ void ship_set_position(ship_t *ship, int32_t x, int32_t y){
 
 void ship_go(ship_t *ship){
 
-	if(ship -> ia_activated){
+	if(ship -> ia_activated && ship->state == SHIP_LIVE){
 		ia_drive_ship(ship->ia, ship);
 		//printf("Intentamos disparar\n");
 		//weapon_shoot(&(ship->weapon));

@@ -22,6 +22,7 @@ Los 0 y 10 son tipos de disparos. Ver shoot.h */
 #define	SHIP_LIVE		0	/* La nave vive */
 #define	SHIP_DESTROY	1	/* La nave se esta destruyendo */
 #define	SHIP_END			2	/* La nave deja de existir */
+#define	SHIP_ZOMBI		3	/* La nave deja de existir */
 
 typedef struct t_ia_mov{
 	vector_t vector;

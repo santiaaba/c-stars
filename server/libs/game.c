@@ -55,7 +55,7 @@ void game_start(game_t *g){
 	/* Resetea el juego y lo inicia en el nivel 1 */
 	g->score = 0;
 	g->level_current = 1;
-	ship_set_state(g->player,SHIP_END);
+	ship_set_state(g->player,SHIP_LIVE);
 	ship_set_animation(g->player,0,1,false);
 	ship_set_power(g->player,100);
 	game_level_prepare(g);
@@ -239,6 +239,7 @@ void static game_playing_level(game_t *g){
 	struct timespec req;
 	struct timespec rem;
 	int cantfotograms;
+	int wait;
 	ship_t *ship;
 	shoot_t *shoot;
 	data_render_t data;
@@ -252,7 +253,7 @@ void static game_playing_level(game_t *g){
 
 	g->data.header.size = 0;
 	clockgame_start(g->clock);
-	while(g->state == G_PLAYING || g->state == G_OVER){
+	while(g->state == G_PLAYING){
 	//	continue;
 		//printf("game_playing_level(): RELOJ: %"PRIu32"\n",clockgame_time(g->clock));
 		if(level_get_state(g->level) == L_PLAYING)
@@ -262,9 +263,9 @@ void static game_playing_level(game_t *g){
 		while(!lista_eol(g->enemies)){
 			ship = lista_get(g->enemies);
 			//printf("ship(x,y):(%i,%i)\n",ship->position->x,ship->position->y);
+			ship_go(ship);
 			switch(ship_get_state(ship)){
 				case SHIP_LIVE:
-					ship_go(ship);
 					/* Determinamos si debe comenzar a disparar */
 					if(!ship_is_shooting(ship))
 						if(point_get_x(ship_get_position(ship))<SCREEN_WIDTH)
@@ -392,9 +393,9 @@ void static game_playing_level(game_t *g){
 
 		/* Nave del jugador */
 		ship = g->player;
+		ship_go(ship);
 		switch(ship_get_state(ship)){
 			case SHIP_LIVE:
-				ship_go(ship);
 				ship_render(ship,&data);
 				break;
 			case SHIP_DESTROY:
@@ -404,9 +405,15 @@ void static game_playing_level(game_t *g){
 				break;
 			case SHIP_END:
 				/* JUEGO FINALIZADO */
-				game_set_state(g,G_OVER);
 				g->request_status = 1;
 				g->data.header.aux |= AUX_FORCESTATUS;
+				ship_set_state(ship,SHIP_ZOMBI);
+				level_set_state(g->level,L_GAME_OVER);
+				wait = clockgame_time(g->clock) + 40;	//4 segundos;
+				break;
+			case SHIP_ZOMBI:
+				/* En este estado no hace nada de nada */
+				break;
 		}
 
 		game_send_data(g,&data,false);
@@ -442,6 +449,14 @@ void static game_playing_level(game_t *g){
 					level_set_state(g->level,L_END);
 				}
 				break;
+			case L_GAME_OVER:
+				/* El nivel ha finalizado porque el jugador ha
+					perdido. Se esperan 4 segundos para pasar el
+					juego a G_OVER. Ésto para dar tiempo a que el
+					cliente genere un status */
+					if (clockgame_time(g->clock) > wait){
+						game_set_state(g,G_OVER);
+					}
 			case L_END:
 				/* El nivel ha finalizado */
 				/* colocamos en 1 request_status para que viaje

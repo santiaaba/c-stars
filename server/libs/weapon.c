@@ -18,7 +18,7 @@ void weapon_init(weapon_t *weapon, uint8_t type, uint8_t frecuence,
 
 	switch(type){
 		case WEAPON_1:
-			weapon->frecuence = 2;
+			weapon->frecuence = 5;
 			break;
 	}
 }
