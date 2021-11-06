@@ -40,13 +40,20 @@ bool rect_into_rect(rect_t *limit, rect_t *rect){
 bool rect_out_rect(rect_t *limit, rect_t *rect){
 
 	bool out;
-	out = (	rect->x + rect->width < limit->x ||
-				limit->x + limit->width < rect->x ||
-				rect->y + rect->height < limit->y ||
-				limit->y + limit->height < rect->y);
-//	printf("rect_out?:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i\n",
-//			rect->x,rect->y,rect->width,rect->height,
-//			limit->x,limit->y,limit->width,limit->height,out);
+	out = (	(rect->x + rect->width) < limit->x ||
+				(limit->x + limit->width) < rect->x ||
+				(rect->y + rect->height) < limit->y ||
+				(limit->y + limit->height) < rect->y);
+
+	printf("rect_out?:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i,%i,%i,%i,%i\n",
+			rect->x,rect->y,rect->width,rect->height,
+			limit->x,limit->y,limit->width,limit->height,
+			(rect->x + rect->width) < limit->x,
+			(limit->x + limit->width) < rect->x,
+			(rect->y + rect->height) < limit->y,
+			(limit->y + limit->height) < rect->y,
+			(int)(limit->x + limit->width)
+			);
 	return out;
 }
 

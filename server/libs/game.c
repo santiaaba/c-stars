@@ -286,6 +286,15 @@ void static game_playing_level(game_t *g){
 						/* Comenzamos eliminacion nave enemiga */
 						ship_begin_destroy(ship);
 					}
+
+					/* Si sale de pantalla se elimina */
+					/* La NAVE DEBE INICIAR CON AL MENOS UN PIXEL DENTRO
+						DE LOS LIMITES. SINO SE AUTODESTRUYE */
+					if(border_out_limits(ship_border(ship),&(g->limits))){
+							printf("ENEMIGO salio de pantalla!!!!!\n");
+							ship_set_state(ship,SHIP_END);
+					}
+
 					ship_render(ship,&data);
 					game_send_data(g,&data,false);
 					lista_next(g->enemies);

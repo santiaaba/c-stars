@@ -247,25 +247,43 @@ void ia_init(ia_t *ia, clockgame_t *clock){
 	ia->path=(lista_t*)malloc(sizeof(lista_t));
 	lista_init(ia->path,sizeof(ia_mov_t));
 	ia -> clock = clock;
+	ia -> next_mov_time = 0;
+	ia -> start = false;
 }
 
 void ia_start(ia_t *ia){
 	lista_first(ia->path);
-	ia -> time_start = clockgame_time(ia->clock);
+	ia -> start = true;
 }
 
-void ia_add_path( ia_t *ia, uint16_t instant,
+void ia_add_path( ia_t *ia, uint16_t duration,
 					 uint32_t direction, uint32_t speed){
 	ia_mov_t *mov;
 	mov = (ia_mov_t *)malloc(sizeof(ia_mov_t));
 	vector_set(&(mov->vector),vector_grad_to_rad(direction),speed);
-	mov->instant = instant;
+	mov->duration = duration;
 	lista_add(ia->path,mov);
 }
 
 void ia_drive_ship(ia_t *ia, ship_t *ship){
 	vector_t *vector;
 
+	if(ia->start){
+		if(!lista_eol(ia->path)){
+			printf("Entro IA hay movimientos: %i | %i\n",ia->next_mov_time,clockgame_time(ia->clock));
+			if(ia->next_mov_time < clockgame_time(ia->clock)){
+				vector = &(((ia_mov_t*)(lista_get(ia->path)))->vector);
+				ship_set_speed(ship,vector_get_module(vector));
+				ship_set_direction(ship,vector_get_direction(vector));
+				printf("Duracion: %i\n",((ia_mov_t*)lista_get(ia->path))->duration);
+				ia->next_mov_time = ((ia_mov_t*)lista_get(ia->path))->duration + clockgame_time(ia->clock);
+				lista_next(ia->path);
+			}
+//		} else {
+//			ship_set_state(ship,SHIP_DESTROY);
+		}
+	}
+/*
 	if(!lista_eol(ia->path)){
 		if(((ia_mov_t*)lista_get(ia->path))->instant + ia->time_start
 			<= clockgame_time(ia->clock)){
@@ -277,6 +295,7 @@ void ia_drive_ship(ia_t *ia, ship_t *ship){
 	} else {
 		ship_set_state(ship,SHIP_DESTROY);
 	}
+*/
 }
 
 void ia_mov_destroy(ia_mov_t **ia_mov){

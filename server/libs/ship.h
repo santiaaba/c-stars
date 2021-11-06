@@ -26,13 +26,14 @@ Los 0 y 10 son tipos de disparos. Ver shoot.h */
 
 typedef struct t_ia_mov{
 	vector_t vector;
-	uint16_t instant;
+	uint16_t duration;
 } ia_mov_t;
 
 typedef struct t_ia{
 	lista_t *path;
-	uint16_t time_start;	/* Instante de tiempo en que
-									se inicio el IA */
+	bool start;
+	uint16_t next_mov_time;	/* Instante de tiempo en que se inicio
+										el último movimiento */
 	clockgame_t *clock;
 } ia_t;
 
@@ -155,7 +156,7 @@ void ia_start(ia_t *ia);
 	si correspondiese */
 void ia_drive_ship(ia_t *ia, ship_t *ship);
 
-void ia_add_path(ia_t *ia, uint16_t instant,uint32_t direction, uint32_t speed);
+void ia_add_path(ia_t *ia, uint16_t duration, uint32_t direction, uint32_t speed);
 
 void ia_destroy(ia_t **ia);
 

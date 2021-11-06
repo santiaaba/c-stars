@@ -58,7 +58,7 @@ void main(char argc, char * argv[]){
 			printf("direccion: %i, ",num);
 			fscanf(fdIN,"%hd",&num);			/* tiempo */
 			fwrite(&num,sizeof(int16_t),1,fdOUT);
-			printf("momento: %i\n",num);
+			printf("duracion: %i\n",num);
 			k++;
 		}
 		i++;

@@ -109,7 +109,7 @@ bool border_out_limits(border_t *border, rect_t *limit){
 		y + point_get_y(border->position));
 
 //	printf ("---------out?----------\n");
-	return rect_out_rect(&rect,limit);
+	return rect_out_rect(limit,&rect);
 	
 }
 
