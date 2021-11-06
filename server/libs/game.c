@@ -373,10 +373,10 @@ void static game_playing_level(game_t *g){
 								shoot_get_damage(shoot));
 							//printf("power: %i\n",ship_get_power(ship));
 							if(ship_get_power(ship) < 0){
+								ship_begin_destroy(ship);
 								g->score += game_remunerate(ship_get_type(ship));
-								ship_set_state(ship,SHIP_DESTROY);
-								ship_set_animation(ship,1,15,false);
 								g->request_status = 1;
+		            		g->data.header.aux |= AUX_FORCESTATUS;
 							}
 							shoot_set_state(shoot,SHOOT_DESTROY);
 						}
@@ -461,9 +461,9 @@ void static game_playing_level(game_t *g){
 				}
 				break;
 			case L_EGRESS:
-				/* Cuando la nave sale de la pantalla hemos terminado
-					el nivel */
-				if(point_get_x(ship_get_position(g->player)) >= SCREEN_WIDTH &&
+				/* Avanzamos la nava automaticamente hasta que sale de la panalla */
+
+				if(border_out_limits(ship_border(g->player),&(g->limits)) &&
 					g->request_status == 0){
 					level_set_state(g->level,L_END);
 				}

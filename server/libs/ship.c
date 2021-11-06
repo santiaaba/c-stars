@@ -53,7 +53,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = true;
 			weapon_init(&(ship->weapon),WEAPON_1,5,clock,
-				GRAD_0,false,100,ship->position,62,43,shoots);
+				GRAD_0,false,100,ship->position,62,36,shoots);
 			break;
 		case SHIP_ENEMIE1:
 			ship -> power = 30;
@@ -73,8 +73,8 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = false;
-			weapon_init(&(ship->weapon),WEAPON_1,200,clock,
-				GRAD_180,true,0,ship->position,0,69,shoots);
+			weapon_init(&(ship->weapon),WEAPON_1,20,clock,
+				GRAD_180,true,30,ship->position,0,69,shoots);
 			break;
 	}
 }
