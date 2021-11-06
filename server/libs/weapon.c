@@ -15,12 +15,7 @@ void weapon_init(weapon_t *weapon, uint8_t type, uint8_t frecuence,
 	weapon->offset_y = offset_y;
 	weapon->shoots = shoots;
 	weapon->shooting = false;
-
-	switch(type){
-		case WEAPON_1:
-			weapon->frecuence = 5;
-			break;
-	}
+	weapon->frecuence = frecuence;
 }
 
 void weapon_shooting(weapon_t *weapon, bool shooting){
@@ -46,11 +41,12 @@ bool weapon_shoot(weapon_t *weapon){
 
 	//printf("Disparamos?: %i\n",weapon->shooting);
 	if(weapon->shooting){
-		//printf("weapon_shoot(): clock:%i > next:%i\n",clockgame_time(weapon->clockgame), weapon->last_shoot + weapon->frecuence);
+//		printf("weapon_shoot(): clock:%i > next: %i + %i = %i\n",clockgame_time(weapon->clockgame),
+//			weapon->last_shoot, weapon->frecuence, weapon->last_shoot + weapon->frecuence);
 		if(clockgame_time(weapon->clockgame) > weapon->last_shoot + weapon->frecuence && aux){
 			//printf("Creamos un nuevo disparo\n");
 			shoot = (shoot_t*)malloc(sizeof(shoot_t));
-			printf("weapon_shoot(): %i\n",weapon->type);
+//			printf("weapon_shoot(): %i\n",weapon->type);
 			switch(weapon->type){
 				case WEAPON_1:
 					//printf("Iniciamos el disparo\n");

@@ -20,12 +20,11 @@ void shoot_init(shoot_t *shoot, int type,
 
 	shoot->type = type;
 	point_set(shoot->position,0,0);
-	border_init(shoot->border,0,0);
 	vector_init(shoot->vector);
 	shoot->sprite = 0;
 	shoot->frame = 0;
 	point_set(shoot->position,x,y);
-	border_set_point(shoot->border,x,y);
+	//border_set_point(shoot->border,x,y);
 
 	shoot->state = SHOOT_LIVE;
 
@@ -33,6 +32,7 @@ void shoot_init(shoot_t *shoot, int type,
 		case SHOOT_1:
 			shoot->damage = 10;
 			vector_set(shoot->vector,direction,15);
+			border_init(shoot->border,shoot->position,10,10);
 			rect = create_rect(0,0,10,10);
          border_add_rect(shoot->border,rect);
 			shoot_set_animation(shoot,0,1,false);
@@ -57,7 +57,7 @@ void shoot_set_state(shoot_t *shoot, uint8_t state){
 
 void shoot_set_position(shoot_t *shoot, int32_t x, int32_t y){
 	point_set(shoot->position,x,y);
-	border_set_point(shoot->border,x,y);
+	//border_set_point(shoot->border,x,y);
 }
 
 point_t *shoot_get_position(shoot_t *shoot){
@@ -67,8 +67,8 @@ point_t *shoot_get_position(shoot_t *shoot){
 void shoot_go(shoot_t *shoot){
 	animation_next(&(shoot->animation));
 	point_add_vector(shoot->position,shoot->vector);
-	border_set_point(shoot->border,shoot->position->x,
-		shoot->position->y);
+	//border_set_point(shoot->border,shoot->position->x,
+	//	shoot->position->y);
 }
 
 uint32_t shoot_get_damage(shoot_t *shoot){

@@ -18,6 +18,9 @@ void game_init(game_t *g, sem_t *sem_event){
 	g->request_status = 0;
 	g->statusForced = false;
 
+	rect_set_point(&(g->limits),0,0);
+	rect_set_dim(&(g->limits),SCREEN_WIDTH,SCREEN_HEIGHT);
+
 	g->level=(level_t*)malloc(sizeof(level_t));
 	level_init(g->level,g->clock);
 	g->level_current = 1;
@@ -47,6 +50,7 @@ void game_level_prepare(game_t *g){
 	lista_clean(g->shoot_player,(void*)(void**)&shoot_destroy);
 	lista_clean(g->enemies,(void*)(void**)&ship_destroy);
 	ship_set_position(g->player,100,300);
+	ship_set_tangible(g->player,true);
 	g->frame = 0;
 	clockgame_restore(g->clock);
 }
@@ -258,6 +262,7 @@ void static game_playing_level(game_t *g){
 		//printf("game_playing_level(): RELOJ: %"PRIu32"\n",clockgame_time(g->clock));
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
+
 		/* Gestionamos enemigos */
 		lista_first(g->enemies);
 		while(!lista_eol(g->enemies)){
@@ -288,18 +293,18 @@ void static game_playing_level(game_t *g){
 				case SHIP_DESTROY:
 					if(animation_end(&(ship->animation)))
 						ship_set_state(ship,SHIP_END);
-/*					else
-						animation_next(&(ship->animation));*/
 					ship_render(ship,&data);
 					game_send_data(g,&data,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_END:
+					printf("ENEMIGOS. Antes: %i",lista_size(g->enemies));
 					ship = lista_remove(g->enemies);
 					ship_destroy(&ship);
-					//free(ship);
+					printf("ENEMIGOS. Quedan: %i",lista_size(g->enemies));
 			}
 		}
+
 		/* Gestionamos disparos del enemigo */
 		lista_first(g->shoot_enemies);
 		while(!lista_eol(g->shoot_enemies)){
@@ -324,6 +329,13 @@ void static game_playing_level(game_t *g){
 						}
 						shoot_set_state(shoot,SHOOT_DESTROY);
 					}
+
+					/* Sale de pantalla? */
+					if(border_out_limits(shoot_get_border(shoot),&(g->limits))){
+						printf("Disparo salio de pantalla!!!!!\n");
+						shoot_set_state(shoot,SHOOT_END);
+					}
+
 					shoot_render(shoot,&data);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_enemies);
@@ -331,16 +343,15 @@ void static game_playing_level(game_t *g){
 				case SHOOT_DESTROY:
 					if(animation_end(&(shoot->animation)))
 						shoot_set_state(shoot,SHOOT_END);
-/*					else
-						animation_next(&(shoot->animation));*/
 					shoot_render(shoot,&data);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_enemies);
 					break;
 				case SHOOT_END:
+					printf("SHOOTS Enemigos. Antes: %i",lista_size(g->shoot_enemies));
 					shoot = lista_remove(g->shoot_enemies);
 					shoot_destroy(&shoot);
-					//free(shoot);
+					printf(" Quedan: %i\n",lista_size(g->shoot_enemies));
 			}
 		}
 
@@ -371,6 +382,13 @@ void static game_playing_level(game_t *g){
 						}
 						lista_next(g->enemies);
 					}
+
+					/* Determinamos si sale de la pantalla */
+					if(border_out_limits(shoot_get_border(shoot),&(g->limits))){
+						printf("Disparo salio de pantalla!!!!!\n");
+						shoot_set_state(shoot,SHOOT_END);
+					}
+
 					shoot_render(shoot,&data);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_player);
@@ -385,9 +403,10 @@ void static game_playing_level(game_t *g){
 					lista_next(g->shoot_player);
 					break;
 				case SHOOT_END:
+					printf("SHOOTS Jugador. Antes: %i",lista_size(g->shoot_player));
 					shoot = lista_remove(g->shoot_player);
 					shoot_destroy(&shoot);
-					//free(shoot);
+					printf(" Quedan: %i\n",lista_size(g->shoot_player));
 			}
 		}
 

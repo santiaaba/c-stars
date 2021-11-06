@@ -96,13 +96,6 @@ void ship_remove_limits(ship_t *ship);
 	si esta esta activada. Anima la nave */
 void ship_go(ship_t *ship);
 
-/* Agrega un rectandulo al borde de la nave. Se debe
-   realizar luego del init cuando la nave esta en el punto
-	(0,0). Los rectángulos deben estar definidos relativos
-	a este punto.
- */
-void ship_border_add(ship_t *ship, int32_t x, int32_t y, uint32_t heigh, uint32_t width);
-
 /* Para el manejo de los estados */
 void ship_set_state(ship_t *ship, uint8_t state);
 uint8_t ship_get_state(ship_t *ship);

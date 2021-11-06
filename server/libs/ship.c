@@ -23,7 +23,6 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 	ship->ia=(ia_t*)malloc(sizeof(ia_t));
 
 	point_init(ship->position);
-	border_init(ship->border,0,0);
 	vector_init(ship->vector);
 	ia_init(ship->ia, clock);
 
@@ -38,29 +37,44 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 	switch(type){
 		case SHIP_PLAYER:
 			ship -> power = 100;
-			rect = create_rect(21,4,21,80);
+
+			border_init(ship->border,ship->position,64,88);
+			rect = create_rect(54,34,15,18);
 			border_add_rect(ship->border,rect);
-			rect = create_rect(42,17,17,53);
+			rect = create_rect(52,73,13,17);
 			border_add_rect(ship->border,rect);
-			rect = create_rect(4,33,17,23);
+			rect = create_rect(4,35,55,23);
 			border_add_rect(ship->border,rect);
+			rect = create_rect(20,3,19,30);
+			border_add_rect(ship->border,rect);
+			rect = create_rect(20,55,19,30);
+			border_add_rect(ship->border,rect);
+			
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = true;
-			weapon_init(&(ship->weapon),WEAPON_1,10,clock,
+			weapon_init(&(ship->weapon),WEAPON_1,5,clock,
 				GRAD_0,false,100,ship->position,62,43,shoots);
 			break;
 		case SHIP_ENEMIE1:
 			ship -> power = 30;
-			rect = create_rect(27,8,82,45);
+			border_init(ship->border,ship->position,133,138);
+
+			rect = create_rect(19,57,105,26);
 			border_add_rect(ship->border,rect);
-			rect = create_rect(15,56,11,29);
+
+			rect = create_rect(45,26,20,32);
 			border_add_rect(ship->border,rect);
-			rect = create_rect(27,86,82,45);
+
+			rect = create_rect(45,84,20,32);
 			border_add_rect(ship->border,rect);
+
+			rect = create_rect(62,10,44,118);
+			border_add_rect(ship->border,rect);
+
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = false;
-			weapon_init(&(ship->weapon),WEAPON_1,20,clock,
-				GRAD_180,true,50,ship->position,0,69,shoots);
+			weapon_init(&(ship->weapon),WEAPON_1,200,clock,
+				GRAD_180,true,0,ship->position,0,69,shoots);
 			break;
 	}
 }
@@ -131,7 +145,7 @@ int ship_get_type(ship_t *ship){
 
 void ship_set_position(ship_t *ship, int32_t x, int32_t y){
 	point_set(ship->position,x,y);
-	border_set_point(ship->border,x,y);
+	//border_set_point(ship->border,x,y);
 }
 
 void ship_go(ship_t *ship){
@@ -159,21 +173,12 @@ void ship_go(ship_t *ship){
 	point_add(ship->position,ship->addx,ship->addy);
 
 //	printf("(%i,%i)\n",ship->position->x,ship->position->y);
-	border_set_point(ship->border,ship->position->x,ship->position->y);
+	//border_set_point(ship->border,ship->position->x,ship->position->y);
 
 //	point_add(weapon_get_position(&(ship->weapon)),ship->addx,ship->addy);
 	weapon_shoot(&(ship->weapon));
 }
 
-/*
-void ship_set_vector(ship_t *ship, vector_t *vector){
-	vector_copy(ship->vector,vector);
-}
-
-vector_t *ship_get_vector(ship_t *ship){
-	return ship->vector;
-}
-*/
 border_t *ship_border(ship_t *ship){
 	return ship->border;
 }
@@ -186,20 +191,11 @@ uint8_t ship_colision_ship(ship_t *ship, ship_t *ship2){
 }
 
 uint8_t ship_colision_shoot(ship_t *ship, shoot_t *shoot){
+//	printf("SHIP TANGIBLE:%i\n",ship->tangible);
 	if(ship->tangible)
 		return border_collision(ship->border,shoot_get_border(shoot));
 	else
 		return false;
-}
-
-void ship_border_add(ship_t *ship, int32_t x, int32_t y,
-							uint32_t width, uint32_t height){
-	rect_t *rect;
-	rect = (rect_t *)malloc(sizeof(rect_t));
-	rect_init(rect);
-	rect_set_point(rect,x,y);
-	rect_set_dim(rect,width,height);
-	border_add_rect(ship->border,rect);
 }
 
 int ship_get_power(ship_t *ship){
@@ -235,15 +231,6 @@ void ship_set_animation(ship_t *ship, uint8_t sprite,
 	uint8_t frame_size, bool loop){
 	animation_init(&(ship->animation),sprite,frame_size, loop);
 }
-
-/*
-void ship_data(ship_t *ship, data_render_t *data){
-	data->entity_class = ship->type;
-	data->pos_x = point_get_x(ship->position);
-	data->pos_y = point_get_y(ship->position);
-	animation_get(&(ship->animation),&(data->sprite),&(data->frame));
-}
-*/
 
 void ship_render(ship_t *ship, data_render_t *data){
 	data->entity_class = ship->type;

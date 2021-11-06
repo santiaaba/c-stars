@@ -62,7 +62,7 @@ void static req_game_start(game_t *g, req_t *req, res_t *res){
 	/* Inicia el juego. */
 	printf("GAME STATE: %i\n",game_get_state(g));
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
-	if(game_get_state(g) != G_READY){
+	if(game_get_state(g) != G_READY && game_get_state(g) != G_OVER){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}

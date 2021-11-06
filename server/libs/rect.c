@@ -37,6 +37,19 @@ bool rect_into_rect(rect_t *limit, rect_t *rect){
 				rect->x + rect->width < limit->x + limit->width);
 }
 
+bool rect_out_rect(rect_t *limit, rect_t *rect){
+
+	bool out;
+	out = (	rect->x + rect->width < limit->x ||
+				limit->x + limit->width < rect->x ||
+				rect->y + rect->height < limit->y ||
+				limit->y + limit->height < rect->y);
+//	printf("rect_out?:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i\n",
+//			rect->x,rect->y,rect->width,rect->height,
+//			limit->x,limit->y,limit->width,limit->height,out);
+	return out;
+}
+
 void rect_copy(rect_t *dest, rect_t *origen){
 	dest->x = origen->x;
 	dest->y = origen->y;
@@ -56,13 +69,27 @@ uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	uint32_t o_h = rect2->height;
 	uint32_t o_w = rect2->width;
 
-	crash = (o_x > b_x && o_x < b_x + b_w &&
-	((o_y < b_y && o_y > b_y - b_h) ||
-	(o_y + o_h < b_y && o_y + o_h > b_y - b_h))) ||
+	crash = ((o_x > b_x && o_x < b_x + b_w) ||
+		(o_x + o_w > b_x && o_x + o_w < b_x + b_w)) &&
+		((o_y + o_h > b_y && o_y + o_h < b_y + b_h) ||
+		 (o_y > b_y && o_y < b_y + b_h));
 
-	(o_x + o_w > b_x && o_x < b_x + b_w &&
+/*
+	crash = (o_x > b_x && o_x < b_x + b_w &&
+		(
+			(o_y < b_y && o_y > b_y - b_h) ||
+			(o_y + o_h < b_y && o_y + o_h > b_y - b_h)
+		)
+	)
+	||
+		(o_x + o_w > b_x && o_x < b_x + b_w &&
 	((o_y + o_w < b_y && o_y + o_w > b_y - b_h) ||
 	(o_y + o_h < b_y && o_y + o_h > b_y - b_h)));
+*/
+/*	crash =	(o_x + o_w > b_x && o_y + o_h > b_y) ||
+				(o_x < b_x + b_w && o_y + o_h > b_y) ||
+				(o_x + o_w > b_x && o_y < b_y + b_h) ||
+				(o_x < b_x + b_w && o_y < b_y + b_h); */
 
 //	printf("rect_collision:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i\n",
 //			b_x,b_y,b_w,b_h,o_x,o_y,o_w,o_h,crash);
