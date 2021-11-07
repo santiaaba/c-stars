@@ -107,6 +107,10 @@ void ship_set_limits(ship_t *ship,int limit_bottom, int limit_right){
 	rect_set_dim(&(ship->limits),limit_right,limit_bottom);
 }
 
+void ship_activate_limits(ship_t *ship){
+	ship->limited = true;
+}
+
 void ship_remove_limits(ship_t *ship){
 	ship->limited = false;
 }

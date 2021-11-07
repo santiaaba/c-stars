@@ -44,13 +44,19 @@ void game_init(game_t *g, sem_t *sem_event){
 
 void game_level_prepare(game_t *g){
 	/* Daja preparado el juego para el nivel en cuestion */
-
 	level_load(g->level,g->level_current, g->shoot_enemies);
 	lista_clean(g->shoot_enemies,(void*)(void**)&shoot_destroy);
 	lista_clean(g->shoot_player,(void*)(void**)&shoot_destroy);
 	lista_clean(g->enemies,(void*)(void**)&ship_destroy);
 	ship_set_position(g->player,100,300);
 	ship_set_tangible(g->player,true);
+	ship_activate_limits(g->player);
+
+	g->direction.top = false;
+	g->direction.bottom = false;
+	g->direction.left = false;
+	g->direction.top = false;
+
 	g->frame = 0;
 	clockgame_restore(g->clock);
 }
@@ -291,7 +297,7 @@ void static game_playing_level(game_t *g){
 					/* La NAVE DEBE INICIAR CON AL MENOS UN PIXEL DENTRO
 						DE LOS LIMITES. SINO SE AUTODESTRUYE */
 					if(border_out_limits(ship_border(ship),&(g->limits))){
-							printf("ENEMIGO salio de pantalla!!!!!\n");
+							//printf("ENEMIGO salio de pantalla!!!!!\n");
 							ship_set_state(ship,SHIP_END);
 					}
 
@@ -307,10 +313,10 @@ void static game_playing_level(game_t *g){
 					lista_next(g->enemies);
 					break;
 				case SHIP_END:
-					printf("ENEMIGOS. Antes: %i",lista_size(g->enemies));
+					//printf("ENEMIGOS. Antes: %i",lista_size(g->enemies));
 					ship = lista_remove(g->enemies);
 					ship_destroy(&ship);
-					printf("ENEMIGOS. Quedan: %i",lista_size(g->enemies));
+					//printf("ENEMIGOS. Quedan: %i",lista_size(g->enemies));
 			}
 		}
 
@@ -465,6 +471,7 @@ void static game_playing_level(game_t *g){
 					lista_size(g->shoot_enemies) == 0){
 						ship_remove_limits(g->player);
 						ship_set_speed(g->player,10.0);
+						ship_shooting(g->player,false);
 						ship_set_direction(g->player,0.0);
 						level_set_state(g->level,L_EGRESS);
 				}

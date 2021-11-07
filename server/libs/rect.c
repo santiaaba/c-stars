@@ -7,26 +7,26 @@ void rect_init(rect_t *rect){
 	rect->height = 0;
 }
 
-void rect_get_point(rect_t *rect, int32_t *x, int32_t *y){
+void rect_get_point(rect_t *rect, int *x, int *y){
 	*x = rect->x;
 	*y = rect->y;
 }
 
-void rect_set_point(rect_t *rect, int32_t x, int32_t y){
+void rect_set_point(rect_t *rect, int x, int y){
 	rect->x = x;
 	rect->y = y;
 }
 
-void rect_set_dim(rect_t *rect, uint32_t width, uint32_t height){
+void rect_set_dim(rect_t *rect, uint16_t width, uint16_t height){
 	rect->width = width;
 	rect->height = height;
 }
 
-uint32_t rect_get_width(rect_t *rect){
+uint rect_get_width(rect_t *rect){
 	return rect->width;
 }
 
-uint32_t rect_get_height(rect_t *rect){
+uint rect_get_height(rect_t *rect){
 	return rect->height;
 }
 
@@ -44,16 +44,16 @@ bool rect_out_rect(rect_t *limit, rect_t *rect){
 				(limit->x + limit->width) < rect->x ||
 				(rect->y + rect->height) < limit->y ||
 				(limit->y + limit->height) < rect->y);
-
-	printf("rect_out?:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i,%i,%i,%i,%i\n",
+/*
+	printf("rect_out?:(x,y,w,h) =>(%i,%i,%i,%i) | (%i,%i,%i,%i) | %i,%i,%i,%i\n",
 			rect->x,rect->y,rect->width,rect->height,
 			limit->x,limit->y,limit->width,limit->height,
 			(rect->x + rect->width) < limit->x,
 			(limit->x + limit->width) < rect->x,
 			(rect->y + rect->height) < limit->y,
-			(limit->y + limit->height) < rect->y,
-			(int)(limit->x + limit->width)
+			(limit->y + limit->height) < rect->y
 			);
+*/
 	return out;
 }
 
@@ -67,14 +67,14 @@ void rect_copy(rect_t *dest, rect_t *origen){
 uint16_t rect_collision(rect_t *rect, rect_t *rect2){
 	
 	bool crash;
-	int32_t b_x = rect->x;
-	int32_t b_y = rect->y;
-	uint32_t b_h = rect->height;
-	uint32_t b_w = rect->width;
-	int32_t o_x = rect2->x;
-	int32_t o_y = rect2->y;
-	uint32_t o_h = rect2->height;
-	uint32_t o_w = rect2->width;
+	int b_x = rect->x;
+	int b_y = rect->y;
+	uint b_h = rect->height;
+	uint b_w = rect->width;
+	int o_x = rect2->x;
+	int o_y = rect2->y;
+	uint o_h = rect2->height;
+	uint o_w = rect2->width;
 
 	crash = ((o_x > b_x && o_x < b_x + b_w) ||
 		(o_x + o_w > b_x && o_x + o_w < b_x + b_w)) &&

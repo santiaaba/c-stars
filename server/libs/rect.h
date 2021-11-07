@@ -8,22 +8,22 @@
 #define RECT_H
 
 typedef struct rect{
-	int32_t x;
-	int32_t y;
-	uint32_t width;
-	uint32_t height;
+	int x;
+	int y;
+	uint16_t width;
+	uint16_t height;
 } rect_t;
 
 /* Inicializa un rectangulo */
 void rect_init(rect_t *rect);
 
 /* Setea el punto del rectangulo */
-void rect_set_point(rect_t *rect, int32_t x, int32_t y);
+void rect_set_point(rect_t *rect, int x, int y);
 
-void rect_get_point(rect_t *rect, int32_t *x, int32_t *y);
+void rect_get_point(rect_t *rect, int *x, int *y);
 
 /* Setea las dimenciones del rectangulo */
-void rect_set_dim(rect_t *rect, uint32_t width, uint32_t height);
+void rect_set_dim(rect_t *rect, uint16_t width, uint16_t height);
 
 /* Retorna el ancho del rectangulo */
 uint32_t rect_get_width(rect_t *rect);

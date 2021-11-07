@@ -93,6 +93,8 @@ void ship_set_limits(ship_t *ship,int limit_bottom, int limit_right);
 /* Remueve los limites de la nave en sus movimientos */
 void ship_remove_limits(ship_t *ship);
 
+void ship_activate_limits(ship_t *ship);
+
 /* Mueve la nave. Ejecuta la instaucción de la ia
 	si esta esta activada. Anima la nave */
 void ship_go(ship_t *ship);
