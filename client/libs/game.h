@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>
@@ -11,6 +12,7 @@
 #include "entity.h"
 #include "button.h"
 #include "powerbar.h"
+#include "background.h"
 #include "input.h"
 #include "menu.h"
 #include "text.h"
@@ -30,8 +32,11 @@
 #define SCREEN_BPP		24
 #define SCREEN_REFRESH	60
 #define CANT_TEXTURES	3
+#define CANT_SOUNDS		2
+#define CANT_FX_SOUNDS	2
+#define CANT_LEVELS		1
 
-/* EStados del cliente */
+/* Estados del cliente */
 #define HELLO				0		// Pantalla de presentacion
 #define DISCONNECTED		1		// Pantalla de conexion
 #define CONNECTED			2		// Conectado listo para iniciar
@@ -40,6 +45,10 @@
 #define END					5		// Finaliza el cliente
 #define END_LEVEL			6		// Finaliza el nivel
 #define END_GAME			7		// Finaliza el juego
+
+/* Efectos de sonido */
+#define FX_MENU			0
+#define FX_CLICK			1
 
 typedef struct{
 	SDL_Texture *texture;
@@ -50,9 +59,12 @@ typedef struct{
 typedef struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	entitie_t entities[CANT_TEXTURES];		// Texturas
-	uint16_t screen_frame;						// Frame actual
-	int status;							// Estado del cliente
+	entitie_t entities[CANT_TEXTURES];			// Entidades
+	SDL_Texture *backgrounds[CANT_LEVELS];		// Background
+	Mix_Chunk *sounds[CANT_SOUNDS];				// Sonidos provenientes del servidor
+	Mix_Chunk *fx_sounds[CANT_FX_SOUNDS];		// Sonidos varios
+	uint16_t screen_frame;							// Frame actual
+	int status;											// Estado del cliente
 	bool status_in_progress;
 
 	/* Los siguientes 4 atributos son obtenidos
@@ -64,10 +76,12 @@ typedef struct {
 	uint8_t level_state;				// Estado del nivel
 	uint32_t score;					// Puntaje
 
+	data_t data;
 	tcp_client_t *command_cli;
 	sem_t sem_status;
-	pthread_t th_render;
+	sem_t sem_data;
 	pthread_t th_status;
+	pthread_t th_recive;
 	int udp;
 	int sockfd;
 	struct sockaddr_in cliaddr;

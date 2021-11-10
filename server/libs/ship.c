@@ -52,7 +52,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = true;
-			weapon_init(&(ship->weapon),WEAPON_1,5,clock,
+			weapon_init(&(ship->weapon),WEAPON_1,2,clock,
 				GRAD_0,false,100,ship->position,62,36,shoots);
 			break;
 		case SHIP_ENEMIE1:
@@ -236,11 +236,17 @@ void ship_set_animation(ship_t *ship, uint8_t sprite,
 	animation_init(&(ship->animation),sprite,frame_size, loop);
 }
 
-void ship_render(ship_t *ship, data_render_t *data){
+void ship_render(ship_t *ship, data_render_t *data, int16_t *sound){
 	data->entity_class = ship->type;
 	data->pos_x = point_get_x(ship->position);
 	data->pos_y = point_get_y(ship->position);
 	animation_get(&(ship->animation),&(data->sprite),&(data->frame));
+
+	/* Sound Destroy. All ships */
+	if(data->sprite == 1 && data->frame == 9)
+		*sound = SOUND_EXPLOSION;		/* Explosion */
+	else
+		*sound = -1;		/* NADA */
 }
 
 /***************************************

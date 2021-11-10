@@ -142,7 +142,7 @@ void ship_ia_activate(ship_t *ship);
 void ship_destroy(ship_t **ship);
 
 /* Genera los datos de la nave en el buffer */
-void ship_render(ship_t *ship, data_render_t *data);
+void ship_render(ship_t *ship, data_render_t *data, int16_t *sound);
 
 /****************************
 			Para la IA

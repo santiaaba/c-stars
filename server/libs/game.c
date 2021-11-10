@@ -39,6 +39,9 @@ void game_init(game_t *g, sem_t *sem_event){
 	clockgame_init(g->clock);
 
 	g->data.header.size = 0;
+	g->data.header.type = D_VIDEO;
+	g->sound.header.size = 0;
+	g->sound.header.type = D_SOUND;
 	g->buffer = (char*)malloc(sizeof(char)*8);
 }
 
@@ -48,6 +51,8 @@ void game_level_prepare(game_t *g){
 	lista_clean(g->shoot_enemies,(void*)(void**)&shoot_destroy);
 	lista_clean(g->shoot_player,(void*)(void**)&shoot_destroy);
 	lista_clean(g->enemies,(void*)(void**)&ship_destroy);
+	ship_set_direction(g->player,0);
+	ship_set_speed(g->player,0);
 	ship_set_position(g->player,100,300);
 	ship_set_tangible(g->player,true);
 	ship_activate_limits(g->player);
@@ -203,22 +208,50 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 		g->data.header.size ++;
 	}
 
-	if(at_once || g->data.header.size == MAX_DATA_BODY){
+	if((at_once || g->data.header.size == MAX_DATA_BODY) &&
+		g->data.header.size != 0){
 		g->data.header.frame = g->frame;
-		g->data.header.type = D_VIDEO;
 		if(g->request_status)
 			g->data.header.aux = AUX_FORCESTATUS;
 		else
 			g->data.header.aux = 0;
 
 		data_to_buffer(&(g->data),&(g->buffer),&(g->buffer_size));
-//		printf("game_send_data(): Bytes a enviar: %i\n",g->buffer_size);
+		printf("game_send_data(): Bytes a enviar: %i\n",g->buffer_size);
 		n = sendto(g->sockfd, g->buffer, g->buffer_size, 0,
 			(const struct sockaddr *) &(g->servaddr),sizeof(g->servaddr));
-//		printf("game_send_data(): Bytes enviados: %i\n",n);
+		printf("game_send_data(): Bytes enviados: %i\n",n);
 		g->data.header.size = 0;
 	}
 }
+
+void static game_send_sound(game_t *g, int16_t *sound, bool at_once){
+	int n;
+
+	printf("game_send_sound() header.size=%u\n",g->sound.header.size);
+	if(sound != NULL && *sound != -1){
+		g->sound.sound[g->sound.header.size] = *sound;
+		g->sound.header.size ++;
+	}
+
+	if((at_once || g->sound.header.size == MAX_DATA_BODY)
+		&& g->sound.header.size != 0){
+		printf("game_send_sound(): Enviando sonido\n");
+		g->sound.header.frame = g->frame;
+		if(g->request_status)
+			g->sound.header.aux = AUX_FORCESTATUS;
+		else
+			g->sound.header.aux = 0;
+
+		data_to_buffer(&(g->sound),&(g->buffer),&(g->buffer_size));
+//		printf("game_send_sound(): Bytes a enviar: %i\n",g->buffer_size);
+		n = sendto(g->sockfd, g->buffer, g->buffer_size, 0,
+			(const struct sockaddr *) &(g->servaddr),sizeof(g->servaddr));
+//		printf("game_send_sound(): Bytes enviados: %i\n",n);
+		g->sound.header.size = 0;
+	}
+}
+
 
 int game_init_udp(game_t *g, char *ip, int port){
 	if ( (g->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
@@ -253,6 +286,7 @@ void static game_playing_level(game_t *g){
 	ship_t *ship;
 	shoot_t *shoot;
 	data_render_t data;
+	int16_t sound;
 
 	req.tv_sec = (1000/FXS) / 1000;
 	req.tv_nsec = ((1000/FXS) % 1000) * 1000000;
@@ -265,7 +299,7 @@ void static game_playing_level(game_t *g){
 	clockgame_start(g->clock);
 	while(g->state == G_PLAYING){
 	//	continue;
-		//printf("game_playing_level(): RELOJ: %"PRIu32"\n",clockgame_time(g->clock));
+	//	printf("game_playing_level(): RELOJ: %"PRIu32"\n",clockgame_time(g->clock));
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
 
@@ -273,7 +307,7 @@ void static game_playing_level(game_t *g){
 		lista_first(g->enemies);
 		while(!lista_eol(g->enemies)){
 			ship = lista_get(g->enemies);
-			//printf("ship(x,y):(%i,%i)\n",ship->position->x,ship->position->y);
+		//	printf("ship(x,y):(%i,%i)\n",ship->position->x,ship->position->y);
 			ship_go(ship);
 			switch(ship_get_state(ship)){
 				case SHIP_LIVE:
@@ -297,26 +331,28 @@ void static game_playing_level(game_t *g){
 					/* La NAVE DEBE INICIAR CON AL MENOS UN PIXEL DENTRO
 						DE LOS LIMITES. SINO SE AUTODESTRUYE */
 					if(border_out_limits(ship_border(ship),&(g->limits))){
-							//printf("ENEMIGO salio de pantalla!!!!!\n");
+//							printf("ENEMIGO salio de pantalla!!!!!\n");
 							ship_set_state(ship,SHIP_END);
 					}
 
-					ship_render(ship,&data);
+					ship_render(ship,&data,&sound);
+//					printf("Render: %i",sound);
 					game_send_data(g,&data,false);
+					game_send_sound(g,&sound,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_DESTROY:
 					if(animation_end(&(ship->animation)))
 						ship_set_state(ship,SHIP_END);
-					ship_render(ship,&data);
+					ship_render(ship,&data,&sound);
+//					printf("Render: %i",sound);
 					game_send_data(g,&data,false);
+					game_send_sound(g,&sound,false);
 					lista_next(g->enemies);
 					break;
 				case SHIP_END:
-					//printf("ENEMIGOS. Antes: %i",lista_size(g->enemies));
 					ship = lista_remove(g->enemies);
 					ship_destroy(&ship);
-					//printf("ENEMIGOS. Quedan: %i",lista_size(g->enemies));
 			}
 		}
 
@@ -325,20 +361,22 @@ void static game_playing_level(game_t *g){
 		while(!lista_eol(g->shoot_enemies)){
 			shoot = lista_get(g->shoot_enemies);
 			switch(shoot_get_state(shoot)){
+				case SHOOT_CREATED:
+					shoot_set_state(shoot,SHOOT_LIVE);
 				case SHOOT_LIVE:
-					//printf("shoot(x,y):(%i,%i)\n",shoot->position->x,shoot->position->y);
+//					printf("shoot(x,y):(%i,%i)\n",shoot->position->x,shoot->position->y);
 					shoot_go(shoot);
 					/* Calculamos colición con nave del jugador */
 					ship = g->player;
 					if(ship_colision_shoot(ship,shoot)){
-						//printf("COLISIONO DISPARO - power: %i - damage: %i = ",ship_get_power(ship),shoot_get_damage(shoot));
+//						printf("COLISIONO DISPARO - power: %i - damage: %i = ",ship_get_power(ship),shoot_get_damage(shoot));
 						ship_set_power(ship, ship_get_power(ship) -
 							shoot_get_damage(shoot));
 
 						g->request_status = 1;
 		            g->data.header.aux |= AUX_FORCESTATUS;
 						
-						//printf("power: %i\n",ship_get_power(ship));
+//						printf("power: %i\n",ship_get_power(ship));
 						if(ship_get_power(ship) < 0){
 							ship_begin_destroy(ship);
 						}
@@ -347,26 +385,28 @@ void static game_playing_level(game_t *g){
 
 					/* Sale de pantalla? */
 					if(border_out_limits(shoot_get_border(shoot),&(g->limits))){
-						printf("Disparo salio de pantalla!!!!!\n");
+//						printf("Disparo salio de pantalla!!!!!\n");
 						shoot_set_state(shoot,SHOOT_END);
 					}
 
-					shoot_render(shoot,&data);
+					shoot_render(shoot,&data,&sound);
+//					printf("shoot Render: %i",sound);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_enemies);
 					break;
 				case SHOOT_DESTROY:
 					if(animation_end(&(shoot->animation)))
 						shoot_set_state(shoot,SHOOT_END);
-					shoot_render(shoot,&data);
+					shoot_render(shoot,&data,&sound);
+//					printf("Render: %i",sound);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_enemies);
 					break;
 				case SHOOT_END:
-					printf("SHOOTS Enemigos. Antes: %i",lista_size(g->shoot_enemies));
+//					printf("SHOOTS Enemigos. Antes: %i",lista_size(g->shoot_enemies));
 					shoot = lista_remove(g->shoot_enemies);
 					shoot_destroy(&shoot);
-					printf(" Quedan: %i\n",lista_size(g->shoot_enemies));
+//					printf(" Quedan: %i\n",lista_size(g->shoot_enemies));
 			}
 		}
 
@@ -375,6 +415,11 @@ void static game_playing_level(game_t *g){
 		while(!lista_eol(g->shoot_player)){
 			shoot = lista_get(g->shoot_player);
 			switch(shoot_get_state(shoot)){
+				case SHOOT_CREATED:
+					sound = SOUND_SHOOT1;
+					game_send_sound(g,&sound,false);
+					shoot_set_state(shoot,SHOOT_LIVE);
+					break;
 				case SHOOT_LIVE:
 					//printf("shoot(x,y):(%i,%i)\n",shoot->position->x,shoot->position->y);
 					shoot_go(shoot);
@@ -400,11 +445,12 @@ void static game_playing_level(game_t *g){
 
 					/* Determinamos si sale de la pantalla */
 					if(border_out_limits(shoot_get_border(shoot),&(g->limits))){
-						printf("Disparo salio de pantalla!!!!!\n");
+//						printf("Disparo salio de pantalla!!!!!\n");
 						shoot_set_state(shoot,SHOOT_END);
 					}
 
-					shoot_render(shoot,&data);
+					shoot_render(shoot,&data,&sound);
+	//				printf("Render: %i",sound);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_player);
 					break;
@@ -413,15 +459,16 @@ void static game_playing_level(game_t *g){
 						shoot_set_state(shoot,SHOOT_END);
 					else
 						animation_next(&(shoot->animation));
-					shoot_render(shoot,&data);
+					shoot_render(shoot,&data,&sound);
+//					printf("Render: %i",sound);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_player);
 					break;
 				case SHOOT_END:
-					printf("SHOOTS Jugador. Antes: %i",lista_size(g->shoot_player));
+//					printf("SHOOTS Jugador. Antes: %i",lista_size(g->shoot_player));
 					shoot = lista_remove(g->shoot_player);
 					shoot_destroy(&shoot);
-					printf(" Quedan: %i\n",lista_size(g->shoot_player));
+//					printf(" Quedan: %i\n",lista_size(g->shoot_player));
 			}
 		}
 
@@ -430,12 +477,14 @@ void static game_playing_level(game_t *g){
 		ship_go(ship);
 		switch(ship_get_state(ship)){
 			case SHIP_LIVE:
-				ship_render(ship,&data);
+				ship_render(ship,&data,&sound);
+//				printf("Render: %i",sound);
 				break;
 			case SHIP_DESTROY:
 				if(animation_end(&(ship->animation)))
 					ship_set_state(ship,SHIP_END);
-				ship_render(ship,&data);
+				ship_render(ship,&data,&sound);
+//				printf("Render: %i",sound);
 				break;
 			case SHIP_END:
 				/* JUEGO FINALIZADO */
@@ -450,7 +499,11 @@ void static game_playing_level(game_t *g){
 				break;
 		}
 
+//		printf("ACA para player\n");
 		game_send_data(g,&data,false);
+//		printf("ACA para player 2\n");
+		game_send_sound(g,&sound,false);
+//		printf("ACA para player 3\n");
 
 		/* Estado del nivel que se esta jugando */
 		switch(level_get_state(g->level)){
@@ -501,19 +554,23 @@ void static game_playing_level(game_t *g){
 				g->data.header.aux |= AUX_FORCESTATUS;
 
 				if(g->level_current < CANT_LEVELS){
-					printf("Pasamos al siguiente nivel\n");
+//					printf("Pasamos al siguiente nivel\n");
 					/* Hay un nivel siguiente */
 					g->level_current++;
 					game_level_prepare(g);
 				} else {
-					printf("No hay mas niveles\n");
+//					printf("No hay mas niveles\n");
 					/* No hay mas niveles, terminamos el juego */
 					game_set_state(g,G_OVER);
 				}
 				
 		}
 		/* Enviamos los datos sobrantes en este loop */
+//		printf("ACA para resto 1\n");
 		game_send_data(g,NULL,true);
+//		printf("ACA para resto 2\n");
+		game_send_sound(g,NULL,true);
+//		printf("ACA para resto 3\n");
 		g->frame++;
 
 		nanosleep(&req,&rem);

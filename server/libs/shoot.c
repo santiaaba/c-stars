@@ -26,14 +26,14 @@ void shoot_init(shoot_t *shoot, int type,
 	point_set(shoot->position,x,y);
 	//border_set_point(shoot->border,x,y);
 
-	shoot->state = SHOOT_LIVE;
+	shoot->state = SHOOT_CREATED;
 
 	switch(type){
 		case SHOOT_1:
 			shoot->damage = 10;
 			vector_set(shoot->vector,direction,15);
-			border_init(shoot->border,shoot->position,10,10);
-			rect = create_rect(0,0,10,10);
+			border_init(shoot->border,shoot->position,14,14);
+			rect = create_rect(0,0,14,14);
          border_add_rect(shoot->border,rect);
 			shoot_set_animation(shoot,0,1,false);
 			break;
@@ -79,11 +79,12 @@ border_t *shoot_get_border(shoot_t *shoot){
 	return shoot->border;
 }
 
-void shoot_render(shoot_t *shoot, data_render_t *data){
+void shoot_render(shoot_t *shoot, data_render_t *data, int16_t *sound){
 	data->entity_class = shoot->type;
 	data->pos_x = point_get_x(shoot->position);
 	data->pos_y = point_get_y(shoot->position);
 	animation_get(&(shoot->animation),&(data->sprite),&(data->frame));
+	*sound = -1;	/* Nada de momento */
 }
 
 void shoot_destroy(shoot_t **shoot){

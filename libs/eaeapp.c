@@ -235,31 +235,48 @@ void data_to_buffer(data_t *data, char **buffer, int *size){
 	uint16_t aux16;
 
 	/* Header */
-//	if(*size < DATA_HEAD_SIZE + (data->header.size * 8)){
+	if(data->header.type == D_VIDEO)
 		*size = DATA_HEAD_SIZE + (data->header.size * 8);
-		*buffer = (char *)realloc(*buffer,*size);
-//	}
+	else
+		*size = DATA_HEAD_SIZE + (data->header.size * 2);
+	*buffer = (char *)realloc(*buffer,*size);
+
 //	printf("data_to_buffer(): frame = %"PRIu32"\n",data->header.frame);
 	aux32 = htonl(data->header.frame);
 	memcpy(&(*buffer)[0], &aux32, 4);
 	(*buffer)[4] = data->header.type;
+//	printf("pasando type: %i\n",data->header.type);
 	aux16 = htons(data->header.size);
 	memcpy(&(*buffer)[5], &aux16, 2);
+//	printf("pasando size: %i\n",data->header.size);
 	(*buffer)[7] = data->header.aux;
+//	printf("pasando aux: %i\n",data->header.aux);
 
 	/* Body */
-	int k = 8;
-	for(int j=0;j<data->header.size;j++){
-		aux16 = htons(data->body[j].entity_class);
-		memcpy(&(*buffer)[k], &aux16, 2);
-		aux16 = htons(data->body[j].pos_x);
-		memcpy(&(*buffer)[k+2], &aux16, 2);
-		aux16 = htons(data->body[j].pos_y);
-		memcpy(&(*buffer)[k+4], &aux16, 2);
-		(*buffer)[k+6] = data->body[j].sprite;
-		(*buffer)[k+7] = data->body[j].frame;
-		k += 8;
+	if(data->header.type == D_VIDEO){
+//		printf("enviando video\n");
+		int k = 8;
+		for(int j=0;j<data->header.size;j++){
+			aux16 = htons(data->body[j].entity_class);
+			memcpy(&(*buffer)[k], &aux16, 2);
+			aux16 = htons(data->body[j].pos_x);
+			memcpy(&(*buffer)[k+2], &aux16, 2);
+			aux16 = htons(data->body[j].pos_y);
+			memcpy(&(*buffer)[k+4], &aux16, 2);
+			(*buffer)[k+6] = data->body[j].sprite;
+			(*buffer)[k+7] = data->body[j].frame;
+			k += 8;
+		}
+	} else {
+		printf("enviando sonido\n");
+		int k = 2;
+		for(int j=0;j<data->header.size;j++){
+			aux16 = htons(data->sound[j]);
+			memcpy(&(*buffer)[k], &aux16, 2);
+			k += 2;
+		}
 	}
+//	printf("data_to_buffer: paso todo\n");
 }
 
 void buffer_to_data(data_t *data, char *buffer){
@@ -268,6 +285,7 @@ void buffer_to_data(data_t *data, char *buffer){
 	uint32_t aux32;
 
 	/* Header */
+//	printf("buffer_to_data(): Entro\n");
 	memcpy(&aux32, &(buffer[0]), 4);
 	data->header.frame = ntohl(aux32);
 	data->header.type = buffer[4];
@@ -278,21 +296,31 @@ void buffer_to_data(data_t *data, char *buffer){
 //		data->header.frame, data->header.type, data->header.size, data->header.aux);
 	/* body */
 
-	int k = 8;
-	for(int j=0;j<data->header.size;j++){
-		memcpy(&aux16, &(buffer[k]), 2);
-		data->body[j].entity_class = ntohs(aux16);
-		memcpy(&aux16, &(buffer[k + 2]), 2);
-		data->body[j].pos_x = ntohs(aux16);
-		memcpy(&aux16, &(buffer[k + 4]), 2);
-		data->body[j].pos_y = ntohs(aux16);
-		data->body[j].sprite = buffer[k + 6];
-		data->body[j].frame = buffer[k + 7];
-		k += 8;
-//		printf("buffer_to_data():CLASS: %u | (X,Y):(%u,%u) | SPRITE: %u| FRAME: %u\n",
-//				data->body[j].entity_class,
-//				data->body[j].pos_x, data->body[j].pos_y,
-//				data->body[j].sprite,data->body[j].frame);
+	if(data->header.type == D_VIDEO){
+		int k = 8;
+		for(int j=0;j<data->header.size;j++){
+			memcpy(&aux16, &(buffer[k]), 2);
+			data->body[j].entity_class = ntohs(aux16);
+			memcpy(&aux16, &(buffer[k + 2]), 2);
+			data->body[j].pos_x = ntohs(aux16);
+			memcpy(&aux16, &(buffer[k + 4]), 2);
+			data->body[j].pos_y = ntohs(aux16);
+			data->body[j].sprite = buffer[k + 6];
+			data->body[j].frame = buffer[k + 7];
+			k += 8;
+//			printf("buffer_to_data():CLASS: %u | (X,Y):(%u,%u) | SPRITE: %u| FRAME: %u\n",
+//					data->body[j].entity_class,
+//					data->body[j].pos_x, data->body[j].pos_y,
+//					data->body[j].sprite,data->body[j].frame);
+		}
+	} else {
+		int k = 2;
+		for(int j=0;j<data->header.size;j++){
+			memcpy(&aux16, &(buffer[k]), 2);
+			data->sound[j] = ntohs(aux16);
+//			printf("buffer_to_data(): sound: %i\n",data->sound[j]);
+			k += 2;
+		}
 	}
 }
 

@@ -17,20 +17,69 @@ int static game_load_textures(game_t *g){
 	if(g->entities[SHIP_ENEMIE1].texture == NULL)
 		return 0;
 	//Shoot 1
-	load_entity(&(g->entities[SHOOT_1]),25,25,"img/shoot1.png",g->renderer);
+	load_entity(&(g->entities[SHOOT_1]),14,14,"img/shoot1.png",g->renderer);
 	if(g->entities[SHOOT_1].texture == NULL)
 		return 0;
+
+	/* Carga de los background */
+	g->backgrounds[0] =IMG_LoadTexture(g->renderer, "img/background1.png");
 }
+
+int static game_load_sound(game_t *g){
+
+	int i;
+
+	//Explosion
+	for(i=0;i<CANT_SOUNDS;i++){
+		printf("ADASD\n");
+		memset(&(g->sounds[i]), 0, sizeof(Mix_Chunk*) * 2);
+		printf("ADASD___Adasd\n");
+	}
+	printf("Paso sonido\n");
+	g->sounds[SOUND_EXPLOSION] = Mix_LoadWAV("sound/explosion.wav");
+	g->sounds[SOUND_SHOOT1] = Mix_LoadWAV("sound/shoot1.wav");
+
+	//FX_sounds
+	for(i=0;i<CANT_SOUNDS;i++)
+		memset(&(g->fx_sounds[i]), 0, sizeof(Mix_Chunk*) * 2);
+
+	printf("Paso sonido\n");
+	g->fx_sounds[FX_MENU] = Mix_LoadWAV("sound/menu.wav");
+	printf("Paso sonido\n");
+}
+
+void static game_set_status(game_t *g, int status){
+	sem_wait(&(g->sem_status));
+		g->status = status;
+	sem_post(&(g->sem_status));
+}
+
+void static close_connection(void *g){
+	game_t *gg = (game_t*)g;
+	req_t req;
+	void server_response_handle(res_t *res){
+		game_set_status(gg,DISCONNECTED);
+		printf("Cerramos la conexión\n");
+		tcp_client_disconnect(gg->command_cli);
+	}
+	req_init(&req);
+	req_fill(&req,C_DISCONNECT,BODY_REQ_0);
+	printf("Enviamos desconectarnos\n");
+	tcp_client_send(gg->command_cli,&req,&server_response_handle);
+	printf("Enviamos desconectarnos. Recibimos respuesta\n");
+	req_destroy(&req);
+}
+
 
 int game_init(game_t *g){
 	
 	printf("Iniciando librería SDL\n");
-	if(SDL_Init(SDL_INIT_VIDEO) < 0){
-		printf("No fue posible iniciar el video.\n");
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0){
+		printf("No fue posible iniciar el video o audio.\n");
 		printf("Error SDL: %s\n", SDL_GetError());
-		return 1;
+		return 0;
 	}
-
+	
 	printf("Generando Ventana\n");
 	g->window = SDL_CreateWindow(
 		"C-Start", 20, 20, SCREEN_WIDTH,
@@ -39,23 +88,41 @@ int game_init(game_t *g){
 	if(g->window == NULL){
 		printf("No fue posible crear la ventana.\n");
 		printf("Error SDL: %s\n", SDL_GetError());
-		return 1;
+		return 0;
 	}
 
 	printf("Levantando libreria de fuentes\n");
 	if(TTF_Init() == -1){
 		printf("Error al inicializar la librería TTF\n");
-		return 1;
+		return 0;
 	}
 
 	g->status_in_progress = false;
 	g->renderer = SDL_CreateRenderer(g->window, -1, 0);
 	g->status = HELLO;
 	g->udp = 20000;	// Lo fijamos por ahora
+	g->data.header.size = 0;
 
 	printf("Iniciando semáforo sem_status\n");
 	if(sem_init(&(g->sem_status),0,1) == -1){
 		fprintf(stderr, "game_init() failed: %s\n", strerror(errno));
+		return 0;
+	}
+
+	printf("Iniciando semáforo sem_data\n");
+	if(sem_init(&(g->sem_data),0,1) == -1){
+		fprintf(stderr, "game_init() failed: %s\n", strerror(errno));
+		return 0;
+	}
+
+	printf("Iniciando sonido");
+	if(Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512) < 0){
+		fprintf(stderr, "Error al iniciar el audio: %s\n", SDL_GetError());
+		return 0;
+	}
+	if(Mix_AllocateChannels(4)<0){
+		fprintf(stderr, "Unable to allocate mixing channels: %s\n", SDL_GetError());
+		return 0;
 	}
 
 	printf("Creando cliente de comandos\n");
@@ -63,6 +130,11 @@ int game_init(game_t *g){
 
 	printf("Cargando texturas\n");
 	game_load_textures(g);
+
+	printf("Cargando sonidos\n");
+	game_load_sound(g);
+
+	return 1;
 }
 
 int game_check_connect(){
@@ -91,20 +163,39 @@ void static game_status(game_t *g){
 	tcp_client_send(g->command_cli,&req,&server_response_handle);
 }
 
+void *game_data_recive(game_t *g){
+	/* Queda en un hilo esperando que ingresen datos nuevos */
+	int len, n;
+	char buffer[MAX_DATA];
+
+	len = sizeof(g->cliaddr);
+
+	while(g->status != DISCONNECTED){
+		n = recvfrom(g->sockfd, (char *)buffer, MAX_DATA, 
+				MSG_WAITALL, ( struct sockaddr *) &(g->cliaddr),
+				&len);
+		printf("Datos recibidos: %i\n",n);
+		if (n < 0)
+			close_connection(g);
+		
+		sem_wait(&(g->sem_data));
+			buffer_to_data(&(g->data),buffer);
+		sem_post(&(g->sem_data));
+	}
+}
+
 void static game_render(game_t *g){
 
-	int len, n;
-	data_t data;
-	char buffer[MAX_DATA];
 	SDL_Rect position;
 	char score[100];
 	SDL_Rect frame;
+	Mix_Chunk *sound01 = NULL;
 	int index_entity;
 	text_t text_score;
 	text_t text_energia;
 	powerbar_t powerbar;
+	background_t bg;
 
-	len = sizeof(g->cliaddr);
 
 	SDL_RenderClear(g->renderer);
 	SDL_RenderPresent(g->renderer);
@@ -113,86 +204,98 @@ void static game_render(game_t *g){
 	text_init(&text_score,800,30,16,g->renderer);
 	text_init(&text_energia,200,20,16,g->renderer);
 	text_set(&text_energia,"Energia:");
+
+	background_init(&bg,g->renderer,g->backgrounds[g->level - 1]);
+	//background_begin(&bg);
+
 	powerbar_init(&powerbar,g->renderer);
 	powerbar_set_position(&powerbar,259,22);
 	powerbar_set_max(&powerbar,100);
 	powerbar_set_power(&powerbar,g->power_ship);
+	int l = 0;
 	while(g->status == PLAYING){
-//		printf("game_render(): Esperando datos de render\n");
-		n = recvfrom(g->sockfd, (char *)buffer, MAX_DATA, 
-				MSG_WAITALL, ( struct sockaddr *) &(g->cliaddr),
-				&len);
-//		printf("game_render(): Datos de render recibidos: %i\n",n);
- 
-		buffer_to_data(&data,buffer);
 
-		if(data.header.aux && AUX_FORCESTATUS && g->status_in_progress == false){
-			sem_wait(&(g->sem_status));
-				g->status_in_progress = true;
-			sem_post(&(g->sem_status));
-			/* El server nos solicita consultar por el estado */
-			pthread_create(&(g->th_status), NULL, (void*)(void*)(&game_status),g);
-		}
-
-		/* Si la data corresponde a un frame nuevo entonces
-			dibujamos la pantalla. */
-		if(data.header.frame != g->screen_frame){
-			g->screen_frame = data.header.frame;
-
-			sprintf(score,"Puntaje: %i",g->score);
-			text_set(&text_score,score);
-			text_draw(&text_score);
-			text_draw(&text_energia);
-			powerbar_set_power(&powerbar,g->power_ship);
-			powerbar_draw(&powerbar);
-			SDL_RenderPresent(g->renderer);
-//			printf("Nuevo frame\n");
-			SDL_RenderClear(g->renderer);
-		}
-		for(int i=0;i<data.header.size;i++){
-			index_entity = data.body[i].entity_class;
-//			printf("Dibujando entidad en index: %i\n",index_entity);
-			if(index_entity != -1){
-				/* Rectangulo para dibujar en pantalla */
-				position.x = data.body[i].pos_x;
-				position.y = data.body[i].pos_y;
-				position.w = g->entities[index_entity].w;
-				position.h = g->entities[index_entity].h;
-//				printf("Dibujando entidad: position:(x,y,w,h) = (%i,%i,%i,%i)\n",
-//						position.x,position.y,position.w,position.h);
-	
-				/* Rectangulo para recortar la textura */
-				frame.w = position.w;
-				frame.h = position.h;
-				frame.y = frame.h * data.body[i].sprite;
-				frame.x = frame.w * data.body[i].frame;
-//				printf("Dibujando entidad: recorte:(x,y,w,h) = (%i,%i,%i,%i)\n",
-//						frame.x,frame.y,frame.w,frame.h);
-	
-				/* Dibujamos */
-				SDL_RenderCopy(
-					g->renderer,
-					g->entities[index_entity].texture,
-					&frame,
-					&position);
+		sem_wait(&(g->sem_data));
+		if(g->data.header.size == 0){
+			/* Hacer nada. Esperar unos milisegundos */
+			printf("Esperamos\n");
+			SDL_Delay(10);
+		} else {
+			if(g->data.header.type == D_VIDEO){
+			/* Es D_VIDEO */
+				if(g->data.header.aux && AUX_FORCESTATUS && g->status_in_progress == false){
+					sem_wait(&(g->sem_status));
+					g->status_in_progress = true;
+					sem_post(&(g->sem_status));
+					/* El server nos solicita consultar por el estado */
+					pthread_create(&(g->th_status), NULL, (void*)(void*)(&game_status),g);
+				}
+		
+				/* Si la data corresponde a un frame nuevo entonces
+					dibujamos la pantalla. */
+				if(g->data.header.frame != g->screen_frame){
+					g->screen_frame = g->data.header.frame;
+		
+					text_set(&text_score,score);
+					text_draw(&text_score);
+					text_draw(&text_energia);
+					powerbar_set_power(&powerbar,g->power_ship);
+					powerbar_draw(&powerbar);
+					SDL_RenderPresent(g->renderer);
+					printf("Nuevo frame: %i\n",l);
+					l++;
+					SDL_RenderClear(g->renderer);
+					background_draw(&bg);
+				}
+				for(int i=0;i<g->data.header.size;i++){
+					index_entity = g->data.body[i].entity_class;
+//					printf("Dibujando entidad en index: %i\n",index_entity);
+					if(index_entity != -1){
+						/* Rectangulo para dibujar en pantalla */
+						position.x = g->data.body[i].pos_x;
+						position.y = g->data.body[i].pos_y;
+						position.w = g->entities[index_entity].w;
+						position.h = g->entities[index_entity].h;
+//						printf("Dibujando entidad: position:(x,y,w,h) = (%i,%i,%i,%i)\n",
+//								position.x,position.y,position.w,position.h);
+			
+						/* Rectangulo para recortar la textura */
+						frame.w = position.w;
+						frame.h = position.h;
+						frame.y = frame.h * g->data.body[i].sprite;
+						frame.x = frame.w * g->data.body[i].frame;
+//						printf("Dibujando entidad: recorte:(x,y,w,h) = (%i,%i,%i,%i)\n",
+//								frame.x,frame.y,frame.w,frame.h);
+			
+						/* Dibujamos */
+						SDL_RenderCopy(
+							g->renderer,
+							g->entities[index_entity].texture,
+							&frame,
+							&position);
+					}
+				}
+			} else {
+				/* Es D-SOUND */
+				for(int i=0;i < g->data.header.size;i++){
+					Mix_PlayChannel(-1, g->sounds[g->data.sound[i]], 0);
+					printf("Sonido: %i\n",g->data.sound[i]);
+				}
 			}
+			g->data.header.size = 0;
 		}
+		printf("game_render(): PEGA LA VUELTA:%u\n",g->status);
+		sem_post(&(g->sem_data));
+		SDL_Delay(10);
 	}
+	printf("game_render(): SALIMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOSSSS:%u\n",g->status);
 	powerbar_destroy(&powerbar);
-//	printf("game_render(): Salio render:%u\n",g->status);
-}
-
-
-void static game_set_status(game_t *g, int status){
-	sem_wait(&(g->sem_status));
-		g->status = status;
-	sem_post(&(g->sem_status));
+	return;
 }
 
 int static game_start_udp_server(game_t *g){
-	/* Inicia en thread que se encarga de recibir los
-		paquetes de UDP con las instrucciones para
-		el dibujado de la pantalla */
+	/* Inicia el server UDP que recibe los datos
+		para confeccionar las pantallas y los sonidos. */
 
 	if ( (g->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
 		perror("socket creation failed");
@@ -275,7 +378,6 @@ void game_play(game_t *g){
 		uint16_t space;
 	} key_last_state_t;
 
-	text_t debug;
 	bool new_event;
 	SDL_Event event;
 	SDL_Rect frame;
@@ -308,9 +410,6 @@ void game_play(game_t *g){
 	key_last_state.left = SDL_KEYUP;
 	key_last_state.right = SDL_KEYUP;
 	key_last_state.space = SDL_KEYUP;
-
-	text_init(&debug,300,300,25,g->renderer);
-	text_set(&debug,"Jugando");
 
 	req_init(&req);
 	req_fill(&req,C_KEY_PRESS,BODY_REQ_KP); //4
@@ -375,14 +474,6 @@ void game_play(game_t *g){
 			}
 		}
 
-		/* Dibutajos la pantalla si es que tenemos informacion
-			en el buffer de datos UDP */
-
-		//printf("Dibujamos\n");
-//		SDL_RenderClear(g->renderer);
-//		text_draw(&debug);
-//		SDL_RenderPresent(g->renderer);
-
 		SDL_Delay(SCREEN_REFRESH);
 
 		/* Controlamos el estado del play y del nivel */
@@ -396,7 +487,7 @@ void game_play(game_t *g){
 			}
 		}
 	}
-	text_destroy(&debug);
+	return;
 }
 
 void game_connect(game_t *g){
@@ -417,6 +508,8 @@ void game_connect(game_t *g){
 	char message[200];
 	char borrar[1000];
 	bool end = false;
+	SDL_Texture *background;
+	SDL_Rect bg_rect;
 
 	void *try_to_connect(void *g){
 		game_t *gg = (game_t*)g;
@@ -429,6 +522,10 @@ void game_connect(game_t *g){
 			if(res->header.resp == RES_OK){
 				game_start_udp_server(gg);
 				game_set_status(gg,CONNECTED);
+
+				/* Iniciamos el hilo que deja al server udp
+					recibiendo datos */
+				pthread_create(&(gg->th_recive),NULL,(void*)(void*)(&game_data_recive),gg);
 				end = true;
 				req_fill(&req,C_CONNECT_2,BODY_REQ_0);
 				tcp_client_send(gg->command_cli,&req,NULL);
@@ -480,10 +577,20 @@ void game_connect(game_t *g){
 	text_init(&error,300,300,25,g->renderer);
 	text_init(&salir,300,500,25,g->renderer);
 	text_set(&salir,"Presionar Esc para regresar");
+	background = IMG_LoadTexture(g->renderer, "img/bg_menu.png");
+	bg_rect.x = 0;
+	bg_rect.y = 0;
+	bg_rect.w = 1024;
+	bg_rect.h = 600;
 
 	while(!end){
 		/* Borramos la pantalla */
 		SDL_RenderClear(g->renderer);
+		SDL_RenderCopy(
+			g->renderer,
+			background,
+			&bg_rect,
+			&bg_rect);
 		if(!wait){
 			while(SDL_PollEvent(&event)){
 				/* Solo aceptamos los numeros, el punto y el backspace */
@@ -612,22 +719,8 @@ void game_main_menu(game_t *g){
 	SDL_Event event;
 	bool pusshed;
 	pthread_t th;
-
-	void close_connection(void *g){
-		game_t *gg = (game_t*)g;
-		req_t req;
-		void server_response_handle(res_t *res){
-			game_set_status(gg,DISCONNECTED);
-			printf("Cerramos la conexión\n");
-			tcp_client_disconnect(gg->command_cli);
-		}
-		req_init(&req);
-		req_fill(&req,C_DISCONNECT,BODY_REQ_0);
-		printf("Enviamos desconectarnos\n");
-		tcp_client_send(gg->command_cli,&req,&server_response_handle);
-		printf("Enviamos desconectarnos. Recibimos respuesta\n");
-		req_destroy(&req);
-	}
+	SDL_Texture *background;
+	SDL_Rect bg_rect;
 
 	void *pre_start_game(void *g){
 		/* Encargado de enviar al servidor el mensaje de
@@ -677,6 +770,11 @@ void game_main_menu(game_t *g){
 	menu_init(&menu,300,100,g->renderer);
 	make_mainMenu(&menu,g->status);
 	pusshed = false;
+	background = IMG_LoadTexture(g->renderer, "img/bg_menu.png");
+	bg_rect.x = 0;
+	bg_rect.y = 0;
+	bg_rect.w = 1024;
+	bg_rect.h = 600;
 	//text_init(&message,200,200,25,g->renderer);
 	while(g->status == DISCONNECTED || g->status == CONNECTED){
 		while(SDL_PollEvent(&event)){
@@ -689,9 +787,11 @@ void game_main_menu(game_t *g){
 				switch(key){
 					case SDLK_DOWN:
 						menu_down(&menu);
+						Mix_PlayChannel(-1, g->fx_sounds[FX_MENU], 0);
 						break;
 					case SDLK_UP:
 						menu_up(&menu);
+						Mix_PlayChannel(-1, g->fx_sounds[FX_MENU], 0);
 						break;
 					case SDLK_RETURN:
 						switch(g->status){
@@ -740,6 +840,11 @@ void game_main_menu(game_t *g){
 				pusshed=false;
 		}	// while SDL_PoolEvents
 		SDL_RenderClear(g->renderer);
+		SDL_RenderCopy(
+			g->renderer,
+			background,
+			&bg_rect,
+			&bg_rect);
 		menu_draw(&menu);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
@@ -828,6 +933,9 @@ void game_pause(game_t *g){
 }
 
 void *game_run(game_t *g){
+	pthread_t th_render;
+	//pthread_t th_playing;
+
 	printf("Arrancamos GAME\n");
 	while(g->status != END){
 		switch(g->status){
@@ -835,7 +943,7 @@ void *game_run(game_t *g){
 				game_hello(g);
 				break;
 			case PLAYING:
-				pthread_create(&(g->th_render), NULL, (void*)(void*)(&game_render),g);
+				pthread_create(&th_render, NULL, (void*)(void*)(&game_render),g);
 				game_play(g);
 				break;
 			case DISCONNECTED:

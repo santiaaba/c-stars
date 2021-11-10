@@ -84,6 +84,7 @@ typedef struct {
 	sem_t *sem_event;					/* Semaphore para la zona critica de eventos */
 	sem_t sem_state;					/* Semaphore para la zona critica de state */
 	data_t data;						/* Datos a enviar por udp */
+	data_t sound;						/* Sonidos a enviar por udp */
 	char *buffer; 		 	 			/* Buffer udp */
 	int buffer_size;
 	key_direction_t direction;

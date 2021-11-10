@@ -20,7 +20,7 @@
 #define RES_HEADER_SIZE		8		// En Bytes
 
 #define DATA_HEAD_SIZE		8
-#define MAX_DATA_BODY		4		// Cantidad de elementos
+#define MAX_DATA_BODY		4		// Cantidad de elementos!!! No Bytes
 #define MAX_DATA				40		// bytes
 
 #define DATA_ENTITY_SIZE	8		// cantidad de bytes de un entity
@@ -76,6 +76,7 @@ typedef struct {
 typedef struct {
 	data_header_t header;
 	data_render_t body[MAX_DATA_BODY];
+	uint16_t sound[MAX_DATA_BODY];
 } data_t;
 
 /************************************************/

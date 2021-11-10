@@ -10,9 +10,10 @@
 #ifndef SHOOT_H
 #define SHOOT_H
 
-#define SHOOT_LIVE		1
-#define SHOOT_DESTROY	2
-#define SHOOT_END			3
+#define SHOOT_CREATED		1
+#define SHOOT_LIVE			2	
+#define SHOOT_DESTROY		3	
+#define SHOOT_END				4
 
 /* Los 20 y 30 son tipos de naves. ver types.h.
 Los 0 y 10 son tipos de disparos. */
@@ -56,6 +57,6 @@ uint32_t shoot_get_damage(shoot_t *shoot);
 void shoot_destroy(shoot_t **shoot);
 
 /* Genera los datos de la nave en el buffer */
-void shoot_render(shoot_t *shoot, data_render_t *data);
+void shoot_render(shoot_t *shoot, data_render_t *data, int16_t *sound);
 
 #endif
