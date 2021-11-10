@@ -34,7 +34,7 @@
 #define CANT_TEXTURES	3
 #define CANT_SOUNDS		2
 #define CANT_FX_SOUNDS	2
-#define CANT_LEVELS		1
+#define CANT_LEVELS		2
 
 /* Estados del cliente */
 #define HELLO				0		// Pantalla de presentacion
@@ -71,7 +71,7 @@ typedef struct {
 	/* Los siguientes 4 atributos son obtenidos
 		mediante el mensaje game_status al servidor */
 
-	uint8_t playing_state;			// Estado del juego segun el server
+	uint8_t game_state;			// Estado del juego segun el server
 	uint8_t power_ship;				// energia de la nave
 	uint8_t level;						// Nivel actual
 	uint8_t level_state;				// Estado del nivel

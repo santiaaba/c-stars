@@ -78,6 +78,7 @@ typedef struct {
 	int event_size;					/* Tamano logico del vector key */
 	rect_t limits;						/* Limites del juego */
 	int state;
+	res_info_t info;					/* info del juego a ser enviada al cliente */
 	uint32_t frame;
 	uint32_t score;
 	bool statusForced;
@@ -103,10 +104,11 @@ typedef struct {
 void game_init(game_t *g, sem_t *sem_event);
 void game_event_add(game_t *g, uint16_t key, uint16_t key_type);
 void game_start(game_t *g);
+void game_resume(game_t *g);
 int game_init_udp(game_t *g, char *ip, int port);
 void *game_run(void *g);
 void game_level_start(game_t *g, int level);
-void game_info(game_t *g, game_info_t *info);
+void game_info(game_t *g, res_info_t *info);
 int game_udp_negociate(game_t *g, char *ip, int port);
 int game_get_state(game_t *g);
 void game_set_state(game_t *g, int state);

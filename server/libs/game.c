@@ -275,6 +275,10 @@ int static game_remunerate(int ship_type){
 	}
 }
 
+void game_resume(game_t *g){
+	game_set_state(g,G_PLAYING);
+}
+
 void static game_playing_level(game_t *g){
 	/* Bucle que posee la logica del juego.
 		GENERA un FRAME del juego  */
@@ -374,8 +378,8 @@ void static game_playing_level(game_t *g){
 						ship_set_power(ship, ship_get_power(ship) -
 							shoot_get_damage(shoot));
 
-						g->request_status = 1;
-		            g->data.header.aux |= AUX_FORCESTATUS;
+//						g->request_status = 1;
+//		            g->data.header.aux |= AUX_FORCESTATUS;
 						
 //						printf("power: %i\n",ship_get_power(ship));
 						if(ship_get_power(ship) < 0){
@@ -493,7 +497,7 @@ void static game_playing_level(game_t *g){
 				g->data.header.aux |= AUX_FORCESTATUS;
 				ship_set_state(ship,SHIP_ZOMBI);
 				level_set_state(g->level,L_GAME_OVER);
-				wait = clockgame_time(g->clock) + 40;	//4 segundos;
+				wait = clockgame_time(g->clock) + 10;	//4 segundos;
 				break;
 			case SHIP_ZOMBI:
 				/* En este estado no hace nada de nada */
@@ -532,10 +536,17 @@ void static game_playing_level(game_t *g){
 				break;
 			case L_EGRESS:
 				/* Avanzamos la nava automaticamente hasta que sale de la panalla */
-
 				if(border_out_limits(ship_border(g->player),&(g->limits)) &&
 					g->request_status == 0){
-					level_set_state(g->level,L_END);
+						if(g->level_current < CANT_LEVELS)
+							/* Nivel siguiente */
+							level_set_state(g->level,L_END);
+						else
+							/* No hay mas niveles */
+							level_set_state(g->level,L_GAME_OVER);
+						g->request_status = 1;
+						g->data.header.aux |= AUX_FORCESTATUS;
+						wait = clockgame_time(g->clock) + 10;  //1 segundos;
 				}
 				break;
 			case L_GAME_OVER:
@@ -543,28 +554,16 @@ void static game_playing_level(game_t *g){
 					perdido. Se esperan 4 segundos para pasar el
 					juego a G_OVER. Ésto para dar tiempo a que el
 					cliente genere un status */
-					if (clockgame_time(g->clock) > wait){
-						game_set_state(g,G_OVER);
-					}
+				if (clockgame_time(g->clock) > wait)
+					game_set_state(g,G_OVER);
+				break;
 			case L_END:
 				/* El nivel ha finalizado */
-				/* colocamos en 1 request_status para que viaje
-					el próximo udp con el bit encendido que avisa
-					al cliente que requiere realizar un game_status */
-				g->request_status = 1;
-				g->data.header.aux |= AUX_FORCESTATUS;
-
-				if(g->level_current < CANT_LEVELS){
-//					printf("Pasamos al siguiente nivel\n");
-					/* Hay un nivel siguiente */
+				if (clockgame_time(g->clock) > wait){
+					game_set_state(g,G_PAUSE);
 					g->level_current++;
 					game_level_prepare(g);
-				} else {
-//					printf("No hay mas niveles\n");
-					/* No hay mas niveles, terminamos el juego */
-					game_set_state(g,G_OVER);
 				}
-				
 		}
 		/* Enviamos los datos sobrantes en este loop */
 //		printf("ACA para resto 1\n");
@@ -586,13 +585,14 @@ int game_get_state(game_t *g){
 }
 
 void game_set_state(game_t *g, int state){
-	sem_wait(&(g->sem_state));
+	printf("Intentando asignar GAME STATE:%i\n",state);
+//	sem_wait(&(g->sem_state));
 		printf("Asignando GAME STATE:%i\n",state);
 		g->state = state;
-	sem_post(&(g->sem_state));
+//	sem_post(&(g->sem_state));
 }
 
-void game_info(game_t *g, game_info_t *info){
+void game_info(game_t *g, res_info_t *info){
 	g->request_status = 0;
 	info->score = g->score;
 	info->state = g->state;

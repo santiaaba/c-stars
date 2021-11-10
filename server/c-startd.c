@@ -38,10 +38,6 @@ int main(void *args){
 		return 1;
 	}
 
-	/* Asignamos el protocolo al server TCP */
-//	printf("Asignamos protocolo\n");
-//	tcp_server_assign_protocol(&command_server,&server_protocol_handle);
-
 	/* Creamos el hilo que se encarga del servidor de comandos */
 	printf("Hilo para el server\n");
 	if(0 != pthread_create(&th_command, NULL, &tcp_server_start, &command_server)){

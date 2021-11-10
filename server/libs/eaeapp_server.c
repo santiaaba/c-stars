@@ -102,12 +102,13 @@ void static req_game_resume(game_t *g, req_t *req, res_t *res){
 		pedido del cliente */
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
 
+	printf("req_game_resume: G_STATUS: %i\n",game_get_state(g));
 	if(game_get_state(g) != G_PAUSE){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
 	res->header.resp = RES_OK;
-	game_set_state(g,G_PLAYING);
+	game_resume(g);
 }
 
 void static req_game_status(game_t *g, req_t *req, res_t *res){

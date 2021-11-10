@@ -23,6 +23,7 @@ int static game_load_textures(game_t *g){
 
 	/* Carga de los background */
 	g->backgrounds[0] =IMG_LoadTexture(g->renderer, "img/background1.png");
+	g->backgrounds[1] =IMG_LoadTexture(g->renderer, "img/background2.png");
 }
 
 int static game_load_sound(game_t *g){
@@ -146,7 +147,7 @@ void static game_status(game_t *g){
 
 	void server_response_handle(res_t *res){
 		sem_wait(&(g->sem_status));
-			g->playing_state = ((res_info_t*)(res->body))->state;
+			g->game_state = ((res_info_t*)(res->body))->state;
 			g->score = ((res_info_t*)(res->body))->score;
 			g->power_ship = ((res_info_t*)(res->body))->power;
 			g->level = ((res_info_t*)(res->body))->level;
@@ -180,12 +181,12 @@ void static game_render(game_t *g){
 	SDL_RenderPresent(g->renderer);
 	game_status(g);
 	g->screen_frame = 0;
-	text_init(&text_score,800,30,16,g->renderer);
+	text_init(&text_score,600,30,16,g->renderer);
 	text_init(&text_energia,200,20,16,g->renderer);
 	text_set(&text_energia,"Energia:");
 
+	printf("CON BACKGROUND: %i\n",g->level - 1);
 	background_init(&bg,g->renderer,g->backgrounds[g->level - 1],BG_DINAMIC);
-	//background_begin(&bg);
 
 	powerbar_init(&powerbar,g->renderer);
 	powerbar_set_position(&powerbar,259,22);
@@ -217,6 +218,7 @@ void static game_render(game_t *g){
 			if(data.header.frame != g->screen_frame){
 				g->screen_frame = data.header.frame;
 	
+				sprintf(score,"Puntaje: %i",g->score);
 				text_set(&text_score,score);
 				text_draw(&text_score);
 				text_draw(&text_energia);
@@ -470,8 +472,8 @@ void game_play(game_t *g){
 
 		SDL_Delay(SCREEN_REFRESH);
 
-		/* Controlamos el estado del play y del nivel */
-		if(g->playing_state == G_OVER){
+		/* Controlamos el estado del juego y del nivel */
+		if(g->game_state == G_OVER || g->level_state == L_GAME_OVER){
 			printf("Cambiamos de estdo a END_GAME\n");
 			game_set_status(g,END_GAME);
 		} else {
@@ -643,6 +645,7 @@ void static game_end_level(game_t *g){
 	text_set(&text_endGame,"Nivel Finalizado");
 	text_set(&text_pressEnter,"Presione ENTER para siguiente nievel");
 
+	printf("Dialogo fin del nivel\n");
 	while(g->status == END_LEVEL){
 		SDL_RenderClear(g->renderer);
 		while(SDL_PollEvent(&event)){
@@ -651,8 +654,8 @@ void static game_end_level(game_t *g){
 				key = event.key.keysym.sym;
 				if (key == SDLK_RETURN){
 					printf("Pasamos al siguiente nivel\n");
+					game_status(g);
 					req_init(&req);
-
 					req_fill(&req,C_GAME_RESUME,BODY_REQ_0);
 					tcp_client_send(g->command_cli,&req,&server_response_handle);
 					req_destroy(&req);
