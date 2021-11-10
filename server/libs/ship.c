@@ -280,12 +280,12 @@ void ia_drive_ship(ia_t *ia, ship_t *ship){
 
 	if(ia->start){
 		if(!lista_eol(ia->path)){
-			printf("Entro IA hay movimientos: %i | %i\n",ia->next_mov_time,clockgame_time(ia->clock));
+//			printf("Entro IA hay movimientos: %i | %i\n",ia->next_mov_time,clockgame_time(ia->clock));
 			if(ia->next_mov_time < clockgame_time(ia->clock)){
 				vector = &(((ia_mov_t*)(lista_get(ia->path)))->vector);
 				ship_set_speed(ship,vector_get_module(vector));
 				ship_set_direction(ship,vector_get_direction(vector));
-				printf("Duracion: %i\n",((ia_mov_t*)lista_get(ia->path))->duration);
+//				printf("Duracion: %i\n",((ia_mov_t*)lista_get(ia->path))->duration);
 				ia->next_mov_time = ((ia_mov_t*)lista_get(ia->path))->duration + clockgame_time(ia->clock);
 				lista_next(ia->path);
 			}

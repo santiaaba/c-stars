@@ -217,10 +217,10 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 			g->data.header.aux = 0;
 
 		data_to_buffer(&(g->data),&(g->buffer),&(g->buffer_size));
-		printf("game_send_data(): Bytes a enviar: %i\n",g->buffer_size);
+//		printf("game_send_data(): Bytes a enviar: %i\n",g->buffer_size);
 		n = sendto(g->sockfd, g->buffer, g->buffer_size, 0,
 			(const struct sockaddr *) &(g->servaddr),sizeof(g->servaddr));
-		printf("game_send_data(): Bytes enviados: %i\n",n);
+//		printf("game_send_data(): Bytes enviados: %i\n",n);
 		g->data.header.size = 0;
 	}
 }
@@ -228,7 +228,7 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 void static game_send_sound(game_t *g, int16_t *sound, bool at_once){
 	int n;
 
-	printf("game_send_sound() header.size=%u\n",g->sound.header.size);
+//	printf("game_send_sound() header.size=%u\n",g->sound.header.size);
 	if(sound != NULL && *sound != -1){
 		g->sound.sound[g->sound.header.size] = *sound;
 		g->sound.header.size ++;
@@ -236,7 +236,7 @@ void static game_send_sound(game_t *g, int16_t *sound, bool at_once){
 
 	if((at_once || g->sound.header.size == MAX_DATA_BODY)
 		&& g->sound.header.size != 0){
-		printf("game_send_sound(): Enviando sonido\n");
+//		printf("game_send_sound(): Enviando sonido\n");
 		g->sound.header.frame = g->frame;
 		if(g->request_status)
 			g->sound.header.aux = AUX_FORCESTATUS;
@@ -331,7 +331,7 @@ void static game_playing_level(game_t *g){
 					/* La NAVE DEBE INICIAR CON AL MENOS UN PIXEL DENTRO
 						DE LOS LIMITES. SINO SE AUTODESTRUYE */
 					if(border_out_limits(ship_border(ship),&(g->limits))){
-//							printf("ENEMIGO salio de pantalla!!!!!\n");
+							printf("ENEMIGO salio de pantalla!!!!!\n");
 							ship_set_state(ship,SHIP_END);
 					}
 
@@ -351,6 +351,7 @@ void static game_playing_level(game_t *g){
 					lista_next(g->enemies);
 					break;
 				case SHIP_END:
+					printf("Enemigo destruido\n");
 					ship = lista_remove(g->enemies);
 					ship_destroy(&ship);
 			}

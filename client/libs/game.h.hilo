@@ -60,7 +60,6 @@ typedef struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	entitie_t entities[CANT_TEXTURES];			// Entidades
-	SDL_Texture *background_temp;
 	SDL_Texture *backgrounds[CANT_LEVELS];		// Background
 	Mix_Chunk *sounds[CANT_SOUNDS];				// Sonidos provenientes del servidor
 	Mix_Chunk *fx_sounds[CANT_FX_SOUNDS];		// Sonidos varios
@@ -80,7 +79,9 @@ typedef struct {
 	data_t data;
 	tcp_client_t *command_cli;
 	sem_t sem_status;
+	sem_t sem_data;
 	pthread_t th_status;
+	pthread_t th_recive;
 	int udp;
 	int sockfd;
 	struct sockaddr_in cliaddr;

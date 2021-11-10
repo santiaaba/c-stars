@@ -3,7 +3,7 @@
 
 #define BUFFER_SIZE			200			/* elementos a renderizar */
 #define MAX_UDP_BUFFER		200			/* Tamano maximo de buffer UDP */
-#define CANT_LEVELS			1
+#define CANT_LEVELS			2
 #define FXS						25				/*Fotogramas por segundo */
 #define EVENT_LIMIT_SIZE	10
 #define SCREEN_WIDTH			1024
