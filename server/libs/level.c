@@ -70,12 +70,17 @@ void level_init(level_t *l, clockgame_t *clockgame){
 	l->clockgame = clockgame;
 }
 
-void attack_destroy(attack_t *attack){
-	ship_destroy(&(attack->ship));
+void attack_destroy(attack_t **attack){
+	printf("destruimos nave\n");
+	ship_destroy(&((*attack)->ship));
+	printf("destruimos nave 2\n");
+	free(*attack);
 }
 
 void level_destroy(level_t *l){
+	printf("level_destroy: borramos lista\n");
 	lista_clean(l->attacks,(void*)(void**)&attack_destroy);
+	printf("level_destroy: borramos lista 2\n");
 }
 
 void level_run(level_t *l, lista_t *enemies){

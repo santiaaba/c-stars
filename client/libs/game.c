@@ -267,7 +267,6 @@ void static game_render(game_t *g){
 		}
 		SDL_Delay(10);
 	}
-	printf("game_render(): SALIMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOSSSS:%u\n",g->status);
 	powerbar_destroy(&powerbar);
 	return;
 }
@@ -304,6 +303,100 @@ int static game_start_udp_server(game_t *g){
 	printf("Server UDP iniciado\n");
 	return 1;
 }
+
+void game_credits(game_t *g){
+	SDL_Event event;
+	SDL_Rect bg_frame, bg_dest;
+	SDL_Texture *bg_texture;
+	text_t name;
+	text_t name1;
+	text_t name2;
+	text_t teacher;
+	text_t teacher1;
+	text_t teacher2;
+	text_t utn;
+	text_t frlp;
+	text_t materia;
+	text_t year;
+
+	bg_frame.x = 0;
+	bg_frame.y = 0;
+	bg_frame.h = SCREEN_HEIGHT;
+	bg_frame.w = SCREEN_WIDTH;
+
+	bg_dest.x = 0;
+	bg_dest.y = 0;
+	bg_dest.h = SCREEN_HEIGHT;
+	bg_dest.w = SCREEN_WIDTH;
+
+	bg_texture = IMG_LoadTexture(g->renderer, "img/hello_bg.jpg");
+
+	text_init(&name,200,100,20,g->renderer);
+	text_init(&name1,230,130,20,g->renderer);
+	text_init(&name2,230,160,20,g->renderer);
+	text_init(&teacher,200,190,20,g->renderer);
+	text_init(&teacher1,230,220,20,g->renderer);
+	text_init(&teacher2,230,250,20,g->renderer);
+	text_init(&utn,200,280,20,g->renderer);
+	text_init(&frlp,200,310,20,g->renderer);
+	text_init(&materia,200,340,20,g->renderer);
+	text_init(&year,200,370,20,g->renderer);
+
+	text_set(&name,"Alumnos:");
+	text_set(&name1,"Pablo Santibanez");
+	text_set(&name2,"Santiago Diaz");
+	text_set(&teacher,"Profesores:");
+	text_set(&teacher1,"Agustin Eijo");
+	text_set(&teacher2,"Osvaldo Falabela");
+	text_set(&utn,"UTN");
+	text_set(&frlp,"frlp");
+	text_set(&materia,"Internetworking");
+	text_set(&year,"2021");
+
+	bool salir = false;
+	while(!salir){
+		/* Si presionamos cualquier tecla, pasamos la pantalla */
+		while(SDL_PollEvent(&event))
+			if(event.type == SDL_KEYDOWN)
+				salir = true;
+
+		/* Borramos la pantalla */
+		SDL_RenderClear(g->renderer);
+		/* Pintamos el background */
+		SDL_RenderCopy(g->renderer, bg_texture, &bg_frame, &bg_dest);
+
+		text_draw(&name);
+		text_draw(&name1);
+		text_draw(&name2);
+		text_draw(&teacher);
+		text_draw(&teacher1);
+		text_draw(&teacher2);
+		text_draw(&utn);
+		text_draw(&frlp);
+		text_draw(&materia);
+		text_draw(&year);
+
+		/* Le pedimos al screen que renderise */
+		SDL_RenderPresent(g->renderer);
+
+		/* Movemos el background */
+		if(bg_frame.x < 200){
+			bg_frame.x++;
+		}
+		SDL_Delay(SCREEN_REFRESH);
+	}
+	text_destroy(&name);
+	text_destroy(&name1);
+	text_destroy(&name2);
+	text_destroy(&teacher);
+	text_destroy(&teacher1);
+	text_destroy(&teacher2);
+	text_destroy(&utn);
+	text_destroy(&frlp);
+	text_destroy(&materia);
+	text_destroy(&year);
+}
+
 
 void game_hello(game_t *g){
 	/* Pantalla de presentacion. En esta pantalla el
@@ -349,6 +442,7 @@ void game_hello(game_t *g){
 		}
 		SDL_Delay(SCREEN_REFRESH);
 	}
+	text_destroy(&label1);
 }
 
 void game_play(game_t *g){
@@ -365,6 +459,7 @@ void game_play(game_t *g){
 		uint16_t space;
 	} key_last_state_t;
 
+	pthread_t th_render;
 	bool new_event;
 	SDL_Event event;
 	SDL_Rect frame;
@@ -380,7 +475,7 @@ void game_play(game_t *g){
 	void pause_game(game_t *g){
 		void server_response_handle(res_t *res){
 			if(res->header.resp == RES_OK){
-				printf("JUEGO PAUSADO!!!!\n");
+//				printf("JUEGO PAUSADO!!!!\n");
 				SDL_DestroyTexture(g->background_temp);
 				surface = SDL_CreateRGBSurface( 0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0, 0, 0, 0 );
 				SDL_RenderReadPixels(g->renderer, NULL, surface->format->format,
@@ -411,6 +506,7 @@ void game_play(game_t *g){
 	req_fill(&req,C_KEY_PRESS,BODY_REQ_KP); //4
 	req.body = (req_kp_t*)malloc(sizeof(req_kp_t));
 	g->screen_frame = 0;
+	pthread_create(&th_render, NULL, (void*)(void*)(&game_render),g);
 	while(g->status == PLAYING){
 		/* Capturamos los eventos del teclado y los colocamos en el
 			buffer compartido con el hilo del cliente de comandos TCP */
@@ -464,7 +560,7 @@ void game_play(game_t *g){
 				if(new_event){
 					((req_kp_t*)(req.body))->key = event.key.keysym.sym;
 					((req_kp_t*)(req.body))->action = event.type;
-					printf("Enviamos evento-->\n");
+//					printf("Enviamos evento-->\n");
 					tcp_client_send(g->command_cli,&req,NULL);
 				}
 			}
@@ -474,16 +570,16 @@ void game_play(game_t *g){
 
 		/* Controlamos el estado del juego y del nivel */
 		if(g->game_state == G_OVER || g->level_state == L_GAME_OVER){
-			printf("Cambiamos de estdo a END_GAME\n");
+//			printf("Cambiamos de estdo a END_GAME\n");
 			game_set_status(g,END_GAME);
 		} else {
 			if(g->level_state == L_END){
-				printf("Cambiamos de estdo a END_LEVEL\n");
+//				printf("Cambiamos de estado a END_LEVEL\n");
 				game_set_status(g,END_LEVEL);
 			}
 		}
 	}
-	return;
+	pthread_join(th_render,NULL);
 }
 
 void game_connect(game_t *g){
@@ -514,7 +610,7 @@ void game_connect(game_t *g){
 		int buffer_req_size = 0;
 
 		void server_response_handle(res_t *res){
-			printf("Manejando la respuesta del server\n");
+		//	printf("Manejando la respuesta del server\n");
 			if(res->header.resp == RES_OK){
 				game_start_udp_server(gg);
 				game_set_status(gg,CONNECTED);
@@ -552,7 +648,7 @@ void game_connect(game_t *g){
 			wait = false;
 			return NULL;
 		}
-		printf("Enviando udp y version\n");
+//		printf("Enviando udp y version\n");
 		req_init(&req);
 		req_fill(&req,C_CONNECT_1,BODY_REQ_CONNECT); //sizeof(req_connect_t)
 		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
@@ -594,14 +690,12 @@ void game_connect(game_t *g){
 					}
 					if (key == SDLK_BACKSPACE){
 						input_del_char(&ip_server);
-						printf("backspace\n");
 					}
 					if (key == SDLK_ESCAPE)
 						end = true;
 					if (key == SDLK_RETURN){
 						wait = true;
 						srv_ip = input_get_value(&ip_server);
-						printf("Creando el hilo\n");
 						text_set(&error,"Tratando de conectar");
 						pthread_create(&th,NULL,&try_to_connect,g);
 					}
@@ -628,32 +722,33 @@ void static game_end_level(game_t *g){
 
 	SDL_Event event;
 	int key = 0;
+	char score[200];
 	text_t text_endGame;
+	text_t text_score;
 	text_t text_pressEnter;
 	req_t req;
 
 	void server_response_handle(res_t *res){
 		if(res->header.resp == RES_OK){
-			printf("Comenzo el siguiente nivel\n");
 			game_set_status(g,PLAYING);
 		}
 	}
 
 	text_init(&text_endGame,300,300,25,g->renderer);
-	text_init(&text_pressEnter,300,900,25,g->renderer);
+	text_init(&text_pressEnter,300,400,25,g->renderer);
+	text_init(&text_score,300,900,25,g->renderer);
 
 	text_set(&text_endGame,"Nivel Finalizado");
+	sprintf(score,"Puntaje total: %i\n",g->score);
+	text_set(&text_score,score);
 	text_set(&text_pressEnter,"Presione ENTER para siguiente nievel");
 
-	printf("Dialogo fin del nivel\n");
 	while(g->status == END_LEVEL){
-		SDL_RenderClear(g->renderer);
 		while(SDL_PollEvent(&event)){
 			/* Esperamos se presione enter */
 			if(event.type == SDL_KEYDOWN){
 				key = event.key.keysym.sym;
 				if (key == SDLK_RETURN){
-					printf("Pasamos al siguiente nivel\n");
 					game_status(g);
 					req_init(&req);
 					req_fill(&req,C_GAME_RESUME,BODY_REQ_0);
@@ -662,43 +757,54 @@ void static game_end_level(game_t *g){
 				}
 			}
 		}
+		SDL_RenderClear(g->renderer);
 		text_draw(&text_endGame);
 		text_draw(&text_pressEnter);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}
+	text_destroy(&text_score);
+	text_destroy(&text_endGame);
+	text_destroy(&text_pressEnter);
 }
 
 void static game_end_game(game_t *g){
 
 	SDL_Event event;
 	int key = 0;
+	char score[200];
 	text_t text_endGame;
 	text_t text_pressEnter;
+	text_t text_score;
 
 	text_init(&text_endGame,300,200,50,g->renderer);
-	text_init(&text_pressEnter,300,400,20,g->renderer);
+	text_init(&text_score,300,400,25,g->renderer);
+	text_init(&text_pressEnter,300,900,20,g->renderer);
 
 	text_set(&text_endGame,"Juego Finalizado");
+	sprintf(score,"Puntaje total: %i\n",g->score);
+	text_set(&text_score,score);
 	text_set(&text_pressEnter,"Presione ENTER para continuar");
 
 	while(g->status == END_GAME){
-		SDL_RenderClear(g->renderer);
 		while(SDL_PollEvent(&event)){
 			/* Esperamos se presione enter */
 			if(event.type == SDL_KEYDOWN){
 				key = event.key.keysym.sym;
 				if (key == SDLK_RETURN){
-					printf("Pasamos al menu principal\n");
 					game_set_status(g,CONNECTED);
 				}
 			}
 		}
+		SDL_RenderClear(g->renderer);
 		text_draw(&text_endGame);
 		text_draw(&text_pressEnter);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}
+	text_destroy(&text_score);
+	text_destroy(&text_endGame);
+	text_destroy(&text_pressEnter);
 }
 
 void game_main_menu(game_t *g){
@@ -723,7 +829,6 @@ void game_main_menu(game_t *g){
 
 		void server_response_handle(res_t *res){
 			if(res->header.resp == RES_OK){
-				printf("Comenzo el juego\n");
 				game_set_status(gg,PLAYING);
 			} else {
 				//text_set(&message,"Error");
@@ -742,7 +847,6 @@ void game_main_menu(game_t *g){
 	void make_mainMenu(menu_t *menu, int status){
 		/* Encargado de armar el menu a mostrar
 			en pantalla */
-		printf("Reamando el menu");
 		menu_destroy(menu);
 		switch(status){
 			case DISCONNECTED:
@@ -759,7 +863,6 @@ void game_main_menu(game_t *g){
 		}
 	}
 
-	printf("--- MAIN-MENU ---\n");
 	menu_init(&menu,300,100,g->renderer);
 	make_mainMenu(&menu,g->status);
 	pusshed = false;
@@ -768,7 +871,6 @@ void game_main_menu(game_t *g){
 	bg_rect.y = 0;
 	bg_rect.w = 1024;
 	bg_rect.h = 600;
-	//text_init(&message,200,200,25,g->renderer);
 	while(g->status == DISCONNECTED || g->status == CONNECTED){
 		while(SDL_PollEvent(&event)){
 			if(menu_is_looked(&menu))
@@ -798,7 +900,7 @@ void game_main_menu(game_t *g){
 										break;
 									case 1:
 										/* CREDITOS */
-										printf("Implementar creditos");
+										game_credits(g);
 										break;
 									case 2:
 										/* SALIR */
@@ -819,7 +921,7 @@ void game_main_menu(game_t *g){
 										break;
 									case 2:
 										/* CREDITOS */
-										printf("Implementar creditos");
+										game_credits(g);
 										break;
 									case 3:
 										/* SALIR */
@@ -862,7 +964,6 @@ void game_pause(game_t *g){
 		}
 		req_init(&req);
 		req_fill(&req,C_GAME_RESUME,BODY_REQ_0);
-		printf("Enviamos continuar\n");
 		tcp_client_send(g->command_cli,&req,&server_response_handle);
 		req_destroy(&req);
 	}
@@ -875,12 +976,10 @@ void game_pause(game_t *g){
 		}
 		req_init(&req);
 		req_fill(&req,C_GAME_STOP,BODY_REQ_0);
-		printf("Enviamos terminar\n");
 		tcp_client_send(g->command_cli,&req,&server_response_handle);
 		req_destroy(&req);
 	}
 
-	printf("--- PAUSE ---\n");
 	background_init(&bg,g->renderer,g->background_temp,BG_STATIC);
 	menu_init(&menu,300,100,g->renderer);
 	menu_add(&menu,"Continuar");
@@ -931,17 +1030,13 @@ void game_pause(game_t *g){
 }
 
 void *game_run(game_t *g){
-	pthread_t th_render;
-	//pthread_t th_playing;
 
-	printf("Arrancamos GAME\n");
 	while(g->status != END){
 		switch(g->status){
 			case HELLO:
 				game_hello(g);
 				break;
 			case PLAYING:
-				pthread_create(&th_render, NULL, (void*)(void*)(&game_render),g);
 				game_play(g);
 				break;
 			case DISCONNECTED:

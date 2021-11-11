@@ -6,15 +6,17 @@ void printb(char *buffer, int size){
 }
 
 void print_header_req(req_t *req){
-	printf("Encabezado\n");
+	printf("-----------------------------------------------------\n");
 	printf("COD: %u | AUX: %u | SIZE: %u | QID: %"PRIu32"\n",
 	req->header.cod,req->header.aux,req->header.size,req->header.qid);
+	printf("-----------------------------------------------------\n");
 }
 
 void print_header_res(res_t *res){
-	printf("Encabezado\n");
+	printf("-----------------------------------------------------\n");
 	printf("COD: %u | RESP: %u | SIZE: %u | QID: %"PRIu32"\n",
 	res->header.cod,res->header.resp,res->header.size,res->header.qid);
+	printf("-----------------------------------------------------\n");
 }
 
 /******************************************************
@@ -79,7 +81,6 @@ void eaeapp_req2char(req_t *req, char *buffer, int *size){
 
 
 	*size = REQ_HEADER_SIZE + req->header.size;
-	printf("Enviando header\n");
 	print_header_req(req);
 	switch(req->header.cod){
 		case C_CONNECT_1:
@@ -93,6 +94,9 @@ void eaeapp_req2char(req_t *req, char *buffer, int *size){
 			memcpy(&buffer[8],&aux16,2);
 			aux16 = htons(((req_kp_t*)(req->body))->action);
 			memcpy(&buffer[10],&aux16,2);
+//			printf("KEYPRESS - KEY:%i, EVENT:%i\n",
+//				((req_kp_t*)(req->body))->key,
+//				((req_kp_t*)(req->body))->action);
 			break;
 	}
 }
@@ -107,7 +111,6 @@ void eaeapp_res2char(res_t *res, char *buffer, int *size){
 	aux32 = htonl(res->header.qid);
 	memcpy(&(buffer[4]),&aux32,4);
 
-	printf("Enviando respuesta\n");
 	print_header_res(res);
 
 	*size = RES_HEADER_SIZE + res->header.size;
@@ -146,7 +149,6 @@ void eaeapp_char2req(req_t *req, char *buffer){
 	memcpy(&aux32,&(buffer[4]),4);
 	req->header.qid = ntohl(aux32);
 
-	printf("Recibiendo header\n");
 	print_header_req(req);
 
 	if(req->body != NULL){
@@ -189,14 +191,12 @@ void eaeapp_char2res(res_t *res, char *buffer){
 	memcpy(&aux32,&(buffer[4]),4);
 	res->header.qid = ntohl(aux32);
 
-	printf("Respuesta recibida\n");
 	print_header_res(res);
 
 	if(res->body != NULL){
 		free(res->body);
 		res->body = NULL;
 	}
-	printf("eaeapp_char2res: %u\n", res->header.cod);
 	switch(res->header.cod){
 		case C_CONNECT_1:
 			res->body = (char*)malloc(res->header.size);
@@ -268,7 +268,6 @@ void data_to_buffer(data_t *data, char **buffer, int *size){
 			k += 8;
 		}
 	} else {
-		printf("enviando sonido\n");
 		int k = 2;
 		for(int j=0;j<data->header.size;j++){
 			aux16 = htons(data->sound[j]);

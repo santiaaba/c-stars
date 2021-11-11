@@ -19,7 +19,6 @@ void weapon_init(weapon_t *weapon, uint8_t type, uint8_t frecuence,
 }
 
 void weapon_shooting(weapon_t *weapon, bool shooting){
-	printf("weapon_shooting: Cambiamos si disparamos o no\n");
 	weapon->shooting = shooting;
 }
 
@@ -49,7 +48,7 @@ bool weapon_shoot(weapon_t *weapon){
 //		printf("weapon_shoot(): clock:%i > next: %i + %i = %i\n",clockgame_time(weapon->clockgame),
 //			weapon->last_shoot, weapon->frecuence, weapon->last_shoot + weapon->frecuence);
 		if(clockgame_time(weapon->clockgame) > weapon->last_shoot + weapon->frecuence && aux){
-			printf("Creamos un nuevo disparo\n");
+//			printf("Creamos un nuevo disparo\n");
 			shoot = (shoot_t*)malloc(sizeof(shoot_t));
 //			printf("weapon_shoot(): %i\n",weapon->type);
 			switch(weapon->type){
@@ -63,7 +62,7 @@ bool weapon_shoot(weapon_t *weapon){
 					lista_add(weapon->shoots,shoot);
 					break;
 				default:
-//					printf("weapon_shoot():Error fatal. No es un WEAPON\n");
+					printf("weapon_shoot():Error fatal. No es un WEAPON\n");
 			}
 //			printf("Registramos el tiempo del ultimo disparo\n");
 			weapon->last_shoot = clockgame_time(weapon->clockgame);

@@ -91,19 +91,16 @@ void input_draw(input_t *input){
 
 void input_add_char(input_t *input, char c){
 	int i = strlen(input->text);
-	printf("Agregando %c\n",c);
 	if(i < TEXT_LIMIT){
 		input->text[i] = c;
 		input->text[i+1] = '\0';
 	}
-	printf("Agregando:%s\n",input->text);
 }
 
 void input_del_char(input_t *input){
 	int i = strlen(input->text);
 	if(i > 0)
 		input->text[i-1] = '\0';
-	printf("Borrado:%s\n",input->text);
 }
 
 char *input_get_value(input_t *input){

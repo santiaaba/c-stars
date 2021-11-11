@@ -47,16 +47,27 @@ void game_init(game_t *g, sem_t *sem_event){
 
 void game_level_prepare(game_t *g){
 	/* Daja preparado el juego para el nivel en cuestion */
+	printf("game_level_prepare 1\n");
 	level_load(g->level,g->level_current, g->shoot_enemies);
+	printf("game_level_prepare 2\n");
 	lista_clean(g->shoot_enemies,(void*)(void**)&shoot_destroy);
+	printf("game_level_prepare 3\n");
 	lista_clean(g->shoot_player,(void*)(void**)&shoot_destroy);
+	printf("game_level_prepare 4\n");
 	lista_clean(g->enemies,(void*)(void**)&ship_destroy);
+	printf("game_level_prepare 5\n");
 	ship_set_direction(g->player,0);
+	printf("game_level_prepare 6\n");
 	ship_set_speed(g->player,0);
+	printf("game_level_prepare 7\n");
 	ship_set_position(g->player,100,300);
+	printf("game_level_prepare 8\n");
 	ship_set_tangible(g->player,true);
+	printf("game_level_prepare 9\n");
 	ship_reset_weapon(g->player);
+	printf("game_level_prepare 10\n");
 	ship_activate_limits(g->player);
+	printf("game_level_prepare 11\n");
 
 	g->direction.top = false;
 	g->direction.bottom = false;
@@ -71,11 +82,17 @@ void game_start(game_t *g){
 	/* Resetea el juego y lo inicia en el nivel 1 */
 	g->score = 0;
 	g->level_current = 1;
+	printf("Paso game_start 1\n");
 	ship_set_state(g->player,SHIP_LIVE);
+	printf("Paso game_start 2\n");
 	ship_set_animation(g->player,0,1,false);
+	printf("Paso game_start 3\n");
 	ship_set_power(g->player,100);
+	printf("Paso game_start 4\n");
 	game_level_prepare(g);
+	printf("Paso game_start 5\n");
 	g->state=G_PLAYING;
+	printf("Paso game_start 6\n");
 }
 
 void game_event_add(game_t *g, uint16_t key, uint16_t key_type){
@@ -229,26 +246,20 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 void static game_send_sound(game_t *g, int16_t *sound, bool at_once){
 	int n;
 
-//	printf("game_send_sound() header.size=%u\n",g->sound.header.size);
 	if(sound != NULL && *sound != -1){
 		g->sound.sound[g->sound.header.size] = *sound;
 		g->sound.header.size ++;
 	}
-
 	if((at_once || g->sound.header.size == MAX_DATA_BODY)
 		&& g->sound.header.size != 0){
-//		printf("game_send_sound(): Enviando sonido\n");
 		g->sound.header.frame = g->frame;
 		if(g->request_status)
 			g->sound.header.aux = AUX_FORCESTATUS;
 		else
 			g->sound.header.aux = 0;
-
 		data_to_buffer(&(g->sound),&(g->buffer),&(g->buffer_size));
-//		printf("game_send_sound(): Bytes a enviar: %i\n",g->buffer_size);
 		n = sendto(g->sockfd, g->buffer, g->buffer_size, 0,
 			(const struct sockaddr *) &(g->servaddr),sizeof(g->servaddr));
-//		printf("game_send_sound(): Bytes enviados: %i\n",n);
 		g->sound.header.size = 0;
 	}
 }
@@ -297,8 +308,6 @@ void static game_playing_level(game_t *g){
 	req.tv_nsec = ((1000/FXS) % 1000) * 1000000;
 
 	/* Leemos de un listado de acciones */
-
-	printf("game_playing_level(): Arrancamos el bucle\n");
 
 	g->data.header.size = 0;
 	clockgame_start(g->clock);
@@ -356,7 +365,6 @@ void static game_playing_level(game_t *g){
 					lista_next(g->enemies);
 					break;
 				case SHIP_END:
-					printf("Enemigo destruido\n");
 					ship = lista_remove(g->enemies);
 					ship_destroy(&ship);
 			}
@@ -586,11 +594,9 @@ int game_get_state(game_t *g){
 }
 
 void game_set_state(game_t *g, int state){
-	printf("Intentando asignar GAME STATE:%i\n",state);
-//	sem_wait(&(g->sem_state));
-		printf("Asignando GAME STATE:%i\n",state);
+	sem_wait(&(g->sem_state));
 		g->state = state;
-//	sem_post(&(g->sem_state));
+	sem_post(&(g->sem_state));
 }
 
 void game_info(game_t *g, res_info_t *info){
