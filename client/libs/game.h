@@ -26,7 +26,6 @@
 #include "../../libs/level_state.h"
 #include "./tcp_client.h"
 
-#define SRV_PORT			2525
 #define SCREEN_WIDTH		1024
 #define SCREEN_HEIGHT	600
 #define SCREEN_BPP		24

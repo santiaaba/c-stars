@@ -33,7 +33,7 @@ int main(void *args){
 
 	/* Inicializamos el server */
 	printf("Inicializamos server tcp\n");
-	if(!tcp_server_init(&command_server,2525,&game)){
+	if(!tcp_server_init(&command_server,EAEAPP_PORT,&game)){
 		printf("Error al querer generar el server");
 		return 1;
 	}

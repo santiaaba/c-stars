@@ -53,6 +53,8 @@
 #define RES_ERROR_VERSION		41
 #define RES_INCORRECT			50
 
+#define EAEAPP_PORT				25025
+
 #define AUX_FORCESTATUS		0b00000001
 
 /*********************************************/
@@ -148,7 +150,7 @@ void printb(char *buffer, int size);
 /* Para el protocolo TCP de comunicación */
 void eaeapp_res2char(res_t *res, char *buffer, int *size);
 void eaeapp_req2char(req_t *req, char *buffer, int *size);
-void eaeapp_char2req(req_t *req, char *buffer);
+int eaeapp_char2req(req_t *req, char *buffer);
 void eaeapp_char2res(res_t *res, char *buffer);
 
 /* Para el protocolo UDP de datos */

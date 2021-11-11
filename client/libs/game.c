@@ -159,6 +159,7 @@ void static game_status(game_t *g){
 	req_init(&req);
 	req_fill(&req,C_GAME_STATUS,BODY_REQ_0);
 	tcp_client_send(g->command_cli,&req,&server_response_handle);
+	req_destroy(&req);
 }
 
 void static game_render(game_t *g){
@@ -503,7 +504,6 @@ void game_play(game_t *g){
 	key_last_state.space = SDL_KEYUP;
 
 	req_init(&req);
-	req_fill(&req,C_KEY_PRESS,BODY_REQ_KP); //4
 	req.body = (req_kp_t*)malloc(sizeof(req_kp_t));
 	g->screen_frame = 0;
 	pthread_create(&th_render, NULL, (void*)(void*)(&game_render),g);
@@ -558,9 +558,9 @@ void game_play(game_t *g){
 				}
 
 				if(new_event){
+					req_fill(&req,C_KEY_PRESS,BODY_REQ_KP);
 					((req_kp_t*)(req.body))->key = event.key.keysym.sym;
 					((req_kp_t*)(req.body))->action = event.type;
-//					printf("Enviamos evento-->\n");
 					tcp_client_send(g->command_cli,&req,NULL);
 				}
 			}
@@ -579,6 +579,7 @@ void game_play(game_t *g){
 			}
 		}
 	}
+	req_destroy(&req);
 	pthread_join(th_render,NULL);
 }
 
@@ -634,7 +635,7 @@ void game_connect(game_t *g){
 			wait = false;
 		}
 
-		if(!tcp_client_init(gg->command_cli,srv_ip,SRV_PORT)){
+		if(!tcp_client_init(gg->command_cli,srv_ip,EAEAPP_PORT)){
 			text_set(&error,"Error fatal al crear el socket");
 			fprintf(stderr, "game_connect() failed: %s\n", strerror(errno));
 			wait = false;

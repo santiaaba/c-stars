@@ -50,7 +50,7 @@ void req_fill(req_t *req, uint8_t cod, uint16_t size){
 	req->header.qid = rand();
 	req->header.cod = cod;
 	req->header.size = size;
-	req_destroy(req);
+//	req_destroy(req);
 }
 
 void res_destroy(res_t *res){
@@ -94,9 +94,9 @@ void eaeapp_req2char(req_t *req, char *buffer, int *size){
 			memcpy(&buffer[8],&aux16,2);
 			aux16 = htons(((req_kp_t*)(req->body))->action);
 			memcpy(&buffer[10],&aux16,2);
-//			printf("KEYPRESS - KEY:%i, EVENT:%i\n",
-//				((req_kp_t*)(req->body))->key,
-//				((req_kp_t*)(req->body))->action);
+			printf("KEYPRESS - KEY:%i, EVENT:%i\n",
+				((req_kp_t*)(req->body))->key,
+				((req_kp_t*)(req->body))->action);
 			break;
 	}
 }
@@ -139,7 +139,7 @@ void eaeapp_res2char(res_t *res, char *buffer, int *size){
 	}
 }
 
-void eaeapp_char2req(req_t *req, char *buffer){
+int eaeapp_char2req(req_t *req, char *buffer){
 	uint16_t aux16;
 	uint32_t aux32;
 	req->header.cod = buffer[0];
@@ -165,7 +165,7 @@ void eaeapp_char2req(req_t *req, char *buffer){
 			printf("UDP: %u | VERSION: %u\n",
 				((req_connect_t*)(req->body))->udp,
 				((req_connect_t*)(req->body))->version);
-			break;
+			return 12;
 		case C_KEY_PRESS:
 			req->body = (req_kp_t*)malloc(sizeof(req_kp_t));
 			memcpy(&aux16,&(buffer[8]),2);
@@ -175,9 +175,10 @@ void eaeapp_char2req(req_t *req, char *buffer){
 			printf("KEY: %u | ACTION: %u\n",
 				((req_kp_t*)(req->body))->key,
 				((req_kp_t*)(req->body))->action);
-			break;
+			return 12;
+		default:
+			return 8;
 	}
-
 }
 
 

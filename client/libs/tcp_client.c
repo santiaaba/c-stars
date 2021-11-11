@@ -45,7 +45,7 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	/* Enviamos el mensaje */
 //	printf("----------------------------\n");
 	bytes = send(cs->sockfd,&buffer,size,0);
-	//printf("Bytes enviados: %i\n",bytes);
+	printf("Bytes enviados: %i\n",bytes);
 	if(bytes < 0){
 		printf("Error al enviar la petición al server\n");
 		return -1;
