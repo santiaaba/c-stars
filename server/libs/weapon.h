@@ -29,6 +29,7 @@ void weapon_init(weapon_t *weapon, uint8_t type, uint8_t frecuence,
 					  uint8_t probability, point_t *position, int offset_x,
 					  int offset_y, lista_t *shoots);
 void weapon_shooting(weapon_t *weapon, bool shooting);
+void weapon_reset(weapon_t *weapon);
 bool weapon_is_shooting(weapon_t *weapon);
 point_t *weapon_get_position(weapon_t *weapon);
 bool weapon_shoot(weapon_t *weapon);

@@ -55,6 +55,7 @@ void game_level_prepare(game_t *g){
 	ship_set_speed(g->player,0);
 	ship_set_position(g->player,100,300);
 	ship_set_tangible(g->player,true);
+	ship_reset_weapon(g->player);
 	ship_activate_limits(g->player);
 
 	g->direction.top = false;

@@ -74,7 +74,7 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = false;
 			weapon_init(&(ship->weapon),WEAPON_1,20,clock,
-				GRAD_180,true,30,ship->position,0,69,shoots);
+				GRAD_180,true,0,ship->position,0,69,shoots);
 			break;
 	}
 }
@@ -117,6 +117,10 @@ void ship_remove_limits(ship_t *ship){
 
 void ship_set_state(ship_t *ship, uint8_t state){
 	ship->state = state;
+}
+
+void ship_reset_weapon(ship_t *ship){
+	weapon_reset(&(ship->weapon));
 }
 
 uint8_t ship_get_state(ship_t *ship){
