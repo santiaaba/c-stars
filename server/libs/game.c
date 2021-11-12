@@ -47,27 +47,16 @@ void game_init(game_t *g, sem_t *sem_event){
 
 void game_level_prepare(game_t *g){
 	/* Daja preparado el juego para el nivel en cuestion */
-	printf("game_level_prepare 1\n");
 	level_load(g->level,g->level_current, g->shoot_enemies);
-	printf("game_level_prepare 2\n");
 	lista_clean(g->shoot_enemies,(void*)(void**)&shoot_destroy);
-	printf("game_level_prepare 3\n");
 	lista_clean(g->shoot_player,(void*)(void**)&shoot_destroy);
-	printf("game_level_prepare 4\n");
 	lista_clean(g->enemies,(void*)(void**)&ship_destroy);
-	printf("game_level_prepare 5\n");
 	ship_set_direction(g->player,0);
-	printf("game_level_prepare 6\n");
 	ship_set_speed(g->player,0);
-	printf("game_level_prepare 7\n");
 	ship_set_position(g->player,100,300);
-	printf("game_level_prepare 8\n");
 	ship_set_tangible(g->player,true);
-	printf("game_level_prepare 9\n");
 	ship_reset_weapon(g->player);
-	printf("game_level_prepare 10\n");
 	ship_activate_limits(g->player);
-	printf("game_level_prepare 11\n");
 
 	g->direction.top = false;
 	g->direction.bottom = false;
@@ -82,17 +71,11 @@ void game_start(game_t *g){
 	/* Resetea el juego y lo inicia en el nivel 1 */
 	g->score = 0;
 	g->level_current = 1;
-	printf("Paso game_start 1\n");
 	ship_set_state(g->player,SHIP_LIVE);
-	printf("Paso game_start 2\n");
 	ship_set_animation(g->player,0,1,false);
-	printf("Paso game_start 3\n");
 	ship_set_power(g->player,100);
-	printf("Paso game_start 4\n");
 	game_level_prepare(g);
-	printf("Paso game_start 5\n");
 	g->state=G_PLAYING;
-	printf("Paso game_start 6\n");
 }
 
 void game_event_add(game_t *g, uint16_t key, uint16_t key_type){
@@ -119,60 +102,43 @@ void static game_handle_events(game_t *g){
 	/* Entramos en seccion critica */
 	sem_wait(g->sem_event);
 	for(i=0;i < g->event_size;i++){
-		printf("game_handle_events(): KEY: %i - EVENT: %i\n",g->events[i]->key,g->events[i]->key_type);
 		switch(g->events[i]->key_type){
 			case K_DOWN:
-				printf("game_handle_events(): KEY_DOWN\n");
 				switch(g->events[i]->key){
 					case K_TOP:
-						printf("game_handle_events(): KEY_DOWN K_TOP\n");
 						g->direction.top = true;
 						break;
 					case K_BOTTOM:
-						printf("game_handle_events(): KEY_DOWN K_BOTTOM\n");
 						g->direction.bottom = true;
 						break;
 					case K_LEFT:
-						printf("game_handle_events(): KEY_DOWN K_LEFT\n");
 						g->direction.left = true;
 						break;
 					case K_RIGHT:
-						printf("game_handle_events(): KEY_DOWN K_RIGHT\n");
 						g->direction.right = true;
 						break;
 					case K_SPACEBAR:
-						printf("game_handle_events(): KEY_DOWN SPACE\n");
 						ship_shooting(g->player,true);
 						break;
-					default:
-						printf("game_handle_events(): KEY_DOWN Cualquier otra tecla\n");
 				}
 				break;
 			case K_UP:
-				printf("game_handle_events(): KEY_UP\n");
 				switch(g->events[i]->key){
 					case K_TOP:
-						printf("game_handle_events(): KEY_UP K_TOP\n");
 						g->direction.top = false;
 						break;
 					case K_BOTTOM:
-						printf("game_handle_events(): KEY_UP K_BOTTOM\n");
 						g->direction.bottom = false;
 						break;
 					case K_LEFT:
-						printf("game_handle_events(): KEY_UP K_LEFT\n");
 						g->direction.left = false;
 						break;
 					case K_RIGHT:
-						printf("game_handle_events(): KEY_UP K_RIGHT\n");
 						g->direction.right = false;
 						break;
 					case K_SPACEBAR:
-						printf("game_handle_events(): KEY_UP SPACE\n");
 						ship_shooting(g->player,false);
 						break;
-					default:
-						printf("game_handle_events(): KEY_UP Cualquier otra tecla\n");
 				}
 		}
 		if(g->direction.left || g->direction.right ||
@@ -197,16 +163,11 @@ void static game_handle_events(game_t *g){
 			direction = GRAD_225;
 		if(g->direction.right && g->direction.bottom)
 			direction = GRAD_315;
-		printf("game_handle_events(): (M,D) => (%f,%f)\n",module,direction);
 		ship_set_direction(g->player,direction);
 		ship_set_speed(g->player,module);
-		//vector_set(vector,direction,module);
 		free(g->events[i]);
 	}
-	
 	g->event_size = 0;
-
-	/* Salimos de seccion critica */
 	sem_post(g->sem_event);
 }
 
@@ -220,7 +181,6 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 
 	int n;
 
-//	printf("game_send_data()-header.size=%u\n",g->data.header.size);
 	if(data != NULL){
 		data_entity_copy(&(g->data.body[g->data.header.size]),data);
 		g->data.header.size ++;
@@ -235,10 +195,8 @@ void static game_send_data(game_t *g, data_render_t *data, bool at_once){
 			g->data.header.aux = 0;
 
 		data_to_buffer(&(g->data),&(g->buffer),&(g->buffer_size));
-//		printf("game_send_data(): Bytes a enviar: %i\n",g->buffer_size);
 		n = sendto(g->sockfd, g->buffer, g->buffer_size, 0,
 			(const struct sockaddr *) &(g->servaddr),sizeof(g->servaddr));
-//		printf("game_send_data(): Bytes enviados: %i\n",n);
 		g->data.header.size = 0;
 	}
 }
@@ -312,8 +270,6 @@ void static game_playing_level(game_t *g){
 	g->data.header.size = 0;
 	clockgame_start(g->clock);
 	while(g->state == G_PLAYING){
-	//	continue;
-	//	printf("game_playing_level(): RELOJ: %"PRIu32"\n",clockgame_time(g->clock));
 		if(level_get_state(g->level) == L_PLAYING)
 			game_handle_events(g);
 
@@ -321,7 +277,6 @@ void static game_playing_level(game_t *g){
 		lista_first(g->enemies);
 		while(!lista_eol(g->enemies)){
 			ship = lista_get(g->enemies);
-		//	printf("ship(x,y):(%i,%i)\n",ship->position->x,ship->position->y);
 			ship_go(ship);
 			switch(ship_get_state(ship)){
 				case SHIP_LIVE:
@@ -345,12 +300,10 @@ void static game_playing_level(game_t *g){
 					/* La NAVE DEBE INICIAR CON AL MENOS UN PIXEL DENTRO
 						DE LOS LIMITES. SINO SE AUTODESTRUYE */
 					if(border_out_limits(ship_border(ship),&(g->limits))){
-							printf("ENEMIGO salio de pantalla!!!!!\n");
 							ship_set_state(ship,SHIP_END);
 					}
 
 					ship_render(ship,&data,&sound);
-//					printf("Render: %i",sound);
 					game_send_data(g,&data,false);
 					game_send_sound(g,&sound,false);
 					lista_next(g->enemies);
@@ -359,7 +312,6 @@ void static game_playing_level(game_t *g){
 					if(animation_end(&(ship->animation)))
 						ship_set_state(ship,SHIP_END);
 					ship_render(ship,&data,&sound);
-//					printf("Render: %i",sound);
 					game_send_data(g,&data,false);
 					game_send_sound(g,&sound,false);
 					lista_next(g->enemies);
@@ -378,19 +330,13 @@ void static game_playing_level(game_t *g){
 				case SHOOT_CREATED:
 					shoot_set_state(shoot,SHOOT_LIVE);
 				case SHOOT_LIVE:
-//					printf("shoot(x,y):(%i,%i)\n",shoot->position->x,shoot->position->y);
 					shoot_go(shoot);
 					/* Calculamos colición con nave del jugador */
 					ship = g->player;
 					if(ship_colision_shoot(ship,shoot)){
-//						printf("COLISIONO DISPARO - power: %i - damage: %i = ",ship_get_power(ship),shoot_get_damage(shoot));
 						ship_set_power(ship, ship_get_power(ship) -
 							shoot_get_damage(shoot));
 
-//						g->request_status = 1;
-//		            g->data.header.aux |= AUX_FORCESTATUS;
-						
-//						printf("power: %i\n",ship_get_power(ship));
 						if(ship_get_power(ship) < 0){
 							ship_begin_destroy(ship);
 						}
@@ -399,12 +345,10 @@ void static game_playing_level(game_t *g){
 
 					/* Sale de pantalla? */
 					if(border_out_limits(shoot_get_border(shoot),&(g->limits))){
-//						printf("Disparo salio de pantalla!!!!!\n");
 						shoot_set_state(shoot,SHOOT_END);
 					}
 
 					shoot_render(shoot,&data,&sound);
-//					printf("shoot Render: %i",sound);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_enemies);
 					break;
@@ -412,15 +356,12 @@ void static game_playing_level(game_t *g){
 					if(animation_end(&(shoot->animation)))
 						shoot_set_state(shoot,SHOOT_END);
 					shoot_render(shoot,&data,&sound);
-//					printf("Render: %i",sound);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_enemies);
 					break;
 				case SHOOT_END:
-//					printf("SHOOTS Enemigos. Antes: %i",lista_size(g->shoot_enemies));
 					shoot = lista_remove(g->shoot_enemies);
 					shoot_destroy(&shoot);
-//					printf(" Quedan: %i\n",lista_size(g->shoot_enemies));
 			}
 		}
 
@@ -435,17 +376,14 @@ void static game_playing_level(game_t *g){
 					shoot_set_state(shoot,SHOOT_LIVE);
 					break;
 				case SHOOT_LIVE:
-					//printf("shoot(x,y):(%i,%i)\n",shoot->position->x,shoot->position->y);
 					shoot_go(shoot);
 					/* Calculamos colición con naves enemigas */
 					lista_first(g->enemies);
 					while(!lista_eol(g->enemies)){
 						ship = lista_get(g->enemies);
 						if(ship_colision_shoot(ship,shoot)){
-							//printf("COLISIONO DISPARO - power: %i - damage: %i = ",ship_get_power(ship),shoot_get_damage(shoot));
 							ship_set_power(ship, ship_get_power(ship) -
 								shoot_get_damage(shoot));
-							//printf("power: %i\n",ship_get_power(ship));
 							if(ship_get_power(ship) < 0){
 								ship_begin_destroy(ship);
 								g->score += game_remunerate(ship_get_type(ship));
@@ -459,12 +397,10 @@ void static game_playing_level(game_t *g){
 
 					/* Determinamos si sale de la pantalla */
 					if(border_out_limits(shoot_get_border(shoot),&(g->limits))){
-//						printf("Disparo salio de pantalla!!!!!\n");
 						shoot_set_state(shoot,SHOOT_END);
 					}
 
 					shoot_render(shoot,&data,&sound);
-	//				printf("Render: %i",sound);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_player);
 					break;
@@ -474,15 +410,12 @@ void static game_playing_level(game_t *g){
 					else
 						animation_next(&(shoot->animation));
 					shoot_render(shoot,&data,&sound);
-//					printf("Render: %i",sound);
 					game_send_data(g,&data,false);
 					lista_next(g->shoot_player);
 					break;
 				case SHOOT_END:
-//					printf("SHOOTS Jugador. Antes: %i",lista_size(g->shoot_player));
 					shoot = lista_remove(g->shoot_player);
 					shoot_destroy(&shoot);
-//					printf(" Quedan: %i\n",lista_size(g->shoot_player));
 			}
 		}
 
@@ -492,13 +425,11 @@ void static game_playing_level(game_t *g){
 		switch(ship_get_state(ship)){
 			case SHIP_LIVE:
 				ship_render(ship,&data,&sound);
-//				printf("Render: %i",sound);
 				break;
 			case SHIP_DESTROY:
 				if(animation_end(&(ship->animation)))
 					ship_set_state(ship,SHIP_END);
 				ship_render(ship,&data,&sound);
-//				printf("Render: %i",sound);
 				break;
 			case SHIP_END:
 				/* JUEGO FINALIZADO */
@@ -506,18 +437,14 @@ void static game_playing_level(game_t *g){
 				g->data.header.aux |= AUX_FORCESTATUS;
 				ship_set_state(ship,SHIP_ZOMBI);
 				level_set_state(g->level,L_GAME_OVER);
-				wait = clockgame_time(g->clock) + 10;	//4 segundos;
+				wait = clockgame_time(g->clock) + 10;
 				break;
 			case SHIP_ZOMBI:
-				/* En este estado no hace nada de nada */
 				break;
 		}
 
-//		printf("ACA para player\n");
 		game_send_data(g,&data,false);
-//		printf("ACA para player 2\n");
 		game_send_sound(g,&sound,false);
-//		printf("ACA para player 3\n");
 
 		/* Estado del nivel que se esta jugando */
 		switch(level_get_state(g->level)){
@@ -575,17 +502,11 @@ void static game_playing_level(game_t *g){
 				}
 		}
 		/* Enviamos los datos sobrantes en este loop */
-//		printf("ACA para resto 1\n");
 		game_send_data(g,NULL,true);
-//		printf("ACA para resto 2\n");
 		game_send_sound(g,NULL,true);
-//		printf("ACA para resto 3\n");
 		g->frame++;
-
 		nanosleep(&req,&rem);
-
 	}
-	printf("game_playing_level(): Salimos del bucle\n");
 	clockgame_stop(g->clock);
 }
 

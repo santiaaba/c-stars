@@ -1,0 +1,8 @@
+libs/*.o
+server/libs/*.o
+client/libs/*.o
+client/c-start
+server/c-startd
+server/data/level1.txt
+server/data/level2.txt
+server/data/plantilla.ods

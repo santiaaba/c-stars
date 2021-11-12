@@ -32,11 +32,8 @@ int static game_load_sound(game_t *g){
 
 	//Explosion
 	for(i=0;i<CANT_SOUNDS;i++){
-		printf("ADASD\n");
 		memset(&(g->sounds[i]), 0, sizeof(Mix_Chunk*) * 2);
-		printf("ADASD___Adasd\n");
 	}
-	printf("Paso sonido\n");
 	g->sounds[SOUND_EXPLOSION] = Mix_LoadWAV("sound/explosion.wav");
 	g->sounds[SOUND_SHOOT1] = Mix_LoadWAV("sound/shoot1.wav");
 
@@ -44,9 +41,7 @@ int static game_load_sound(game_t *g){
 	for(i=0;i<CANT_SOUNDS;i++)
 		memset(&(g->fx_sounds[i]), 0, sizeof(Mix_Chunk*) * 2);
 
-	printf("Paso sonido\n");
 	g->fx_sounds[FX_MENU] = Mix_LoadWAV("sound/menu.wav");
-	printf("Paso sonido\n");
 }
 
 void static game_set_status(game_t *g, int status){
@@ -60,16 +55,12 @@ void static close_connection(void *g){
 	req_t req;
 	void server_response_handle(res_t *res){
 		game_set_status(gg,DISCONNECTED);
-		printf("Cerramos la conexión\n");
 		tcp_client_disconnect(gg->command_cli);
-		printf("Cerramos el socket UDP\n");
 		close(gg->sockfd);
 	}
 	req_init(&req);
 	req_fill(&req,C_DISCONNECT,BODY_REQ_0);
-	printf("Enviamos desconectarnos\n");
 	tcp_client_send(gg->command_cli,&req,&server_response_handle);
-	printf("Enviamos desconectarnos. Recibimos respuesta\n");
 	req_destroy(&req);
 }
 
@@ -186,7 +177,6 @@ void static game_render(game_t *g){
 	text_init(&text_energia,200,20,16,g->renderer);
 	text_set(&text_energia,"Energia:");
 
-	printf("CON BACKGROUND: %i\n",g->level - 1);
 	background_init(&bg,g->renderer,g->backgrounds[g->level - 1],BG_DINAMIC);
 
 	powerbar_init(&powerbar,g->renderer);
@@ -233,23 +223,18 @@ void static game_render(game_t *g){
 			}
 			for(int i=0;i<data.header.size;i++){
 				index_entity = data.body[i].entity_class;
-//				printf("Dibujando entidad en index: %i\n",index_entity);
 				if(index_entity != -1){
 					/* Rectangulo para dibujar en pantalla */
 					position.x = data.body[i].pos_x;
 					position.y = data.body[i].pos_y;
 					position.w = g->entities[index_entity].w;
 					position.h = g->entities[index_entity].h;
-//					printf("Dibujando entidad: position:(x,y,w,h) = (%i,%i,%i,%i)\n",
-//							position.x,position.y,position.w,position.h);
 		
 					/* Rectangulo para recortar la textura */
 					frame.w = position.w;
 					frame.h = position.h;
 					frame.y = frame.h * data.body[i].sprite;
 					frame.x = frame.w * data.body[i].frame;
-//					printf("Dibujando entidad: recorte:(x,y,w,h) = (%i,%i,%i,%i)\n",
-//							frame.x,frame.y,frame.w,frame.h);
 		
 					/* Dibujamos */
 					SDL_RenderCopy(
@@ -263,7 +248,6 @@ void static game_render(game_t *g){
 			/* Es D-SOUND */
 			for(int i=0;i < data.header.size;i++){
 				Mix_PlayChannel(-1, g->sounds[data.sound[i]], 0);
-				printf("Sonido: %i\n",data.sound[i]);
 			}
 		}
 		SDL_Delay(10);
@@ -570,11 +554,9 @@ void game_play(game_t *g){
 
 		/* Controlamos el estado del juego y del nivel */
 		if(g->game_state == G_OVER || g->level_state == L_GAME_OVER){
-//			printf("Cambiamos de estdo a END_GAME\n");
 			game_set_status(g,END_GAME);
 		} else {
 			if(g->level_state == L_END){
-//				printf("Cambiamos de estado a END_LEVEL\n");
 				game_set_status(g,END_LEVEL);
 			}
 		}
@@ -611,7 +593,6 @@ void game_connect(game_t *g){
 		int buffer_req_size = 0;
 
 		void server_response_handle(res_t *res){
-		//	printf("Manejando la respuesta del server\n");
 			if(res->header.resp == RES_OK){
 				game_start_udp_server(gg);
 				game_set_status(gg,CONNECTED);
@@ -642,14 +623,12 @@ void game_connect(game_t *g){
 			return NULL;
 		}
 		
-		printf("Conectando contra el servidor\n");
 		if(!tcp_client_connect(gg->command_cli)){
 			text_set(&error,"Server no responde");
 			fprintf(stderr, "game_connect() failed: %s\n", strerror(errno));
 			wait = false;
 			return NULL;
 		}
-//		printf("Enviando udp y version\n");
 		req_init(&req);
 		req_fill(&req,C_CONNECT_1,BODY_REQ_CONNECT); //sizeof(req_connect_t)
 		req.body = (req_connect_t*)malloc(sizeof(req_connect_t));
@@ -735,12 +714,12 @@ void static game_end_level(game_t *g){
 		}
 	}
 
-	text_init(&text_endGame,300,300,25,g->renderer);
-	text_init(&text_pressEnter,300,400,25,g->renderer);
-	text_init(&text_score,300,900,25,g->renderer);
+	text_init(&text_endGame,300,100,25,g->renderer);
+	text_init(&text_pressEnter,300,300,25,g->renderer);
+	text_init(&text_score,300,400,40,g->renderer);
 
 	text_set(&text_endGame,"Nivel Finalizado");
-	sprintf(score,"Puntaje total: %i\n",g->score);
+	sprintf(score,"Puntaje total: %i",g->score);
 	text_set(&text_score,score);
 	text_set(&text_pressEnter,"Presione ENTER para siguiente nievel");
 
@@ -761,6 +740,7 @@ void static game_end_level(game_t *g){
 		SDL_RenderClear(g->renderer);
 		text_draw(&text_endGame);
 		text_draw(&text_pressEnter);
+		text_draw(&text_score);
 		SDL_RenderPresent(g->renderer);
 		SDL_Delay(SCREEN_REFRESH);
 	}
@@ -832,7 +812,6 @@ void game_main_menu(game_t *g){
 			if(res->header.resp == RES_OK){
 				game_set_status(gg,PLAYING);
 			} else {
-				//text_set(&message,"Error");
 				menu_unlooked(&menu);
 				menu_show(&menu);
 			}

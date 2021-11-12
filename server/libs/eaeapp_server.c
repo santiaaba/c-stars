@@ -60,14 +60,12 @@ void static req_key_press(game_t *g, req_t *req, res_t *res){
 
 void static req_game_start(game_t *g, req_t *req, res_t *res){
 	/* Inicia el juego. */
-	printf("GAME STATE: %i\n",game_get_state(g));
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
 	if(game_get_state(g) != G_READY && game_get_state(g) != G_OVER){
 		res->header.resp = RES_INCORRECT;
 		return;
 	}
 	res->header.resp = RES_OK;
-	printf("eaeapp_server(): Llego\n");
 	game_start(g);
 }
 
@@ -78,7 +76,6 @@ void static req_game_stop(game_t *g, req_t *req, res_t *res){
 	if(game_get_state(g) != G_PAUSE &&
 		game_get_state(g) != G_PLAYING &&
 		game_get_state(g) != G_OVER){
-			printf("req_game_stop(): ICORRECTO: %i\n",game_get_state(g));
 			res->header.resp = RES_INCORRECT;
 			return;
 	}
@@ -102,7 +99,6 @@ void static req_game_resume(game_t *g, req_t *req, res_t *res){
 		pedido del cliente */
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
 
-	printf("req_game_resume: G_STATUS: %i\n",game_get_state(g));
 	if(game_get_state(g) != G_PAUSE){
 		res->header.resp = RES_INCORRECT;
 		return;
@@ -112,12 +108,10 @@ void static req_game_resume(game_t *g, req_t *req, res_t *res){
 }
 
 void static req_game_status(game_t *g, req_t *req, res_t *res){
-	printf("req_game_status()\n");
 	/* Retorna el estado del nivel y del juego actual */
 	res_fill(res,req->header.cod,0,BODY_RES_0,req->header.qid);
 
 	res->body = (game_info_t*)malloc(sizeof(game_info_t));
-	printf("req_game_status(): %i\n",BODY_RES_STATUS);
 	res->header.size = BODY_RES_STATUS;
 	res->header.resp = RES_OK;
 	game_info(g,res->body);
@@ -176,7 +170,6 @@ void server_protocol_handle(game_t *g, char *ip, req_t *req, res_t *res){
 			req_key_press((game_t *)g,req,res);
 			break;
 		default:
-			printf("Error de codigo\n");
 			req_error(req,res);
 	}
 }

@@ -74,13 +74,12 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			animation_init(&(ship->animation),0,1,false);
 			ship->limited = false;
 			weapon_init(&(ship->weapon),WEAPON_1,20,clock,
-				GRAD_180,true,0,ship->position,0,69,shoots);
+				GRAD_180,true,30,ship->position,0,69,shoots);
 			break;
 	}
 }
 
 void ship_begin_destroy(ship_t *ship){
-	printf("COMIENZA DESTRUCCION\n");
 	ship->state = SHIP_DESTROY;
 	ship->tangible = false;
 	ship_set_animation(ship,1,15,false);
@@ -160,8 +159,6 @@ void ship_go(ship_t *ship){
 
 	if(ship -> ia_activated && ship->state == SHIP_LIVE){
 		ia_drive_ship(ship->ia, ship);
-		//printf("Intentamos disparar\n");
-		//weapon_shoot(&(ship->weapon));
 	}
 	animation_next(&(ship->animation));
 	/* Actualizamos su posicion */
@@ -174,16 +171,7 @@ void ship_go(ship_t *ship){
 			return;
 		}
 	}
-
-//	printf("ship_move() ----> (X:%i,Y:%i) ------->", ship->addx,ship->addy);
-
-	//point_add_vector(ship->position,ship->vector);
 	point_add(ship->position,ship->addx,ship->addy);
-
-//	printf("(%i,%i)\n",ship->position->x,ship->position->y);
-	//border_set_point(ship->border,ship->position->x,ship->position->y);
-
-//	point_add(weapon_get_position(&(ship->weapon)),ship->addx,ship->addy);
 	weapon_shoot(&(ship->weapon));
 }
 
@@ -199,7 +187,6 @@ uint8_t ship_colision_ship(ship_t *ship, ship_t *ship2){
 }
 
 uint8_t ship_colision_shoot(ship_t *ship, shoot_t *shoot){
-//	printf("SHIP TANGIBLE:%i\n",ship->tangible);
 	if(ship->tangible)
 		return border_collision(ship->border,shoot_get_border(shoot));
 	else
@@ -284,32 +271,15 @@ void ia_drive_ship(ia_t *ia, ship_t *ship){
 
 	if(ia->start){
 		if(!lista_eol(ia->path)){
-//			printf("Entro IA hay movimientos: %i | %i\n",ia->next_mov_time,clockgame_time(ia->clock));
 			if(ia->next_mov_time < clockgame_time(ia->clock)){
 				vector = &(((ia_mov_t*)(lista_get(ia->path)))->vector);
 				ship_set_speed(ship,vector_get_module(vector));
 				ship_set_direction(ship,vector_get_direction(vector));
-//				printf("Duracion: %i\n",((ia_mov_t*)lista_get(ia->path))->duration);
 				ia->next_mov_time = ((ia_mov_t*)lista_get(ia->path))->duration + clockgame_time(ia->clock);
 				lista_next(ia->path);
 			}
-//		} else {
-//			ship_set_state(ship,SHIP_DESTROY);
 		}
 	}
-/*
-	if(!lista_eol(ia->path)){
-		if(((ia_mov_t*)lista_get(ia->path))->instant + ia->time_start
-			<= clockgame_time(ia->clock)){
-			vector = &(((ia_mov_t*)(lista_get(ia->path)))->vector);
-			ship_set_speed(ship,vector_get_module(vector));
-			ship_set_direction(ship,vector_get_direction(vector));
-			lista_next(ia->path);
-		}
-	} else {
-		ship_set_state(ship,SHIP_DESTROY);
-	}
-*/
 }
 
 void ia_mov_destroy(ia_mov_t **ia_mov){

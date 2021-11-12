@@ -43,9 +43,7 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	eaeapp_req2char(req,buffer,&size);
 
 	/* Enviamos el mensaje */
-//	printf("----------------------------\n");
 	bytes = send(cs->sockfd,&buffer,size,0);
-	printf("Bytes enviados: %i\n",bytes);
 	if(bytes < 0){
 		printf("Error al enviar la petición al server\n");
 		return -1;
@@ -53,12 +51,9 @@ int tcp_client_send(tcp_client_t *cs, req_t *req, void handle_res(res_t*)){
 	/* Recibimos la respuesta */
 	if(handle_res != NULL){
 		bytes = recv(cs->sockfd,buffer,MAX_BUFFER,0);
-	//	printf("bytes recibidos(MAX_BUFFER=%i): %i\n",MAX_BUFFER,bytes);
 		eaeapp_char2res(&res,buffer);
-	//	printf("Paso el eaeapp\n");
 		handle_res(&res);
 	}
-//	printf("----------------------------\n\n");
 	return 0;
 }
 

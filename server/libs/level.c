@@ -15,7 +15,6 @@ void level_load(level_t *l, uint8_t id, lista_t *shoots_enemies){
 	/*Borramos posibles datos de nivel viejo*/
 	level_destroy(l);
 	
-	printf("level_load(): Cargando el nivel %i\n",id);
 	sprintf(datafile,"data/level%i.data",id);
 
 	l->id = id;
@@ -23,8 +22,6 @@ void level_load(level_t *l, uint8_t id, lista_t *shoots_enemies){
 	fread(&cantShips,sizeof(int16_t),1,fdIN);	/* Cantidad Naves */
 	fread(&(l->background),sizeof(int16_t),1,fdIN);		/* Bakgroud */
 	fread(&(l->soundTrak),sizeof(int16_t),1,fdIN);		/* Trak sound */
-	printf("Cant Naves: %i - Background: %i - Sound track: %i\n",
-		cantShips,l->background,l->soundTrak);
 	i = 0;
 	while(i < cantShips){
 		fread(&num,sizeof(int16_t),1,fdIN);	/* tipo nave */
@@ -33,9 +30,7 @@ void level_load(level_t *l, uint8_t id, lista_t *shoots_enemies){
 		ship = (ship_t*)malloc(sizeof(ship_t));
 		ship_init(ship,num,l->clockgame, shoots_enemies);
 		ship_set_position(ship,x,y);
-		printf("Ataque nave tipo: %i, pos:(%i,%i),", num,x,y);
 		fread(&num,sizeof(int16_t),1,fdIN);	/* tiempo en que se lanza*/
-		printf(" tiempo: %i\n", num);
 		attack = (attack_t*)malloc(sizeof(attack_t));
 		attack->ship = ship;
 		attack->time = num;
@@ -43,23 +38,17 @@ void level_load(level_t *l, uint8_t id, lista_t *shoots_enemies){
 		fread(&cantMovements,sizeof(int16_t),1,fdIN);	/* movements */
 		ia = ship_get_ia(ship);
 		k = 0;
-		printf("		Movimientos(%i):\n",cantMovements);
 		while(k < cantMovements){
 			fread(&speed,sizeof(int16_t),1,fdIN);	/* modulo */
 			fread(&direction,sizeof(int16_t),1,fdIN);	/* direccion */
 			fread(&time,sizeof(int16_t),1,fdIN);	/* tiempo */
-			printf("			modulo:%i, direccion:%i, tiempo:%i\n",
-				speed,direction,time);
 			ia_add_path(ia,time,direction,speed);
-			printf("Paso IA\n");
 			k++;
 		}
 		i++;
 	}
 	fclose(fdIN);
-	printf("Nivel cargado\n");
 	l->state = L_INGRESS;
-	printf("Nivel cargado INGRESS\n");
 }
 
 void level_init(level_t *l, clockgame_t *clockgame){
