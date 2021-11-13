@@ -16,6 +16,10 @@ int static game_load_textures(game_t *g){
 	load_entity(&(g->entities[SHIP_ENEMIE1]),133,138,"img/enemigo1.png",g->renderer);
 	if(g->entities[SHIP_ENEMIE1].texture == NULL)
 		return 0;
+	// Enemie 2
+	load_entity(&(g->entities[SHIP_ENEMIE2]),161,119,"img/enemigo2.png",g->renderer);
+	if(g->entities[SHIP_ENEMIE2].texture == NULL)
+		return 0;
 	//Shoot 1
 	load_entity(&(g->entities[SHOOT_1]),14,14,"img/shoot1.png",g->renderer);
 	if(g->entities[SHOOT_1].texture == NULL)
@@ -1011,6 +1015,13 @@ void game_pause(game_t *g){
 
 void *game_run(game_t *g){
 
+	Mix_Music *music;
+	music=Mix_LoadMUS("sound/track.mp3");
+
+	if(Mix_PlayMusic(music, -1)==-1) {
+		printf("Mix_PlayMusic: %s\n", Mix_GetError());
+	}
+	
 	while(g->status != END){
 		switch(g->status){
 			case HELLO:

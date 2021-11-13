@@ -76,6 +76,25 @@ void ship_init(ship_t *ship, uint8_t type, clockgame_t *clock, lista_t *shoots){
 			weapon_init(&(ship->weapon),WEAPON_1,20,clock,
 				GRAD_180,true,30,ship->position,0,69,shoots);
 			break;
+		case SHIP_ENEMIE2:
+			ship -> power = 100;
+			border_init(ship->border,ship->position,161,119);
+
+			rect = create_rect(3,6,148,25);
+			border_add_rect(ship->border,rect);
+
+			rect = create_rect(5,87,148,25);
+			border_add_rect(ship->border,rect);
+
+			rect = create_rect(21,38,124,40);
+			border_add_rect(ship->border,rect);
+
+			animation_init(&(ship->animation),0,1,false);
+			ship->limited = false;
+			weapon_init(&(ship->weapon),WEAPON_1,20,clock,
+				GRAD_180,true,30,ship->position,0,69,shoots);
+			break;
+
 	}
 }
 

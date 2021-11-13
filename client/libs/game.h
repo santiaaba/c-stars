@@ -30,7 +30,7 @@
 #define SCREEN_HEIGHT	600
 #define SCREEN_BPP		24
 #define SCREEN_REFRESH	60
-#define CANT_TEXTURES	3
+#define CANT_TEXTURES	4
 #define CANT_SOUNDS		2
 #define CANT_FX_SOUNDS	2
 #define CANT_LEVELS		2
