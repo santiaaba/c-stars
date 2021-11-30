@@ -1,4 +1,0 @@
-Game posee la lógica del juego y guarda en un buffer lo que se debe enviar por UDP.
-Dicho buffer se va pisando con cada frame a presentar. Inmediatamente a generado el
-buffer, se arman los paquetes udp y se envían al cliente (clientes???). OJO... que esto
-no consuma tiempo y genere un retardo en el loop del juego.

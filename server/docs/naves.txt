@@ -1,2 +1,0 @@
-Nave			x		y		width			height
-			392		133	58				57
